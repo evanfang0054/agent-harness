@@ -766,7 +766,7 @@ Skill 路径引用均采用**相对本 skill 根目录**的形式（`references/
 
 ## Skill 推广水印（仅动画产出）
 
-**只在动画产出**（HTML 动画 → MP4 / GIF）默认带「**Created by Huashu-Design**」水印，辅助 skill 传播。**幻灯片 / 信息图 / 原型 / 网页等其他场景不加**——加了反而干扰用户实际使用。
+**只在动画产出**（HTML 动画 → MP4 / GIF）默认带「**Created by Design**」水印，辅助 skill 传播。**幻灯片 / 信息图 / 原型 / 网页等其他场景不加**——加了反而干扰用户实际使用。
 
 - **必带场景**：HTML 动画 → 导出 MP4 / GIF（用户会拿去公众号、X、B站传播，水印能跟着流通）
 - **不带场景**：幻灯片（用户自己讲）、信息图（嵌文章）、App / 网页原型（设计 review）、配图
@@ -780,7 +780,7 @@ Skill 路径引用均采用**相对本 skill 根目录**的形式（`references/
     letterSpacing: '0.15em', fontFamily: 'monospace',
     pointerEvents: 'none', zIndex: 100,
   }}>
-    Created by Huashu-Design
+    Created by Design
     {/* 第三方品牌动画前缀「非官方出品 · 」*/}
   </div>
   ```
