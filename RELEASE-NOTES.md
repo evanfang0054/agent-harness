@@ -4,7 +4,7 @@
 
 ### Changes
 
-- 新增/huashu-design skill
+- 新增/design skill
 
 ## v5.0.17 (2026-04-16)
 
