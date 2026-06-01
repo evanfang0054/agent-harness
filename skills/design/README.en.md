@@ -21,7 +21,7 @@
 
 Not "decent for AI" quality — it looks like a real design team made it. Give the skill your brand assets (logo, colors, UI screenshots) and it reads your brand's voice; give it nothing and the built-in 20 design vocabularies still keep you out of AI slop territory.
 
-**Every animation in this README was made by huashu-design itself.** No Figma, no After Effects — just a sentence + skill run. Next product launch needs a promo video? You can make it too.
+**Every animation in this README was made by design itself.** No Figma, no After Effects — just a sentence + skill run. Next product launch needs a promo video? You can make it too.
 
 ```
 npx skills add alchaincyf/huashu-design
@@ -41,7 +41,7 @@ npx skills add alchaincyf/huashu-design
   </video>
 </p>
 
-<p align="center"><sub>▲ 10-second hero animation showing what huashu-design does (<a href="https://github.com/alchaincyf/huashu-design/releases/download/v2.0/hero-animation-v10-en.mp4">download MP4</a> if autoplay doesn't work)</sub></p>
+<p align="center"><sub>▲ 10-second hero animation showing what design does (<a href="https://github.com/alchaincyf/huashu-design/releases/download/v2.0/hero-animation-v10-en.mp4">download MP4</a> if autoplay doesn't work)</sub></p>
 
 ---
 
@@ -198,7 +198,7 @@ I'll be upfront: the Core Asset Protocol's philosophy was lifted from system pro
 
 Positioning differences:
 
-| | Claude Design | huashu-design |
+| | Claude Design | design |
 |---|---|---|
 | Form | Web product (used in browser) | Skill (used in Claude Code) |
 | Quota | Subscription quota | API usage · parallel agents unblocked |
@@ -207,7 +207,7 @@ Positioning differences:
 | Complex animation | Limited | Stage + Sprite timeline · 60fps export |
 | Agent compatibility | Claude.ai only | Claude Code / Cursor / Trae / Hermes / OpenClaw |
 
-Claude Design is a **better graphics tool**. Huashu-design makes **the graphics-tool layer disappear**. Two paths, different audiences.
+Claude Design is a **better graphics tool**. Design makes **the graphics-tool layer disappear**. Two paths, different audiences.
 
 ---
 
