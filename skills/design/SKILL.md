@@ -1,6 +1,6 @@
 ---
 name: design
-description: 用HTML做高保真原型、交互Demo、幻灯片、动画、设计变体探索+设计方向顾问+专家评审的一体化设计能力。HTML是工具不是媒介，根据任务embody不同专家（UX设计师/动画师/幻灯片设计师/原型师），避免web design tropes。触发词：做原型、设计Demo、交互原型、HTML演示、动画Demo、设计变体、hi-fi设计、UI mockup、prototype、设计探索、做个HTML页面、做个可视化、app原型、iOS原型、移动应用mockup、导出MP4、导出GIF、60fps视频、设计风格、设计方向、设计哲学、配色方案、视觉风格、推荐风格、选个风格、做个好看的、评审、好不好看、review this design。**主干能力**：Junior Designer工作流（先给假设+reasoning+placeholder再迭代）、反AI slop清单、React+Babel+Tailwind最佳实践（默认用Tailwind CSS，用户要求时才用普通样式）、Tweaks变体切换、Speaker Notes演示、Starter Components（幻灯片外壳/变体画布/动画引擎/设备边框）、App原型专属守则（默认从Wikimedia/Met/Unsplash取真图、每台iPhone包AppPhone状态管理器可交互、交付前跑Playwright点击测试）、Playwright验证、HTML动画→MP4/GIF视频导出（25fps基础 + 60fps插帧 + palette优化GIF + 6首场景化BGM + 自动fade）。**需求模糊时的Fallback**：设计方向顾问模式——从5流派×20种设计哲学（Pentagram信息建筑/Field.io运动诗学/Kenya Hara东方极简/Sagmeister实验先锋等）推荐3个差异化方向，展示24个预制showcase（8场景×3风格），并行生成3个视觉Demo让用户选。**交付后可选**：专家级5维度评审（哲学一致性/视觉层级/细节执行/功能性/创新性各打10分+修复清单）。
+description: 用HTML做高保真原型、交互Demo、幻灯片、动画、设计变体探索+设计方向顾问+专家评审的一体化设计能力。HTML是工具不是媒介，根据任务embody不同专家（UX设计师/动画师/幻灯片设计师/原型师），避免web design tropes。触发词：做原型、设计Demo、交互原型、HTML演示、动画Demo、设计变体、hi-fi设计、UI mockup、prototype、设计探索、做个HTML页面、做个可视化、app原型、iOS原型、移动应用mockup、导出MP4、导出GIF、60fps视频、设计风格、设计方向、设计哲学、配色方案、视觉风格、推荐风格、选个风格、做个好看的、评审、好不好看、review this design。**主干能力**：Junior Designer工作流（先给假设+reasoning+placeholder再迭代）、反AI slop清单、**默认单文件inline React+Tailwind CSS**（所有JSX写进一个HTML的script标签，Tailwind CDN引入，双击就能开，用户不要React时才降级纯HTML+CSS）、Tweaks变体切换、Speaker Notes演示、Starter Components（幻灯片外壳/变体画布/动画引擎/设备边框）、App原型专属守则（默认从Wikimedia/Met/Unsplash取真图、每台iPhone包AppPhone状态管理器可交互、交付前跑Playwright点击测试）、Playwright验证、HTML动画→MP4/GIF视频导出（25fps基础 + 60fps插帧 + palette优化GIF + 6首场景化BGM + 自动fade）。**需求模糊时的Fallback**：设计方向顾问模式——从5流派×20种设计哲学（Pentagram信息建筑/Field.io运动诗学/Kenya Hara东方极简/Sagmeister实验先锋等）推荐3个差异化方向，展示24个预制showcase（8场景×3风格），并行生成3个视觉Demo让用户选。**交付后可选**：专家级5维度评审（哲学一致性/视觉层级/细节执行/功能性/创新性各打10分+修复清单）。
 ---
 
 # Design
@@ -368,6 +368,34 @@ curl -A "Mozilla/5.0" -L "<hero-image-url>" -o assets/<brand>-brand/product-hero
 
 完整清单见 `references/content-guidelines.md`。
 
+## 架构选型（所有设计任务通用，必先决定）
+
+**无论做什么类型的产出（网页原型、App mockup、幻灯片、信息图、动画），默认架构都是单文件 inline React + Tailwind CSS。** 这不是 App 专属的选择，而是所有设计任务的通用起手式。
+
+**默认单文件 inline React + Tailwind CSS**——所有 JSX/data 直接写进主 HTML 的 `<script type="text/babel">...</script>` 标签，**不要**用 `<script src="components.jsx">` 外部加载。原因：`file://` 协议下浏览器把外部 JS 当跨 origin 拦截，强制用户起 HTTP server 违反「双击就能开」的原型直觉。
+
+**样式默认用 Tailwind**——`<head>` 里引入 `<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>`，然后用 `className="flex gap-4 p-6 ..."` 写样式。Tailwind 的好处：设计师能读懂、响应式一行搞定、避免 styles 对象命名冲突。只有用户明确说「用普通样式」「不要 Tailwind」时才回退到 inline style。详见 `references/react-setup.md` 的「样式策略」。
+
+**为什么这是全局默认而非只限 App 原型**：
+- 用户说"画个页面"、"做个模板"、"帮我设计"时，预期的是一个浏览器打开就能看的产出
+- React 组件化让设计变体、状态切换、Tweaks 天然支持
+- Tailwind 让响应式和视觉调参一行搞定
+- 单文件 = 零配置 = 双击就能看，符合原型的「快」直觉
+
+**拆外部文件只在两种情况**：
+- (a) 单文件 >1000 行难维护 → 拆成 `components.jsx` + `data.js`，同时明确交付说明（`python3 -m http.server` 命令 + 访问 URL）
+- (b) 需要多 subagent 并行写不同屏 → `index.html` + 每屏独立 HTML，iframe 聚合
+
+**选型速查**：
+
+| 场景 | 架构 | 交付方式 |
+|------|------|----------|
+| 通用设计任务（默认） | 单文件 inline React + Tailwind | 一个 `.html` 双击开 |
+| 大型产出（>10 屏 / >1000行） | 多 jsx + server | 附启动命令 |
+| 多 agent 并行 | 多 HTML + iframe | `index.html` 聚合 |
+
+技术细节（pinned 版本、integrity hash、禁止项）→ `references/react-setup.md`。
+
 ## 设计方向顾问（Fallback 模式）
 
 **什么时候触发**：
@@ -464,23 +492,14 @@ curl -A "Mozilla/5.0" -L "<hero-image-url>" -o assets/<brand>-brand/product-hero
 
 做 iOS/Android/移动 app 原型时（触发：「app 原型」「iOS mockup」「移动应用」「做个 app」），下面四条**覆盖**通用 placeholder 原则——app 原型是 demo 现场，静态摆拍和米白占位卡没有说服力。
 
-### 0. 架构选型（必先决定）
+### 0. 架构选型（继承通用节 + App 特有补充）
 
-**默认单文件 inline React + Tailwind CSS**——所有 JSX/data 直接写进主 HTML 的 `<script type="text/babel">...</script>` 标签，**不要**用 `<script src="components.jsx">` 外部加载。原因：`file://` 协议下浏览器把外部 JS 当跨 origin 拦截，强制用户起 HTTP server 违反「双击就能开」的原型直觉。引用本地图片必须 base64 内嵌 data URL，别假设有 server。
+**通用架构已见上方「架构选型（所有设计任务通用）」**——默认单文件 inline React + Tailwind CSS。这里只补充 App 原型特有的约束：
 
-**样式默认用 Tailwind**——`<head>` 里引入 `<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>`，然后用 `className="flex gap-4 p-6 ..."` 写样式。Tailwind 的好处：设计师能读懂、响应式一行搞定、避免 styles 对象命名冲突。只有用户明确说「用普通样式」「不要 Tailwind」时才回退到 inline style。详见 `references/react-setup.md` 的「样式策略」。
-
-**拆外部文件只在两种情况**：
-- (a) 单文件 >1000 行难维护 → 拆成 `components.jsx` + `data.js`，同时明确交付说明（`python3 -m http.server` 命令 + 访问 URL）
-- (b) 需要多 subagent 并行写不同屏 → `index.html` + 每屏独立 HTML（`today.html`/`graph.html`...），iframe 聚合，每屏也都是自包含单文件
-
-**选型速查**：
-
-| 场景 | 架构 | 交付方式 |
-|------|------|----------|
-| 单人做 4-6 屏原型（主流） | 单文件 inline | 一个 `.html` 双击开 |
-| 单人做大型 App（>10 屏） | 多 jsx + server | 附启动命令 |
-| 多 agent 并行 | 多 HTML + iframe | `index.html` 聚合，每屏独立可开 |
+**App 原型额外要求**：
+- 每台 iPhone 包 `AppPhone` 状态管理器（flow demo 时可交互）
+- 引用本地图片必须 base64 内嵌 data URL，别假设有 server
+- 状态管理用 React `useState`，tab bar / 按钮加 `cursor: pointer` + hover 反馈
 
 ### 1. 先找真图，不是 placeholder 摆着
 
@@ -605,6 +624,7 @@ Screen 组件接 callback props（`onEnter`、`onClose`、`onTabChange`、`onOpe
 ### 标准流程（用TaskCreate追踪）
 
 1. **理解需求**：
+   - 🏗️ **架构确认（默认已定）**：默认使用单文件 inline React + Tailwind CSS（见上方「架构选型」）。只有用户明确说「不用 React」「纯 HTML+CSS」时才降级。不需要每次都问——直接用。
    - 🔍 **0. 事实验证（涉及具体产品/技术时必做，优先级最高）**：任务涉及具体产品/技术/事件（DJI Pocket 4、Gemini 3 Pro、Nano Banana Pro、某新 SDK 等）时，**第一个动作**是 `WebSearch` 验证其存在性、发布状态、最新版本、关键规格。把事实写入 `product-facts.md`。详见「核心原则 #0」。**这步做在问 clarifying questions 之前**——事实错了问什么都歪。
    - 新任务或模糊任务必须问clarifying questions，详见 `references/workflow.md`。一次focused一轮问题通常够，小修小补跳过。
    - 🛑 **检查点1：问题清单一次性发给用户，等用户批量答完再往下走**。不要边问边做。
@@ -787,6 +807,7 @@ Skill 路径引用均采用**相对本 skill 根目录**的形式（`references/
 
 ## 核心提醒
 
+- **架构默认**：所有设计任务默认单文件 inline React + Tailwind CSS——JSX 写进一个 HTML 的 `<script type="text/babel">`，Tailwind CDN 引入，双击就能开。用户明确说不用 React 时才降级。
 - **事实验证先于假设**（核心原则 #0）：涉及具体产品/技术/事件（DJI Pocket 4、Gemini 3 Pro 等）必须先 `WebSearch` 验证存在性和状态，不凭训练语料断言。
 - **Embody专家**：做幻灯片时是幻灯片设计师，做动画时是动画师。不是写Web UI。
 - **Junior先show，再做**：先展示思路，再执行。

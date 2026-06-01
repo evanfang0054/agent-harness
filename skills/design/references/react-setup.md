@@ -1,5 +1,7 @@
 # React + Babel 项目规范
 
+**所有设计任务的默认技术栈**——用HTML做任何视觉产出（原型、页面模板、幻灯片、信息图、动画Demo）时，都默认使用 inline React + Tailwind CSS。这不是某个场景的专属选择，而是全局默认。只有用户明确说「不用 React」「纯 HTML+CSS」时才降级。
+
 用HTML+React+Babel做原型时必须遵守的技术规范。不遵守会炸。
 
 ## Pinned Script Tags（必须用这些版本）
