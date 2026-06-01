@@ -1,5 +1,11 @@
 # Superpowers Release Notes
 
+## v5.0.20 (2026-06-01)
+
+### Changes
+
+-  提升 React+Tailwind 为全局默认架构，精简 README
+
 ## v5.0.19 (2026-06-01)
 
 ### Changes
