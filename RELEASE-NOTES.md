@@ -1,5 +1,11 @@
 # Superpowers Release Notes
 
+## v5.0.19 (2026-06-01)
+
+### Changes
+
+- 剔除worktrees、剔除视觉预览，调整design命名
+
 ## v5.0.18 (2026-04-23)
 
 ### Changes
