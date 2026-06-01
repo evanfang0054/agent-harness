@@ -31,7 +31,7 @@ HEAD_SHA=$(git rev-parse HEAD)
 
 **2. Dispatch code-reviewer agent:**
 
-Invoke the `code-reviewer` agent (defined in `agents/code-reviewer.md`). It runs in the current workspace—no worktree needed.
+Invoke the `code-reviewer` agent (defined in `agents/code-reviewer.md`).
 
 **Placeholders:**
 - `{WHAT_WAS_IMPLEMENTED}` - What you just built

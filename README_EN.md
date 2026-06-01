@@ -165,9 +165,7 @@ Superpowers uses a layered architecture: **Decision Layer** ensures "doing the r
 
 5. **requesting-code-review** - Activates between tasks. Reviews against plan, reports issues by severity. Critical issues block progress.
 
-6. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree if used.
-
-> **Optional: using-git-worktrees** - Use only when user explicitly requests workspace isolation. Creates isolated workspace on new branch. Not used by default.
+6. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard).
 
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
 
@@ -194,7 +192,6 @@ Superpowers uses a layered architecture: **Decision Layer** ensures "doing the r
 - **dispatching-parallel-agents** - Concurrent subagent workflows
 - **requesting-code-review** - Pre-review checklist
 - **receiving-code-review** - Responding to feedback
-- **using-git-worktrees** - Parallel development branches
 - **finishing-a-development-branch** - Merge/PR decision workflow
 - **subagent-driven-development** - Ralph-loop driven orchestrator mode, dispatches subagents + two-stage review
 

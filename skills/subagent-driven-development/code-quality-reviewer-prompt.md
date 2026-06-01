@@ -8,7 +8,6 @@ Use this template when dispatching a code quality reviewer subagent.
 
 ```
 Invoke code-reviewer agent (agents/code-reviewer.md):
-  Runs in current workspace—no worktree needed.
 
   WHAT_WAS_IMPLEMENTED: [from implementer's report]
   PLAN_OR_REQUIREMENTS: Task N from [plan-file]

@@ -299,12 +299,6 @@ Done!
 
 ## Integration
 
-**Related workflow skills:**
-- **superpowers:using-git-worktrees** - OPTIONAL: Set up isolated workspace if user requests isolation (not required by default). If worktrees are disallowed, run review flow directly in the current workspace.
-- **superpowers:writing-plans** - Creates the plan this skill executes
-- **superpowers:requesting-code-review** - Code review template for reviewer subagents
-- **superpowers:finishing-a-development-branch** - Complete development after all tasks
-
 **Subagents should use:**
 - **superpowers:test-driven-development** - Subagents follow TDD for each task
 

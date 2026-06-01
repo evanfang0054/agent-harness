@@ -164,9 +164,7 @@ Superpowers 采用分层架构：**决策层**确保"做对的事"，**执行层
 
 5. **requesting-code-review（请求代码审查）** - 在任务之间激活。根据计划审查，按严重程度报告问题。关键问题会阻止进度。
 
-6. **finishing-a-development-branch（完成开发分支）** - 在任务完成时激活。验证测试，提供选项（合并/PR/保留/丢弃），如使用工作树则清理。
-
-> **可选：using-git-worktrees** - 仅当用户明确要求工作空间隔离时使用。在新分支上创建隔离的工作空间。默认不使用。
+6. **finishing-a-development-branch（完成开发分支）** - 在任务完成时激活。验证测试，提供选项（合并/PR/保留/丢弃）。
 
 **AI 助手在执行任何任务前都会检查相关技能。** 这是强制性的工作流程，而非建议。
 
@@ -193,7 +191,6 @@ Superpowers 采用分层架构：**决策层**确保"做对的事"，**执行层
 - **dispatching-parallel-agents** - 并发子代理工作流
 - **requesting-code-review** - 预审查清单
 - **receiving-code-review** - 响应反馈
-- **using-git-worktrees** - 并行开发分支
 - **finishing-a-development-branch** - 合并/PR 决策工作流
 - **subagent-driven-development** - Ralph-loop 驱动协调者模式，派发子代理 + 两阶段审查
 
