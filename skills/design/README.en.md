@@ -224,7 +224,7 @@ This is an 80-point skill, not a 100-point product. For people unwilling to open
 ## Repository Structure
 
 ```
-huashu-design/
+design/
 ├── SKILL.md                 # Main doc (read by agent, Chinese)
 ├── README.md                # Chinese README (default)
 ├── README.en.md             # English README (this file)
