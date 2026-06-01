@@ -1,5 +1,11 @@
 # Superpowers Release Notes
 
+## v5.0.21 (2026-06-01)
+
+### Changes
+
+- 将 design skill 重命名为 harness-design
+
 ## v5.0.20 (2026-06-01)
 
 ### Changes
