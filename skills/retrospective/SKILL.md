@@ -1,6 +1,7 @@
 ---
 name: retrospective
 description: "Engineering retrospective for analyzing recent work. Use when asked to 'do a retro', 'review the week', 'what did we accomplish', or at the end of a sprint/milestone. Analyzes commits, learnings, and patterns to improve future work."
+when_to_use: "[feedback] Triggered at end of sprint or session to analyze what happened and improve."
 ---
 
 # Retrospective

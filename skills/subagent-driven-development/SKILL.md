@@ -2,6 +2,7 @@
 name: subagent-driven-development
 description: Use when executing implementation plans with independent tasks in the current session
 argument-hint: "任务描述或Plan路径"
+when_to_use: "[feedforward, feedback] Triggered when dispatching subagents for plan execution with review gates."
 ---
 
 # Subagent-Driven Development

@@ -1,6 +1,7 @@
 ---
 name: requesting-code-review
 description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements
+when_to_use: "[feedback] Triggered after implementation is complete to request peer review."
 ---
 
 # Requesting Code Review

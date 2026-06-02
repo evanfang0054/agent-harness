@@ -2,6 +2,7 @@
 name: writing-plans
 description: Use when you have a spec or requirements for a multi-step task, before touching code
 effort: high
+when_to_use: "[feedforward] Triggered after brainstorming, before implementation, to decompose work into tasks."
 ---
 
 # Writing Plans

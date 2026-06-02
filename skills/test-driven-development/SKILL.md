@@ -1,6 +1,7 @@
 ---
 name: test-driven-development
 description: Use when implementing any feature or bugfix, before writing implementation code
+when_to_use: "[feedforward] Triggered before writing implementation code to establish test-first discipline."
 ---
 
 # Test-Driven Development (TDD)
