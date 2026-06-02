@@ -37,6 +37,33 @@ BEFORE claiming any status or expressing satisfaction:
 Skip any step = lying, not verifying
 ```
 
+## Loop Detection (Pre-Check)
+
+Before running verification commands, check for doom loops:
+
+```bash
+bash scripts/loop-detector.sh
+```
+
+Interpret exit codes:
+- **0 (OK)**: Proceed with verification
+- **1 (WARNING)**: Reconsider approach. You may be in a loop. Review recent edits before continuing.
+- **2 (HARD STOP)**: STOP. Do not claim completion. Revert to last known good state or seek external input.
+
+**If HARD STOP:** Do not proceed with verification. The approach itself needs reconsideration.
+
+## Computational Sensors (Pre-Review)
+
+After loop detection, before semantic review, run deterministic checks:
+
+1. Check for `.superpowers/sensors.json`:
+   - If exists: run each configured sensor
+   - If missing: use `superpowers:computational-sensors` to set up
+2. Run sensors in order: lint → typecheck → test → coverage → build
+3. Any sensor failure = verification FAILURE. Do not proceed to semantic review.
+
+**Computational before Inferential:** Linters and tests catch 80% of issues with zero ambiguity. Run them first.
+
 ## Common Failures
 
 | Claim | Requires | Not Sufficient |
