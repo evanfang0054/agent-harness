@@ -1,5 +1,11 @@
 # Superpowers Release Notes
 
+## v5.0.21-beta.0 (2026-06-02)
+
+### Changes
+
+- harness优化更新
+
 ## v5.0.21 (2026-06-01)
 
 ### Changes
