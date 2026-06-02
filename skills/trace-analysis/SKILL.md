@@ -42,7 +42,13 @@ The analyzer classifies learnings by keywords in `key` and `insight` fields:
 
 - Top pattern = highest priority. Analyzer sorts by count.
 - If `loop` appears, that's urgent. Doom loops waste the most time.
-- Multiple patterns at similar counts suggests systemic issues. Planning skills (writing-plans + sprint-contract) may prevent several at once.
+- Multiple patterns at similar counts suggest systemic issues. Planning skills (writing-plans + sprint-contract) may prevent several at once.
+
+## TDD Baseline (RED Phase)
+
+Pressure scenario: agent conducting retrospective, learns failure patterns exist but ignores data, "improves" based on gut feeling instead of analyzer output.
+
+Baseline failures: agent skips trace-analyzer.sh, rationalizes "I know the patterns", does not cross-reference with skill improvement actions.
 
 ## Recommendations
 
