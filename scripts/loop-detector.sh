@@ -66,7 +66,7 @@ with open('${TRACKER_FILE}', 'r+') as f:
     json.dump(data, f, indent=2)
     f.truncate()
 "
-    echo "Tracked: ${file} (count=$(get_count '${file}'))"
+    echo "Tracked: ${file} (count=$(get_count "${file}"))"
 }
 
 reset_tracker() {
