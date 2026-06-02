@@ -1,0 +1,8 @@
+{
+  "sensors": [
+    { "name": "lint", "command": "golangci-lint run", "timeout": 60 },
+    { "name": "test", "command": "go test ./... -v", "timeout": 180 },
+    { "name": "build", "command": "go build ./...", "timeout": 120 },
+    { "name": "coverage", "command": "go test ./... -coverprofile=coverage.out && go tool cover -func=coverage.out", "timeout": 180 }
+  ]
+}
