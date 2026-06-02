@@ -73,6 +73,16 @@ Use the output to identify:
 
 Reference: `superpowers:trace-analysis` for interpretation guidance.
 
+### Coverage Metrics Input
+
+Run coverage metrics alongside trace analysis:
+
+```bash
+bash scripts/coverage-metrics.sh
+```
+
+Use coverage gaps to identify which harness dimensions need improvement in the next sprint.
+
 ### Step 3: Structured Review
 
 Present findings in this format:
