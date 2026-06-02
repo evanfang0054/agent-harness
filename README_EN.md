@@ -123,16 +123,20 @@ Superpowers uses a layered architecture: **Decision Layer** ensures "doing the r
 │                      "How to design? How to build?"                          │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
-│   ┌─────────────┐      ┌───────────────┐      ┌─────────────────────────┐  │
-│   │brainstorming│ ───► │ writing-plans │ ───► │ subagent-driven-dev /   │  │
-│   │  "Design?"  │      │ "Break tasks" │      │ executing-plans         │  │
-│   └─────────────┘      └───────────────┘      └─────────────────────────┘  │
+│   ┌─────────────┐  ┌────────────────┐  ┌───────────────┐ ┌──────────────┐  │
+│   │brainstorming│─►│sprint-contract │─►│ writing-plans │─►│subagent-dev /│  │
+│   │  "Design?"  │  │  "Done when?" │  │ "Break tasks" │ │exec-plans   │  │
+│   └─────────────┘  └────────────────┘  └───────────────┘ └──────────────┘  │
 │                                                         │                   │
 │   ┌─────────────────────────────────────────────────────┼───────────────┐  │
 │   │                  Implementation Loop                 ▼               │  │
-│   │  ┌─────┐    ┌───────────┐    ┌──────────────┐    ┌─────────┐       │  │
-│   │  │ TDD │ ─► │code-review│ ─► │ verification │ ─► │finishing│       │  │
-│   │  └─────┘    └───────────┘    └──────────────┘    └─────────┘       │  │
+│   │  ┌─────┐  ┌───────────┐  ┌─────────────┐  ┌──────┐  ┌─────────┐   │  │
+│   │  │ TDD │─►│comp-sensor│─►│code-review  │─►│verify│─►│finishing│   │  │
+│   │  └─────┘  └───────────┘  └─────────────┘  └──────┘  └─────────┘   │  │
+│   └─────────────────────────────────────────────────────────────────────┘  │
+│                                                                             │
+│   ┌─────────────────────────────────────────────────────────────────────┐  │
+│   │ harness-init (bootstrap) · harness-design (prototype) · harness-opt│  │
 │   └─────────────────────────────────────────────────────────────────────┘  │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -148,24 +152,32 @@ Superpowers uses a layered architecture: **Decision Layer** ensures "doing the r
 │   │ "Find/fix"  │      │   "Monitor deploy"  │      │   "Improve"     │    │
 │   └─────────────┘      └─────────────────────┘      └─────────────────┘    │
 │                                                                             │
+│   ┌─────────────────────────────────────────────────────────────────────┐  │
+│   │ trace-analysis (cross-session failure pattern analysis)              │  │
+│   └─────────────────────────────────────────────────────────────────────┘  │
+│                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Core philosophy:** Decision layer guards the "front door" (ensure right direction), Execution layer runs the "workshop" (ensure disciplined implementation), Quality layer guards the "back door" (ensure delivery quality).
+**Core philosophy:** Decision layer guards the "front door" (ensure right direction), Execution layer runs the "workshop" (ensure disciplined implementation), Quality layer guards the "back door" (ensure delivery quality). `sprint-contract` ensures clear Definition of Done between design and planning, `computational-sensors` runs deterministic checks before code review, `trace-analysis` surfaces recurring failure patterns from historical data.
 
 ## The Basic Workflow
 
 1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.
 
-2. **writing-plans** - Activates with approved design. Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
+2. **sprint-contract** - Activates after design approval, before writing plans. Negotiates explicit Definition of Done to prevent ambiguous completion criteria.
 
-3. **subagent-driven-development** or **executing-plans** - Activates with plan. Both driven by ralph-loop to ensure completion. subagent-driven-development acts as orchestrator dispatching subagents (implementer → spec review → quality review), executing-plans runs directly in main session. Both support user-defined additional rules.
+3. **writing-plans** - Activates with sprint contract confirmed. Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
 
-4. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
+4. **subagent-driven-development** or **executing-plans** - Activates with plan. Both driven by ralph-loop to ensure completion. subagent-driven-development acts as orchestrator dispatching subagents (implementer → spec review → quality review), executing-plans runs directly in main session. Both support user-defined additional rules.
 
-5. **requesting-code-review** - Activates between tasks. Reviews against plan, reports issues by severity. Critical issues block progress.
+5. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
 
-6. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard).
+6. **computational-sensors** - Activates before code review. Runs lint, typecheck, test, coverage and other deterministic checks to provide computational evidence for semantic review.
+
+7. **requesting-code-review** - Activates between tasks. Reviews against plan, reports issues by severity. Critical issues block progress.
+
+8. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard).
 
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
 
