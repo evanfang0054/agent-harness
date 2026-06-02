@@ -124,6 +124,15 @@ After the spec review loop passes, ask the user to review the written spec befor
 
 Wait for the user's response. If they request changes, make them and re-run the spec review loop. Only proceed once the user approves.
 
+**Sprint Contract:**
+
+After spec approval, before invoking writing-plans, use `superpowers:sprint-contract` to negotiate explicit Definition of Done. This prevents the common failure mode of "completed but not what was expected."
+
+Skip sprint contract only for:
+- Single-line typo fixes
+- Pure documentation changes
+- Truly trivial changes (no behavior modification)
+
 **Implementation:**
 
 - Invoke the writing-plans skill to create a detailed implementation plan

@@ -20,6 +20,18 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.
 
+## Sprint Contract Verification
+
+Before defining tasks, check for sprint contract:
+
+1. Look for `docs/superpowers/contracts/{feature-name}.contract.md`
+2. If exists: read and align plan tasks with Definition of Done
+3. If missing: prompt user to run `superpowers:sprint-contract` first
+   - User can skip with explicit "skip contract" — proceed without contract
+   - Default: assume contract exists from prior brainstorming phase
+
+**If contract exists:** Plan tasks must trace to contract acceptance criteria.
+
 ## File Structure
 
 Before defining tasks, map out which files will be created or modified and what each one is responsible for. This is where decomposition decisions get locked in.
