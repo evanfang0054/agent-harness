@@ -1,6 +1,7 @@
 ---
 name: executing-plans
 description: Use when you have a written implementation plan to execute iteratively in the current session with review checkpoints
+effort: medium
 argument-hint: "任务描述或 Plan 路径"
 ---
 

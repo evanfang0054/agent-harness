@@ -8,6 +8,7 @@ description: |
   Proactively suggest when the user has a plan or design doc and is about to
   start coding — to catch architecture issues before implementation.
   Suggest using after office-hours and plan-ceo-review.
+effort: high
 ---
 
 # Plan Review Mode

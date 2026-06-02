@@ -8,6 +8,7 @@ description: |
   Use when asked to "think bigger", "expand scope", "strategy review", "rethink this",
   or "is this ambitious enough".
   Suggest using after office-hours.
+effort: max
 ---
 
 # CEO Plan Review Mode
