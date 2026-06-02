@@ -57,6 +57,21 @@ cat .superpowers/learnings.jsonl 2>/dev/null | tail -20
 git diff --stat HEAD~50 --name-only | sort | uniq -c | sort -rn | head -20
 ```
 
+### Trace Analysis Input
+
+As part of data collection, run trace analyzer:
+
+```bash
+bash scripts/trace-analyzer.sh
+```
+
+Use the output to identify:
+- Recurring failure patterns
+- Trends in agent behavior
+- Specific skills that may need improvement
+
+Reference: `superpowers:trace-analysis` for interpretation guidance.
+
 ### Step 3: Structured Review
 
 Present findings in this format:
