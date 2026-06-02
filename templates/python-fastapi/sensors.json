@@ -1,0 +1,8 @@
+{
+  "sensors": [
+    { "name": "lint", "command": "ruff check .", "timeout": 60 },
+    { "name": "typecheck", "command": "mypy .", "timeout": 120 },
+    { "name": "test", "command": "pytest --tb=short", "timeout": 180 },
+    { "name": "coverage", "command": "pytest --cov=. --cov-report=term-missing --cov-fail-under=80", "timeout": 180 }
+  ]
+}
