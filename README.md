@@ -178,6 +178,7 @@ Superpowers 采用分层架构：**决策层**确保"做对的事"，**执行层
 **调试**
 - **systematic-debugging** - 4 阶段根因分析流程（包含根因追踪、纵深防御、基于条件的等待技术）
 - **verification-before-completion** - 确保问题真正修复
+- **loop-detection** - 检测代理反复编辑同一文件无法收敛的死循环
 
 **决策层**（灵感来自 gstack）
 - **office-hours** - YC 办公时间模式，回答"该不该做"，六个强迫性问题验证想法
@@ -187,15 +188,18 @@ Superpowers 采用分层架构：**决策层**确保"做对的事"，**执行层
 **协作**
 - **brainstorming** - 苏格拉底式设计细化（含 6 个强制性问题框架）
 - **writing-plans** - 详细的实现计划
+- **sprint-contract** - 头脑风暴后、编写计划前协商明确的完成标准
 - **executing-plans** - Ralph-loop 驱动执行，强制 TDD/Review/完成流程，支持自定义规则
 - **dispatching-parallel-agents** - 并发子代理工作流
 - **requesting-code-review** - 预审查清单
 - **receiving-code-review** - 响应反馈
 - **finishing-a-development-branch** - 合并/PR 决策工作流
 - **subagent-driven-development** - Ralph-loop 驱动协调者模式，派发子代理 + 两阶段审查
+- **computational-sensors** - 在语义审查前运行确定性检查（lint/类型检查/测试/覆盖率）
 
 **质量保证**
 - **qa-testing** - 系统化 QA 测试 Web 应用，自动修复 bug 并提交
+- **trace-analysis** - 跨 Session 失败模式分析，基于历史 learnings 数据
 
 **文档与运维**
 - **documentation-sync** - 代码变更后自动同步文档
@@ -208,6 +212,11 @@ Superpowers 采用分层架构：**决策层**确保"做对的事"，**执行层
 **元技能**
 - **writing-skills** - 按照最佳实践创建新技能（包含测试方法论）
 - **using-superpowers** - 技能系统介绍
+
+**Harness 工具**
+- **harness-init** - 初始化项目 harness 配置，支持 React/Python/Go 等技术栈模板
+- **harness-design** - HTML 高保真原型与交互 Demo 设计能力
+- **harness-optimizer** - 基于会话分析优化项目 workflow、skill 或 harness
 
 ## 设计理念
 

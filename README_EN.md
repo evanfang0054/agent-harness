@@ -179,28 +179,37 @@ Superpowers uses a layered architecture: **Decision Layer** ensures "doing the r
 **Debugging**
 - **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
 - **verification-before-completion** - Ensure it's actually fixed
+- **loop-detection** - Detect when an agent is stuck editing the same file repeatedly without converging
 
 **Decision Layer** (inspired by gstack)
 - **office-hours** - YC office hours mode, answers "should we build this?", six forcing questions
 - **plan-ceo-review** - CEO-level strategic review, 10-star thinking, challenge premises
 - **plan-eng-review** - Eng manager architecture review, lock in technical approach
 
-**Collaboration** 
+**Collaboration**
 - **brainstorming** - Socratic design refinement
 - **writing-plans** - Detailed implementation plans
+- **sprint-contract** - Negotiate explicit Definition of Done between brainstorming and writing-plans
 - **executing-plans** - Ralph-loop driven execution, enforces TDD/Review/finishing workflow, supports custom rules
 - **dispatching-parallel-agents** - Concurrent subagent workflows
 - **requesting-code-review** - Pre-review checklist
 - **receiving-code-review** - Responding to feedback
 - **finishing-a-development-branch** - Merge/PR decision workflow
 - **subagent-driven-development** - Ralph-loop driven orchestrator mode, dispatches subagents + two-stage review
+- **computational-sensors** - Run deterministic checks (lint/typecheck/test/coverage) before semantic review
 
 **Quality Assurance**
 - **qa-testing** - Systematically QA test web apps, auto-fix bugs with atomic commits
+- **trace-analysis** - Cross-session failure pattern analysis based on historical learnings data
 
 **Meta**
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
 - **using-superpowers** - Introduction to the skills system
+
+**Harness Tools**
+- **harness-init** - Bootstrap harness configuration from templates for React, Python, Go, etc.
+- **harness-design** - HTML hi-fi prototyping, interactive demos, and design exploration
+- **harness-optimizer** - Optimize project workflow, skills, or harness based on session analysis
 
 ## Philosophy
 
