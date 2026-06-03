@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 基于 spec `docs/superpowers/specs/2026-06-02-harness-optimization-design.md` 实施 P0-P3 全部 8 个优化方向，覆盖 loop detection、computational sensors、sprint contract、reasoning budget、trace analysis、FF/FB 分类、harness templates、coverage metrics。
+**Goal:** 基于 spec `docs/superpowers/specs/2026-06-02-harness-optimization-design.md` 实施 P0-P3 全部 7 个优化方向，覆盖 loop detection、computational sensors、sprint contract、trace analysis、FF/FB 分类、harness templates、coverage metrics。
 
 **Architecture:** 增量扩展——新增 5 个 skill + 3 个 script + 3 个 template 目录，修改约 10 个现有 skill 的 frontmatter。所有新增 skill 使用 `writing-skills` skill（TDD 流程）创建。完全向后兼容。
 
@@ -35,12 +35,8 @@
 | 路径 | 修改内容 |
 |------|---------|
 | `skills/verification-before-completion/SKILL.md` | 添加 loop detection + computational sensors 集成段落 |
-| `skills/brainstorming/SKILL.md` | frontmatter 添加 `effort: high`，正文添加 sprint-contract 提示 |
-| `skills/writing-plans/SKILL.md` | frontmatter 添加 `effort: high`，正文添加 sprint-contract 输入验证 |
-| `skills/plan-ceo-review/SKILL.md` | frontmatter 添加 `effort: max` |
-| `skills/plan-eng-review/SKILL.md` | frontmatter 添加 `effort: high` |
-| `skills/executing-plans/SKILL.md` | frontmatter 添加 `effort: medium` |
-| `skills/systematic-debugging/SKILL.md` | frontmatter 添加 `effort: high` |
+| `skills/brainstorming/SKILL.md` | 正文添加 sprint-contract 提示 |
+| `skills/writing-plans/SKILL.md` | 正文添加 sprint-contract 输入验证 |
 | `skills/retrospective/SKILL.md` | 添加 trace-analyzer + coverage-metrics 集成段落 |
 | 14 个 skills 的 frontmatter | 添加 `when_to_use` 中的 `[feedforward]` / `[feedback]` 标签 |
 
@@ -591,124 +587,6 @@ git commit -m "feat(skills): verify sprint contract in writing-plans input check
 
 Added Sprint Contract Verification section after Scope Check.
 If contract missing, prompt user to run sprint-contract (skip allowed)."
-```
-
----
-
-### Task 9: Reasoning Budget — Frontmatter Effort 字段批量添加
-
-**Files:**
-- Modify: 7 个 skill 的 SKILL.md frontmatter
-
-- [ ] **Step 1: brainstorming 添加 effort: high**
-
-修改 `skills/brainstorming/SKILL.md`，在 frontmatter 中 `description` 之后添加 `effort: high`：
-
-```yaml
----
-name: brainstorming
-description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation."
-effort: high
----
-```
-
-- [ ] **Step 2: writing-plans 添加 effort: high**
-
-修改 `skills/writing-plans/SKILL.md`：
-
-```yaml
----
-name: writing-plans
-description: Use when you have a spec or requirements for a multi-step task, before touching code
-effort: high
----
-```
-
-- [ ] **Step 3: plan-ceo-review 添加 effort: max**
-
-修改 `skills/plan-ceo-review/SKILL.md`，在 description 块之后添加 `effort: max`：
-
-```yaml
----
-name: plan-ceo-review
-description: |
-  CEO/founder-mode plan review...
-effort: max
----
-```
-
-- [ ] **Step 4: plan-eng-review 添加 effort: high**
-
-修改 `skills/plan-eng-review/SKILL.md`：
-
-```yaml
----
-name: plan-eng-review
-description: |
-  Eng manager-mode plan review...
-effort: high
----
-```
-
-- [ ] **Step 5: verification-before-completion 添加 effort: high**
-
-修改 `skills/verification-before-completion/SKILL.md`：
-
-```yaml
----
-name: verification-before-completion
-description: Use when about to claim work is complete...
-effort: high
----
-```
-
-- [ ] **Step 6: executing-plans 添加 effort: medium**
-
-修改 `skills/executing-plans/SKILL.md`：
-
-```yaml
----
-name: executing-plans
-description: Use when you have a written implementation plan to execute iteratively in the current session with review checkpoints
-effort: medium
-argument-hint: "任务描述或 Plan 路径"
----
-```
-
-- [ ] **Step 7: systematic-debugging 添加 effort: high**
-
-修改 `skills/systematic-debugging/SKILL.md`：
-
-```yaml
----
-name: systematic-debugging
-description: Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes
-effort: high
----
-```
-
-- [ ] **Step 8: 验证所有 7 个 frontmatter 修改**
-
-Run:
-```bash
-for skill in brainstorming writing-plans plan-ceo-review plan-eng-review verification-before-completion executing-plans systematic-debugging; do
-  echo "=== $skill ==="
-  head -10 skills/$skill/SKILL.md | grep -E "^(name|effort):"
-done
-```
-Expected: 每个 skill 都显示 `name:` 和 `effort:` 两行
-
-- [ ] **Step 9: Commit**
-
-```bash
-git add skills/brainstorming/SKILL.md skills/writing-plans/SKILL.md skills/plan-ceo-review/SKILL.md skills/plan-eng-review/SKILL.md skills/verification-before-completion/SKILL.md skills/executing-plans/SKILL.md skills/systematic-debugging/SKILL.md
-git commit -m "feat(skills): add effort frontmatter to 7 skills for reasoning budget
-
-- brainstorming/writing-plans/plan-eng-review/verification/systematic-debugging: high
-- plan-ceo-review: max
-- executing-plans: medium
-
-Implements Reasoning Sandwich pattern (high planning/verify, medium execution)."
 ```
 
 ---
@@ -1307,7 +1185,6 @@ Lists available templates and copies sensors.json to .superpowers/."
 #   - Computational sensor coverage
 #   - Loop detection enabled
 #   - Sprint contract usage
-#   - Reasoning budget coverage
 
 set -euo pipefail
 
@@ -1352,22 +1229,6 @@ if [ -d "${CONTRACTS_DIR}" ]; then
 else
     echo "Sprint Contracts:        0 files (directory not created)"
 fi
-
-# Reasoning budget
-effort_count=$(grep -rl "^effort:" "${SKILLS_DIR}"/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ')
-echo "Reasoning Budget:         ${effort_count} skills configured"
-echo ""
-echo "=== Gaps ==="
-
-if [ ! -f "${SENSORS_FILE}" ]; then
-    echo "- Missing sensors.json (run /harness-init or /computational-sensors)"
-fi
-if [ ! -d "${CONTRACTS_DIR}" ]; then
-    echo "- No sprint contracts directory (run /sprint-contract for next feature)"
-fi
-if [ "${effort_count}" -lt 7 ]; then
-    echo "- Only ${effort_count}/7 recommended skills have effort configured"
-fi
 ```
 
 - [ ] **Step 2: Make executable**
@@ -1385,8 +1246,7 @@ Expected: 输出完整的覆盖率报告，基于当前项目实际状态
 git add scripts/coverage-metrics.sh
 git commit -m "feat(scripts): add coverage-metrics.sh for harness coverage measurement
 
-Measures 6 dimensions: FF/FB skill coverage, sensors, loop detection,
-sprint contracts, reasoning budget.
+Measures 5 dimensions: FF/FB skill coverage, sensors, loop detection, sprint contracts.
 Outputs gaps list for improvement focus."
 ```
 
@@ -1451,12 +1311,6 @@ Expected: 全部 OK
 
 Run:
 ```bash
-echo "=== Effort field coverage ==="
-for skill in brainstorming writing-plans plan-ceo-review plan-eng-review verification-before-completion executing-plans systematic-debugging; do
-  grep -q "^effort:" skills/$skill/SKILL.md && echo "OK: $skill" || echo "MISSING: $skill"
-done
-
-echo ""
 echo "=== when_to_use tag coverage ==="
 for skill in brainstorming writing-plans sprint-contract test-driven-development verification-before-completion systematic-debugging receiving-code-review retrospective loop-detection trace-analysis requesting-code-review computational-sensors executing-plans subagent-driven-development; do
   grep -q "^when_to_use:" skills/$skill/SKILL.md && echo "OK: $skill" || echo "MISSING: $skill"
@@ -1475,7 +1329,7 @@ Expected: 三个新 script（loop-detector / trace-analyzer / coverage-metrics�
 - [ ] **Step 4: 运行 coverage-metrics 生成最终报告**
 
 Run: `scripts/coverage-metrics.sh`
-Expected: 所有维度覆盖率显著提升（FF/FB 都 ≥ 14，sensors 可配置，loop detection enabled，reasoning budget ≥ 7）
+Expected: 所有维度覆盖率显著提升（FF/FB 都 ≥ 14，sensors 可配置，loop detection enabled）
 
 - [ ] **Step 5: Commit final state**
 
@@ -1484,9 +1338,9 @@ git add -A
 git status
 git commit -m "chore: harness optimization P0-P3 complete
 
-8 optimization directions implemented:
+7 optimization directions implemented:
 - P0: loop detection + computational sensors
-- P1: sprint contract + reasoning budget
+- P1: sprint contract
 - P2: trace analysis + FF/FB classification
 - P3: harness templates + coverage metrics
 
@@ -1503,7 +1357,6 @@ Full backward compatibility maintained."
 - 4.1 Loop Detection → Task 1, 2, 3 ✓
 - 4.2 Computational Sensors → Task 4, 5 ✓
 - 4.3 Sprint Contract → Task 6, 7, 8 ✓
-- 4.4 Reasoning Budget → Task 9 ✓
 - 4.5 Trace Analysis → Task 10, 11, 12 ✓
 - 4.6 FF/FB 分类 → Task 13 ✓
 - 4.7 Harness Templates → Task 14, 15, 16, 17 ✓

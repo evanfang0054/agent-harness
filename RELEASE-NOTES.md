@@ -1,5 +1,11 @@
 # Superpowers Release Notes
 
+## v5.0.21-beta.1 (2026-06-03)
+
+### Changes
+
+- 移除了 Task 9（Reasoning Budget）、修改文件表中的 effort
+
 ## v5.0.21-beta.0 (2026-06-02)
 
 ### Changes
