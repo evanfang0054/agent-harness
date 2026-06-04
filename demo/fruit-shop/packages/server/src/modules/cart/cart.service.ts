@@ -60,23 +60,29 @@ export class CartService {
 
     const quantity = dto.quantity ?? 1;
 
-    // Upsert: insert or update quantity
-    await this.dataSource
-      .createQueryBuilder()
-      .insert()
-      .into(CartEntity)
-      .values({
+    // Check if item already exists in cart
+    const existing = await this.cartRepo.findOne({
+      where: {
+        userId,
+        productId: dto.productId,
+        specLabel: dto.specLabel,
+      },
+    });
+
+    if (existing) {
+      // Merge quantity
+      existing.quantity += quantity;
+      await this.cartRepo.save(existing);
+    } else {
+      // Insert new cart item
+      const cartItem = this.cartRepo.create({
         userId,
         productId: dto.productId,
         specLabel: dto.specLabel,
         quantity,
-      })
-      .orUpdate(['quantity = quantity + VALUES(quantity)'], [
-        'user_id',
-        'product_id',
-        'spec_label',
-      ])
-      .execute();
+      });
+      await this.cartRepo.save(cartItem);
+    }
 
     return this.findAll(userId);
   }

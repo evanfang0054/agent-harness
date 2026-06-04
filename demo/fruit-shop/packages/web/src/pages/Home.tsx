@@ -14,16 +14,9 @@ const MOCK_BANNERS = [
   { id: 3, image: '/banners/organic.jpg', title: '有机认证 安心好果' },
 ];
 
-const MOCK_CATEGORIES: Category[] = [
-  { id: 1, name: '热带水果', icon: '🌴', sortOrder: 1 },
-  { id: 2, name: '柑橘类', icon: '🍊', sortOrder: 2 },
-  { id: 3, name: '浆果类', icon: '🫐', sortOrder: 3 },
-  { id: 4, name: '瓜类', icon: '🍉', sortOrder: 4 },
-  { id: 5, name: '进口水果', icon: '✈️', sortOrder: 5 },
-];
-
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [keyword, setKeyword] = useState('');
   const [activeCategory, setActiveCategory] = useState<number | undefined>();
@@ -51,6 +44,12 @@ export default function Home() {
     },
     [],
   );
+
+  useEffect(() => {
+    productApi.getCategories().then((res) => {
+      setCategories(res.data.data || []);
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     setPage(1);
@@ -102,7 +101,7 @@ export default function Home() {
         {/* 分类标签 */}
         <section className="mt-4">
           <CategoryTabs
-            categories={MOCK_CATEGORIES}
+            categories={categories}
             activeId={activeCategory}
             onChange={handleCategoryChange}
           />
@@ -110,7 +109,7 @@ export default function Home() {
 
         {/* 快捷入口 */}
         <section className="mt-4 grid grid-cols-4 gap-3">
-          {MOCK_CATEGORIES.slice(0, 4).map((cat) => (
+          {categories.slice(0, 4).map((cat) => (
             <button
               key={cat.id}
               onClick={() => handleCategoryChange(cat.id)}
@@ -127,7 +126,7 @@ export default function Home() {
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-display text-lg font-semibold text-gray-800">
               {activeCategory
-                ? MOCK_CATEGORIES.find((c) => c.id === activeCategory)?.name || '精选好果'
+                ? categories.find((c) => c.id === activeCategory)?.name || '精选好果'
                 : '精选好果'}
             </h2>
           </div>

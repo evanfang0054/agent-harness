@@ -3,6 +3,7 @@ import type {
   ApiResponse,
   PaginatedResponse,
   Product,
+  Category,
   PaginationQuery,
 } from 'shared';
 
@@ -25,5 +26,9 @@ export const productApi = {
     return apiClient.get<ApiResponse<Product[]>>('/products/recommendations', {
       params: { limit },
     });
+  },
+
+  getCategories() {
+    return apiClient.get<ApiResponse<Category[]>>('/categories');
   },
 };

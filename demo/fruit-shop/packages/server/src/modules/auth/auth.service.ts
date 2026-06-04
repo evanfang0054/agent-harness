@@ -83,6 +83,7 @@ export class AuthService {
     // 查找用户（需要 password 字段）
     const user = await this.userRepo
       .createQueryBuilder('u')
+      .addSelect('u.password')
       .where('u.phone = :phone', { phone: dto.phone })
       .getOne();
 

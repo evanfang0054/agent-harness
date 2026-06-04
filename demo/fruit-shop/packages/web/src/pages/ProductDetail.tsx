@@ -154,6 +154,11 @@ export default function ProductDetail() {
             <span className="text-primary text-3xl font-bold font-display">
               ¥{product.price.toFixed(2)}
             </span>
+            {product.originalPrice && product.originalPrice > product.price && (
+              <span className="text-gray-400 text-sm line-through">
+                ¥{product.originalPrice.toFixed(2)}
+              </span>
+            )}
             {product.unit && (
               <span className="text-gray-400 text-sm">/{product.unit}</span>
             )}
@@ -170,6 +175,27 @@ export default function ProductDetail() {
                 </svg>
                 {product.origin} 产地直发
               </span>
+            </div>
+          )}
+          <div className="flex flex-wrap gap-2 mt-2">
+            {product.sweetness && (
+              <span className="text-xs text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">
+                甜度: {product.sweetness}
+              </span>
+            )}
+            {product.weight && (
+              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                {product.weight}
+              </span>
+            )}
+          </div>
+          {product.tags && product.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {product.tags.map((tag, idx) => (
+                <span key={idx} className="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                  {tag}
+                </span>
+              ))}
             </div>
           )}
         </div>
@@ -218,6 +244,16 @@ export default function ProductDetail() {
         {/* 商品详情 */}
         <div className="bg-white px-4 py-4 mt-2">
           <h3 className="text-sm font-semibold text-gray-800 mb-3">商品详情</h3>
+          {product.color && (
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xs text-gray-500">品牌色:</span>
+              <span
+                className="w-5 h-5 rounded-full border border-gray-200"
+                style={{ backgroundColor: product.color }}
+              />
+              <span className="text-xs text-gray-400">{product.color}</span>
+            </div>
+          )}
           {product.description ? (
             <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
               {product.description}
