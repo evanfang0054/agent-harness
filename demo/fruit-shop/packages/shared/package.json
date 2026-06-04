@@ -7,7 +7,7 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "require": "./dist/index.js"
+      "default": "./dist/index.js"
     }
   },
   "scripts": {
@@ -18,3 +18,4 @@
     "typescript": "^5.4.0"
   }
 }
+
