@@ -64,7 +64,7 @@ export default function Checkout() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-28">
+    <div className="min-h-screen bg-brand-bg pb-28">
       {/* Header */}
       <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-sm border-b border-gray-100">
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
@@ -93,7 +93,7 @@ export default function Checkout() {
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="请输入详细收货地址"
                 rows={2}
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors resize-none text-sm"
+                className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 bg-brand-bg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary transition-colors resize-none text-sm"
               />
             </div>
 
@@ -105,7 +105,7 @@ export default function Checkout() {
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="请输入收货人手机号"
                 maxLength={11}
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors text-sm"
+                className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 bg-brand-bg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary transition-colors text-sm"
               />
             </div>
 
@@ -119,7 +119,7 @@ export default function Checkout() {
                 onChange={(e) => setRemark(e.target.value)}
                 placeholder="对订单有什么要求？"
                 maxLength={100}
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors text-sm"
+                className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 bg-brand-bg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary transition-colors text-sm"
               />
             </div>
           </section>
@@ -144,7 +144,7 @@ export default function Checkout() {
                     )}
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="text-sm font-medium text-primary">
+                    <p className="text-sm font-medium text-brand-primary">
                       ¥{Number(item.product.price).toFixed(2)}
                     </p>
                     <p className="text-xs text-gray-400">x{item.quantity}</p>
@@ -163,7 +163,7 @@ export default function Checkout() {
               </div>
               <div className="flex justify-between text-gray-600">
                 <span>配送费</span>
-                <span className={shippingFee === 0 ? 'text-success' : ''}>
+                <span className={shippingFee === 0 ? 'text-brand-green' : ''}>
                   {shippingFee === 0 ? '免运费' : `¥${Number(shippingFee).toFixed(2)}`}
                 </span>
               </div>
@@ -174,7 +174,7 @@ export default function Checkout() {
               )}
               <div className="border-t border-gray-100 pt-2 flex justify-between items-center">
                 <span className="font-medium text-gray-800">合计</span>
-                <span className="text-xl font-bold text-primary">
+                <span className="text-xl font-bold text-brand-primary">
                   ¥{Number(totalAmount).toFixed(2)}
                 </span>
               </div>
@@ -188,14 +188,14 @@ export default function Checkout() {
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
           <div>
             <span className="text-sm text-gray-500">应付：</span>
-            <span className="text-xl font-bold text-primary">
+            <span className="text-xl font-bold text-brand-primary">
               ¥{Number(totalAmount).toFixed(2)}
             </span>
           </div>
           <button
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="px-8 py-2.5 bg-primary text-white text-sm font-semibold rounded-full hover:opacity-90 disabled:opacity-50 transition-opacity"
+            className="px-8 py-2.5 bg-brand-primary text-white text-sm font-semibold rounded-full hover:opacity-90 disabled:opacity-50 transition-opacity"
           >
             {isSubmitting ? '提交中...' : '提交订单'}
           </button>

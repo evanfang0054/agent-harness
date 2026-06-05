@@ -74,7 +74,7 @@ export default function Cart() {
   // Empty state
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 pb-20">
+      <div className="min-h-screen bg-brand-bg pb-20">
         <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-sm border-b border-gray-100">
           <div className="max-w-lg mx-auto px-4 py-3">
             <h1 className="text-lg font-semibold text-gray-900 text-center">购物车</h1>
@@ -89,7 +89,7 @@ export default function Cart() {
           <p className="text-gray-400 mt-4 text-sm">购物车空空如也</p>
           <button
             onClick={() => navigate('/')}
-            className="mt-4 px-6 py-2 bg-primary text-white text-sm rounded-full hover:opacity-90 transition-opacity"
+            className="mt-4 px-6 py-2 bg-brand-primary text-white text-sm rounded-full hover:opacity-90 transition-opacity"
           >
             去逛逛
           </button>
@@ -99,7 +99,7 @@ export default function Cart() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-36">
+    <div className="min-h-screen bg-brand-bg pb-36">
       {/* Header */}
       <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-sm border-b border-gray-100">
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
@@ -120,7 +120,7 @@ export default function Cart() {
               onClick={() => toggleSelect(item.id)}
               className={`w-5 h-5 mt-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-colors ${
                 item.selected
-                  ? 'bg-primary border-primary'
+                  ? 'bg-brand-primary border-brand-primary'
                   : 'border-gray-300'
               }`}
             >
@@ -158,7 +158,7 @@ export default function Cart() {
               </div>
 
               <div className="flex items-center justify-between mt-2">
-                <span className="text-primary font-semibold text-sm">
+                <span className="text-brand-primary font-semibold text-sm">
                   ¥{Number(item.product.price).toFixed(2)}
                   {item.product.unit && (
                     <span className="text-xs text-gray-400 font-normal">
@@ -184,7 +184,7 @@ export default function Cart() {
                   <button
                     onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
                     disabled={loadingItemId === item.id}
-                    className="w-7 h-7 flex items-center justify-center rounded-full bg-primary text-white hover:opacity-90 disabled:opacity-40 transition-opacity"
+                    className="w-7 h-7 flex items-center justify-center rounded-full bg-brand-primary text-white hover:opacity-90 disabled:opacity-40 transition-opacity"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M12 5v14M5 12h14" />
@@ -198,7 +198,7 @@ export default function Cart() {
             <button
               onClick={() => handleRemove(item.id)}
               disabled={loadingItemId === item.id}
-              className="self-start mt-1 p-1 text-gray-300 hover:text-danger transition-colors"
+              className="self-start mt-1 p-1 text-gray-300 hover:text-brand-coral transition-colors"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M18 6L6 18M6 6l12 12" />
@@ -218,7 +218,7 @@ export default function Cart() {
             <span
               className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
                 isSelectedAll()
-                  ? 'bg-primary border-primary'
+                  ? 'bg-brand-primary border-brand-primary'
                   : 'border-gray-300'
               }`}
             >
@@ -234,14 +234,14 @@ export default function Cart() {
           <div className="flex items-center gap-4">
             <div className="text-right">
               <span className="text-sm text-gray-500">合计：</span>
-              <span className="text-lg font-bold text-primary">
+              <span className="text-lg font-bold text-brand-primary">
                 ¥{Number(total).toFixed(2)}
               </span>
             </div>
             <button
               onClick={handleCheckout}
               disabled={selectedCount === 0 || isUpdating}
-              className="px-6 py-2.5 bg-primary text-white text-sm font-semibold rounded-full hover:opacity-90 disabled:opacity-40 transition-opacity"
+              className="px-6 py-2.5 bg-brand-primary text-white text-sm font-semibold rounded-full hover:opacity-90 disabled:opacity-40 transition-opacity"
             >
               结算({selectedCount})
             </button>
