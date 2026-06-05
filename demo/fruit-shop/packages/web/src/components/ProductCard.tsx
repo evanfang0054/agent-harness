@@ -8,42 +8,49 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const navigate = useNavigate();
 
-  const formatPrice = (price: number) => {
-    return price.toFixed(2);
-  };
+  const tags = product.tags || [];
 
   return (
     <div
       onClick={() => navigate(`/product/${product.id}`)}
-      className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group"
+      className="bg-brand-card rounded-3xl border border-brand-border overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
     >
-      <div className="relative aspect-square overflow-hidden bg-gray-100">
+      <div className="relative">
         <img
           src={product.image || '/placeholder-fruit.png'}
           alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          className="w-full h-[160px] object-cover"
         />
-        {product.origin && (
-          <span className="absolute top-2 left-2 bg-primary/90 text-white text-xs px-2 py-0.5 rounded-full">
-            {product.origin}
-          </span>
+        {tags[0] && (
+          <div
+            className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full text-[10px] font-bold text-white"
+            style={{ background: (product.color || '#FF6B35') + 'CC' }}
+          >
+            {tags[0]}
+          </div>
         )}
       </div>
       <div className="p-3">
-        <h3 className="text-sm font-medium text-gray-800 line-clamp-1">
-          {product.name}
-        </h3>
-        {product.description && (
-          <p className="text-xs text-gray-500 mt-1 line-clamp-1">
-            {product.description}
-          </p>
-        )}
-        <div className="flex items-baseline gap-1 mt-2">
-          <span className="text-lg font-bold text-primary">
-            ¥{formatPrice(product.price)}
-          </span>
-          {product.unit && (
-            <span className="text-xs text-gray-400">/{product.unit}</span>
+        <div className="flex items-center justify-between">
+          <h3 className="text-[15px] font-bold text-brand-dark">{product.name}</h3>
+          {product.origin && (
+            <span className="text-[11px] text-brand-muted">{product.origin}</span>
+          )}
+        </div>
+        <div className="flex items-baseline justify-between mt-2">
+          <div className="flex items-baseline gap-1">
+            <span className="text-xs text-brand-primary font-bold">¥</span>
+            <span className="text-xl font-extrabold text-brand-primary font-display leading-none">
+              {product.price}
+            </span>
+            {product.unit && (
+              <span className="text-[11px] text-brand-muted ml-0.5">/{product.unit}</span>
+            )}
+          </div>
+          {product.originalPrice && product.originalPrice > product.price && (
+            <span className="text-[11px] text-gray-300 line-through">
+              ¥{product.originalPrice}
+            </span>
           )}
         </div>
       </div>
