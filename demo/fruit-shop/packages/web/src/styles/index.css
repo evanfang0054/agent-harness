@@ -2,21 +2,31 @@
 @import "tailwindcss";
 
 @theme {
-  /* 品牌主色 */
+  /* 品牌色 — 与静态模板 1:1 */
+  --color-brand-bg: #FFF8F0;
+  --color-brand-primary: #FF6B35;
+  --color-brand-secondary: #F7C948;
+  --color-brand-accent: #E84393;
+  --color-brand-green: #00B894;
+  --color-brand-dark: #2D3436;
+  --color-brand-muted: #636E72;
+  --color-brand-card: #FFFFFF;
+  --color-brand-peach: #FFEAA7;
+  --color-brand-coral: #FF7675;
+  --color-brand-border: #f0ece6;
+  --color-brand-btn-bg: #f5f1eb;
+
+  /* 保留旧 token 供其他页面用 */
   --color-primary: #FF6B35;
   --color-primary-light: #FF8C5A;
   --color-primary-dark: #E55A2B;
-
-  /* 强调色 */
   --color-accent: #FFD32A;
-
-  /* 语义色 */
   --color-success: #26DE81;
   --color-danger: #FF6B6B;
   --color-warning: #FFA502;
   --color-info: #45AAF2;
 
-  /* 中性色 */
+  /* 灰色梯度 */
   --color-gray-50: #FAFAFA;
   --color-gray-100: #F5F5F5;
   --color-gray-200: #EEEEEE;
@@ -29,7 +39,7 @@
   --color-gray-900: #212121;
 
   /* 字体 */
-  --font-display: 'Fredoka', sans-serif;
+  --font-display: 'Fredoka', 'Noto Sans SC', sans-serif;
   --font-body: 'Noto Sans SC', sans-serif;
 }
 
@@ -50,8 +60,8 @@ html {
 
 body {
   min-height: 100vh;
-  color: var(--color-gray-900);
-  background-color: #FFFFFF;
+  color: var(--color-brand-dark);
+  background-color: var(--color-brand-bg);
 }
 
 #root {
@@ -78,7 +88,11 @@ body {
   background: var(--color-gray-400);
 }
 
-/* 常用工具类 */
+/* 隐藏横向滚动条 */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* 工具类 */
 .font-display {
   font-family: var(--font-display);
 }
@@ -97,7 +111,7 @@ body {
   overflow: hidden;
 }
 
-/* 安全区域适配 */
+/* 安全区域 */
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
