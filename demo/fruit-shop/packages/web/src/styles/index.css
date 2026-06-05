@@ -16,7 +16,20 @@
   --color-brand-border: #f0ece6;
   --color-brand-btn-bg: #f5f1eb;
 
-  /* 保留旧 token 供其他页面用 */
+  /* 圆角语义 token */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+  --radius-full: 9999px;
+
+  /* 渐变 token */
+  --gradient-cta: linear-gradient(135deg, #FF6B35, #FF7675);
+  --gradient-promo: linear-gradient(135deg, #FF6B35 0%, #FF7675 50%, #F7C948 100%);
+  --gradient-desc: linear-gradient(135deg, #FFEAA744, #F7C94822);
+
+  /* 旧 token 定义保留（已无内部 .tsx 使用） */
   --color-primary: #FF6B35;
   --color-primary-light: #FF8C5A;
   --color-primary-dark: #E55A2B;
