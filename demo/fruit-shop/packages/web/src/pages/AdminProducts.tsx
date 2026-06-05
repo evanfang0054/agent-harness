@@ -15,7 +15,7 @@ const STATUS_LABELS: Record<ProductStatus, string> = {
 
 const STATUS_COLORS: Record<ProductStatus, string> = {
   [ProductStatus.OFF]: 'text-gray-400',
-  [ProductStatus.ON]: 'text-success',
+  [ProductStatus.ON]: 'text-brand-green',
 };
 
 interface ProductFormData {
@@ -71,7 +71,7 @@ export default function AdminProducts() {
         <p className="text-gray-400">无权访问此页面</p>
         <button
           onClick={() => navigate('/')}
-          className="mt-4 text-primary text-sm hover:underline"
+          className="mt-4 text-brand-primary text-sm hover:underline"
         >
           返回首页
         </button>
@@ -195,7 +195,7 @@ export default function AdminProducts() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-brand-bg">
       {/* Header */}
       <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-sm border-b border-gray-200">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -212,7 +212,7 @@ export default function AdminProducts() {
           </div>
           <button
             onClick={openCreateModal}
-            className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:opacity-90 transition-opacity"
+            className="px-4 py-2 bg-brand-primary text-white text-sm font-medium rounded-2xl hover:opacity-90 transition-opacity"
           >
             + 新增商品
           </button>
@@ -227,11 +227,11 @@ export default function AdminProducts() {
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             placeholder="搜索商品..."
-            className="flex-1 px-4 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+            className="flex-1 px-4 py-2 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
           />
           <button
             type="submit"
-            className="px-4 py-2 bg-primary text-white text-sm rounded-lg hover:opacity-90 transition-opacity"
+            className="px-4 py-2 bg-brand-primary text-white text-sm rounded-2xl hover:opacity-90 transition-opacity"
           >
             搜索
           </button>
@@ -248,11 +248,11 @@ export default function AdminProducts() {
           </div>
         ) : (
           <>
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="bg-gray-50 border-b border-gray-100">
+                    <tr className="bg-brand-bg border-b border-gray-100">
                       <th className="px-4 py-3 text-left font-medium text-gray-600">商品</th>
                       <th className="px-4 py-3 text-left font-medium text-gray-600">价格</th>
                       <th className="px-4 py-3 text-left font-medium text-gray-600">库存</th>
@@ -260,12 +260,12 @@ export default function AdminProducts() {
                       <th className="px-4 py-3 text-right font-medium text-gray-600">操作</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-brand-bg">
                     {products.map((product) => (
-                      <tr key={product.id} className="hover:bg-gray-50 transition-colors">
+                      <tr key={product.id} className="hover:bg-brand-bg transition-colors">
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                            <div className="w-10 h-10 rounded-2xl overflow-hidden bg-gray-100 flex-shrink-0">
                               <img
                                 src={product.image || '/placeholder-fruit.png'}
                                 alt={product.name}
@@ -281,7 +281,7 @@ export default function AdminProducts() {
                           </div>
                         </td>
                         <td className="px-4 py-3">
-                          <span className="text-primary font-medium">
+                          <span className="text-brand-primary font-medium">
                             ¥{Number(product.price).toFixed(2)}
                           </span>
                           {product.originalPrice && (
@@ -300,13 +300,13 @@ export default function AdminProducts() {
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => openEditModal(product)}
-                              className="px-2 py-1 text-xs text-primary hover:bg-primary/10 rounded transition-colors"
+                              className="px-2 py-1 text-xs text-brand-primary hover:bg-brand-primary/10 rounded transition-colors"
                             >
                               编辑
                             </button>
                             <button
                               onClick={() => setDeleteTarget(product)}
-                              className="px-2 py-1 text-xs text-danger hover:bg-danger/10 rounded transition-colors"
+                              className="px-2 py-1 text-xs text-brand-coral hover:bg-brand-coral/10 rounded transition-colors"
                             >
                               删除
                             </button>
@@ -325,7 +325,7 @@ export default function AdminProducts() {
                 <button
                   onClick={handleLoadMore}
                   disabled={isLoading}
-                  className="px-6 py-2 text-sm text-primary border border-primary/30 rounded-lg hover:bg-primary/5 disabled:opacity-50 transition-colors"
+                  className="px-6 py-2 text-sm text-brand-primary border border-brand-primary/30 rounded-2xl hover:bg-brand-primary/5 disabled:opacity-50 transition-colors"
                 >
                   {isLoading ? '加载中...' : '加载更多'}
                 </button>
@@ -361,7 +361,7 @@ export default function AdminProducts() {
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="请输入商品名称"
-                  className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                  className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
                 />
               </div>
 
@@ -374,7 +374,7 @@ export default function AdminProducts() {
                     value={form.price}
                     onChange={(e) => setForm({ ...form, price: e.target.value })}
                     placeholder="0.00"
-                    className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                    className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
                   />
                 </div>
                 <div>
@@ -385,7 +385,7 @@ export default function AdminProducts() {
                     value={form.originalPrice}
                     onChange={(e) => setForm({ ...form, originalPrice: e.target.value })}
                     placeholder="0.00（选填）"
-                    className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                    className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
                   />
                 </div>
               </div>
@@ -398,7 +398,7 @@ export default function AdminProducts() {
                     value={form.origin}
                     onChange={(e) => setForm({ ...form, origin: e.target.value })}
                     placeholder="产地"
-                    className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                    className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
                   />
                 </div>
                 <div>
@@ -408,7 +408,7 @@ export default function AdminProducts() {
                     value={form.unit}
                     onChange={(e) => setForm({ ...form, unit: e.target.value })}
                     placeholder="斤"
-                    className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                    className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
                   />
                 </div>
               </div>
@@ -421,7 +421,7 @@ export default function AdminProducts() {
                     value={form.categoryId}
                     onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
                     placeholder="分类ID"
-                    className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                    className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
                   />
                 </div>
                 <div>
@@ -431,7 +431,7 @@ export default function AdminProducts() {
                     value={form.stock}
                     onChange={(e) => setForm({ ...form, stock: e.target.value })}
                     placeholder="库存数量"
-                    className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                    className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
                   />
                 </div>
               </div>
@@ -443,7 +443,7 @@ export default function AdminProducts() {
                   value={form.image}
                   onChange={(e) => setForm({ ...form, image: e.target.value })}
                   placeholder="图片URL"
-                  className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                  className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
                 />
               </div>
 
@@ -454,7 +454,7 @@ export default function AdminProducts() {
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   placeholder="商品描述（选填）"
                   rows={3}
-                  className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none"
+                  className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary resize-none"
                 />
               </div>
 
@@ -463,7 +463,7 @@ export default function AdminProducts() {
                 <select
                   value={form.status}
                   onChange={(e) => setForm({ ...form, status: Number(e.target.value) as ProductStatus })}
-                  className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                  className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
                 >
                   <option value={ProductStatus.ON}>上架</option>
                   <option value={ProductStatus.OFF}>下架</option>
@@ -474,14 +474,14 @@ export default function AdminProducts() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex-1 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-2xl hover:bg-brand-bg transition-colors"
                 >
                   取消
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 py-2.5 text-sm text-white bg-primary rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity"
+                  className="flex-1 py-2.5 text-sm text-white bg-brand-primary rounded-2xl hover:opacity-90 disabled:opacity-50 transition-opacity"
                 >
                   {isSubmitting ? '保存中...' : '保存'}
                 </button>
@@ -502,14 +502,14 @@ export default function AdminProducts() {
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteTarget(null)}
-                className="flex-1 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex-1 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-2xl hover:bg-brand-bg transition-colors"
               >
                 取消
               </button>
               <button
                 onClick={handleDelete}
                 disabled={isDeleting}
-                className="flex-1 py-2.5 text-sm text-white bg-danger rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity"
+                className="flex-1 py-2.5 text-sm text-white bg-brand-coral rounded-2xl hover:opacity-90 disabled:opacity-50 transition-opacity"
               >
                 {isDeleting ? '删除中...' : '删除'}
               </button>

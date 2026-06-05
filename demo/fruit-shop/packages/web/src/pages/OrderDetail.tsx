@@ -14,10 +14,10 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
 };
 
 const STATUS_BG: Record<OrderStatus, string> = {
-  [OrderStatus.PENDING]: 'bg-warning',
-  [OrderStatus.PAID]: 'bg-info',
-  [OrderStatus.SHIPPED]: 'bg-primary',
-  [OrderStatus.COMPLETED]: 'bg-success',
+  [OrderStatus.PENDING]: 'bg-brand-secondary',
+  [OrderStatus.PAID]: 'bg-brand-accent',
+  [OrderStatus.SHIPPED]: 'bg-brand-primary',
+  [OrderStatus.COMPLETED]: 'bg-brand-green',
   [OrderStatus.CANCELLED]: 'bg-gray-400',
 };
 
@@ -64,7 +64,7 @@ export default function OrderDetail() {
         <p className="text-gray-400 text-sm">订单不存在</p>
         <button
           onClick={() => navigate('/orders')}
-          className="mt-4 text-primary text-sm hover:underline"
+          className="mt-4 text-brand-primary text-sm hover:underline"
         >
           返回订单列表
         </button>
@@ -75,7 +75,7 @@ export default function OrderDetail() {
   const order = currentOrder;
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="min-h-screen bg-brand-bg pb-24">
       {/* Header */}
       <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-sm border-b border-gray-100">
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
@@ -104,7 +104,7 @@ export default function OrderDetail() {
         {/* Shipping info */}
         <section className="bg-white rounded-2xl p-4 shadow-sm">
           <h2 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-brand-primary">
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
               <circle cx="12" cy="10" r="3" />
             </svg>
@@ -148,7 +148,7 @@ export default function OrderDetail() {
                   )}
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="text-sm font-medium text-primary">
+                  <p className="text-sm font-medium text-brand-primary">
                     ¥{Number(item.price).toFixed(2)}
                   </p>
                   <p className="text-xs text-gray-400">x{item.quantity}</p>
@@ -159,7 +159,7 @@ export default function OrderDetail() {
 
           <div className="border-t border-gray-100 mt-3 pt-3 flex justify-between items-center">
             <span className="text-sm text-gray-500">订单总额</span>
-            <span className="text-lg font-bold text-primary">
+            <span className="text-lg font-bold text-brand-primary">
               ¥{Number(order.totalAmount).toFixed(2)}
             </span>
           </div>
@@ -172,14 +172,14 @@ export default function OrderDetail() {
           <div className="max-w-lg mx-auto px-4 py-3 flex gap-3">
             <button
               onClick={() => navigate('/orders')}
-              className="flex-1 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-full hover:bg-gray-50 transition-colors"
+              className="flex-1 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-full hover:bg-brand-bg transition-colors"
             >
               返回列表
             </button>
             <button
               onClick={handleCancel}
               disabled={isCancelling}
-              className="flex-1 py-2.5 text-sm text-white bg-danger rounded-full hover:opacity-90 disabled:opacity-50 transition-opacity"
+              className="flex-1 py-2.5 text-sm text-white bg-brand-coral rounded-full hover:opacity-90 disabled:opacity-50 transition-opacity"
             >
               {isCancelling ? '取消中...' : '取消订单'}
             </button>

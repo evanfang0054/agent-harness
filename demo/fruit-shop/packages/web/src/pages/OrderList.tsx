@@ -23,10 +23,10 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
 };
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
-  [OrderStatus.PENDING]: 'text-warning',
-  [OrderStatus.PAID]: 'text-info',
-  [OrderStatus.SHIPPED]: 'text-primary',
-  [OrderStatus.COMPLETED]: 'text-success',
+  [OrderStatus.PENDING]: 'text-brand-secondary',
+  [OrderStatus.PAID]: 'text-brand-accent',
+  [OrderStatus.SHIPPED]: 'text-brand-primary',
+  [OrderStatus.COMPLETED]: 'text-brand-green',
   [OrderStatus.CANCELLED]: 'text-gray-400',
 };
 
@@ -55,7 +55,7 @@ export default function OrderList() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-brand-bg pb-20">
       {/* Header */}
       <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-sm border-b border-gray-100">
         <div className="max-w-lg mx-auto">
@@ -70,7 +70,7 @@ export default function OrderList() {
                 onClick={() => handleTabChange(tab.value)}
                 className={`px-3 py-1.5 text-xs font-medium rounded-full whitespace-nowrap transition-colors ${
                   activeTab === tab.value
-                    ? 'bg-primary text-white'
+                    ? 'bg-brand-primary text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
@@ -115,7 +115,7 @@ export default function OrderList() {
                 <button
                   onClick={handleLoadMore}
                   disabled={isLoading}
-                  className="px-6 py-2 text-sm text-primary border border-primary/30 rounded-full hover:bg-primary/5 disabled:opacity-50 transition-colors"
+                  className="px-6 py-2 text-sm text-brand-primary border border-brand-primary/30 rounded-full hover:bg-brand-primary/5 disabled:opacity-50 transition-colors"
                 >
                   {isLoading ? '加载中...' : '查看更多'}
                 </button>
@@ -153,7 +153,7 @@ function OrderCard({ order, onClick }: { order: Order; onClick: () => void }) {
           </p>
         </div>
         <div className="text-right">
-          <p className="text-lg font-bold text-primary">
+          <p className="text-lg font-bold text-brand-primary">
             ¥{Number(order.totalAmount).toFixed(2)}
           </p>
           <p className="text-xs text-gray-400">
