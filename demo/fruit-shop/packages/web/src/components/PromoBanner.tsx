@@ -1,65 +1,28 @@
-import { useState, useEffect } from 'react';
-
-interface Banner {
-  id: number;
-  image: string;
-  title: string;
-  link?: string;
-}
-
-interface PromoBannerProps {
-  banners: Banner[];
-}
-
-export function PromoBanner({ banners }: PromoBannerProps) {
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  useEffect(() => {
-    if (banners.length <= 1) return;
-    const timer = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % banners.length);
-    }, 4000);
-    return () => clearInterval(timer);
-  }, [banners.length]);
-
-  if (banners.length === 0) return null;
-
+export function PromoBanner() {
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl aspect-[2/1]">
+    <div className="px-4 py-3">
       <div
-        className="flex transition-transform duration-500 ease-out h-full"
-        style={{ transform: `translateX(-${activeIndex * 100}%)` }}
+        className="relative rounded-3xl overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, #FF6B35 0%, #FF7675 50%, #F7C948 100%)',
+        }}
       >
-        {banners.map((banner) => (
-          <div key={banner.id} className="min-w-full h-full relative">
-            <img
-              src={banner.image}
-              alt={banner.title}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-            <h3 className="absolute bottom-3 left-4 text-white font-display text-lg font-semibold drop-shadow-md">
-              {banner.title}
-            </h3>
+        <div className="px-6 py-5 relative z-10">
+          <div className="text-white/80 text-xs font-semibold tracking-wider mb-1">
+            限时特惠
           </div>
-        ))}
-      </div>
-
-      {banners.length > 1 && (
-        <div className="absolute bottom-2 right-3 flex gap-1.5">
-          {banners.map((_, idx) => (
-            <button
-              key={idx}
-              onClick={() => setActiveIndex(idx)}
-              className={`w-2 h-2 rounded-full transition-all ${
-                idx === activeIndex
-                  ? 'bg-white w-4'
-                  : 'bg-white/60'
-              }`}
-            />
-          ))}
+          <div className="text-white text-xl font-black leading-tight">
+            新人首单立减 ¥10
+          </div>
+          <div className="text-white/70 text-xs mt-1">满 49 元可用 · 今日有效</div>
+          <div className="mt-3 inline-block px-4 py-1.5 bg-white rounded-full text-brand-primary text-xs font-bold cursor-pointer">
+            立即领取 →
+          </div>
         </div>
-      )}
+        {/* 装饰圆 */}
+        <div className="absolute -right-4 -top-4 w-24 h-24 rounded-full bg-white/10" />
+        <div className="absolute right-8 -bottom-6 w-20 h-20 rounded-full bg-white/10" />
+      </div>
     </div>
   );
 }
