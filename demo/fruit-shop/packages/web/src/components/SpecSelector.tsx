@@ -22,25 +22,31 @@ export function SpecSelector({ specs, onChange }: SpecSelectorProps) {
   if (specs.length === 0) return null;
 
   return (
-    <div className="space-y-4">
+    <div className="px-5 pb-4 space-y-4">
       {specs.map((spec) => (
         <div key={spec.name}>
-          <h4 className="text-sm font-medium text-gray-700 mb-2">{spec.name}</h4>
-          <div className="flex flex-wrap gap-2">
+          <div className="text-sm font-bold text-brand-dark mb-2.5">{spec.name}</div>
+          <div className="flex gap-2.5 flex-wrap">
             {spec.values.map((value) => {
               const isActive = selected[spec.name] === value;
               return (
-                <button
+                <div
                   key={value}
                   onClick={() => handleSelect(spec.name, value)}
-                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                    isActive
-                      ? 'bg-primary text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
+                  className="py-2.5 px-[18px] rounded-2xl cursor-pointer transition-all duration-200"
+                  style={{
+                    border: isActive ? '2.5px solid #FF6B35' : '2px solid #eee',
+                    background: isActive ? '#FF6B3510' : '#FFFFFF',
+                  }}
                 >
-                  {value}
-                </button>
+                  <div
+                    className={`text-sm font-semibold ${
+                      isActive ? 'text-brand-primary' : 'text-brand-dark'
+                    }`}
+                  >
+                    {value}
+                  </div>
+                </div>
               );
             })}
           </div>
