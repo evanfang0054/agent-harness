@@ -2,7 +2,14 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { productApi } from '@/api/product';
 import type { Product } from 'shared';
+import { ProductHero } from '@/components/ProductHero';
+import { ProductName } from '@/components/ProductName';
+import { PriceSection } from '@/components/PriceSection';
 import { SpecSelector } from '@/components/SpecSelector';
+import { QualityInfo } from '@/components/QualityInfo';
+import { Description } from '@/components/Description';
+import { RecommendFruits } from '@/components/RecommendFruits';
+import { DecorDots } from '@/components/DecorDots';
 import { BuyBar } from '@/components/BuyBar';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useToast } from '@/components/Toast';
@@ -13,9 +20,8 @@ export default function ProductDetail() {
   const { showToast } = useToast();
 
   const [product, setProduct] = useState<Product | null>(null);
+  const [recommendations, setRecommendations] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     if (!id) return;
@@ -36,9 +42,21 @@ export default function ProductDetail() {
     fetchProduct();
   }, [id, navigate, showToast]);
 
+  useEffect(() => {
+    productApi
+      .getRecommendations(5)
+      .then((res) => {
+        const items = res.data.data || [];
+        setRecommendations(
+          items.filter((p: Product) => p.id !== Number(id)).slice(0, 4),
+        );
+      })
+      .catch(() => {});
+  }, [id]);
+
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-brand-bg">
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -46,12 +64,7 @@ export default function ProductDetail() {
 
   if (!product) return null;
 
-  const images = (product as Product & { images?: string[] }).images?.length
-    ? (product as Product & { images?: string[] }).images!
-    : ['/placeholder-fruit.png'];
-  const currentPrice = product.price * quantity;
-
-  // 解析规格：假设 product 有 specs 字段（JSON 存储的规格信息）
+  // 解析规格
   const specs: Array<{ name: string; values: string[] }> = [];
   if ((product as Product & { specs?: string }).specs) {
     try {
@@ -66,203 +79,107 @@ export default function ProductDetail() {
         });
       }
     } catch {
-      // specs 格式不合法，忽略
+      // 忽略
     }
   }
 
+  const handleRecommendClick = (productId: number) => {
+    navigate(`/product/${productId}`);
+    window.scrollTo(0, 0);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      {/* 顶部导航 */}
-      <header className="fixed top-0 left-0 right-0 z-30 safe-top">
-        <div className="max-w-lg mx-auto flex items-center justify-between px-4 py-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="w-9 h-9 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm shadow-sm"
+    <div className="relative bg-brand-bg min-h-screen animate-fade-in">
+      <DecorDots />
+
+      {/* 导航栏 */}
+      <div className="flex items-center justify-between px-4 py-3 bg-brand-bg/90 backdrop-blur-[10px] sticky top-0 z-50">
+        <div
+          onClick={() => navigate(-1)}
+          className="cursor-pointer flex items-center gap-1"
+        >
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#2D3436"
+            strokeWidth="2.5"
+            strokeLinecap="round"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <div className="flex gap-2">
-            <button
-              onClick={() => navigate('/')}
-              className="w-9 h-9 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm shadow-sm"
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </div>
+        <span className="font-bold text-[17px] text-brand-dark">{product.name}</span>
+        <div className="flex gap-3">
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#2D3436"
+            strokeWidth="2"
+            strokeLinecap="round"
+          >
+            <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8" />
+            <polyline points="16,6 12,2 8,6" />
+            <line x1="12" y1="2" x2="12" y2="15" />
+          </svg>
+          <div className="relative cursor-pointer" onClick={() => navigate('/cart')}>
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#2D3436"
+              strokeWidth="2"
+              strokeLinecap="round"
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-              </svg>
-            </button>
+              <circle cx="9" cy="21" r="1" />
+              <circle cx="20" cy="21" r="1" />
+              <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" />
+            </svg>
           </div>
         </div>
-      </header>
-
-      {/* 商品图片轮播 */}
-      <div className="relative aspect-square bg-white">
-        <div
-          className="flex transition-transform duration-300 h-full"
-          style={{ transform: `translateX(-${currentImageIndex * 100}%)` }}
-        >
-          {images.map((img, idx) => (
-            <div key={idx} className="min-w-full h-full">
-              <img
-                src={img}
-                alt={`${product.name} ${idx + 1}`}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          ))}
-        </div>
-
-        {images.length > 1 && (
-          <>
-            <button
-              onClick={() =>
-                setCurrentImageIndex((prev) =>
-                  prev === 0 ? images.length - 1 : prev - 1,
-                )
-              }
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 shadow"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
-            </button>
-            <button
-              onClick={() =>
-                setCurrentImageIndex((prev) =>
-                  prev === images.length - 1 ? 0 : prev + 1,
-                )
-              }
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 shadow"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M9 18l6-6-6-6" />
-              </svg>
-            </button>
-            <div className="absolute bottom-3 right-3 bg-black/50 text-white text-xs px-2 py-0.5 rounded-full">
-              {currentImageIndex + 1}/{images.length}
-            </div>
-          </>
-        )}
       </div>
 
-      {/* 商品信息 */}
-      <main className="max-w-lg mx-auto">
-        {/* 价格区 */}
-        <div className="bg-white px-4 py-4">
-          <div className="flex items-baseline gap-1">
-            <span className="text-primary text-3xl font-bold font-display">
-              ¥{product.price.toFixed(2)}
-            </span>
-            {product.originalPrice && product.originalPrice > product.price && (
-              <span className="text-gray-400 text-sm line-through">
-                ¥{product.originalPrice.toFixed(2)}
-              </span>
-            )}
-            {product.unit && (
-              <span className="text-gray-400 text-sm">/{product.unit}</span>
-            )}
-          </div>
-          <h1 className="text-lg font-semibold text-gray-900 mt-2">
-            {product.name}
-          </h1>
-          {product.origin && (
-            <div className="flex items-center gap-2 mt-2">
-              <span className="inline-flex items-center gap-1 text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg>
-                {product.origin} 产地直发
-              </span>
-            </div>
-          )}
-          <div className="flex flex-wrap gap-2 mt-2">
-            {product.sweetness && (
-              <span className="text-xs text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">
-                甜度: {product.sweetness}
-              </span>
-            )}
-            {product.weight && (
-              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
-                {product.weight}
-              </span>
-            )}
-          </div>
-          {product.tags && product.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              {product.tags.map((tag, idx) => (
-                <span key={idx} className="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
+      {/* 商品大图 */}
+      <ProductHero
+        image={product.image || '/placeholder-fruit.png'}
+        name={product.name}
+        color={product.color || '#FF6B35'}
+      />
 
-        {/* 数量选择 */}
-        <div className="bg-white px-4 py-4 mt-2">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">数量</span>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M5 12h14" />
-                </svg>
-              </button>
-              <span className="text-base font-medium w-8 text-center">
-                {quantity}
-              </span>
-              <button
-                onClick={() => setQuantity(quantity + 1)}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-primary text-white hover:bg-primary-dark transition-colors"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 5v14M5 12h14" />
-                </svg>
-              </button>
-            </div>
-          </div>
-          <div className="text-right mt-2 text-sm text-gray-500">
-            小计：
-            <span className="text-primary font-semibold text-base">
-              ¥{currentPrice.toFixed(2)}
-            </span>
-          </div>
-        </div>
+      {/* 商品名称 + 产地 */}
+      <ProductName name={product.name} origin={product.origin} />
 
-        {/* 规格选择 */}
-        {specs.length > 0 && (
-          <div className="bg-white px-4 py-4 mt-2">
-            <SpecSelector specs={specs} onChange={() => {}} />
-          </div>
-        )}
+      {/* 价格 + tag */}
+      <PriceSection
+        price={product.price}
+        originalPrice={product.originalPrice ?? undefined}
+        unit={product.unit ?? undefined}
+        tags={product.tags ?? undefined}
+      />
 
-        {/* 商品详情 */}
-        <div className="bg-white px-4 py-4 mt-2">
-          <h3 className="text-sm font-semibold text-gray-800 mb-3">商品详情</h3>
-          {product.color && (
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-xs text-gray-500">品牌色:</span>
-              <span
-                className="w-5 h-5 rounded-full border border-gray-200"
-                style={{ backgroundColor: product.color }}
-              />
-              <span className="text-xs text-gray-400">{product.color}</span>
-            </div>
-          )}
-          {product.description ? (
-            <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
-              {product.description}
-            </p>
-          ) : (
-            <p className="text-sm text-gray-400">暂无详情描述</p>
-          )}
+      {/* 规格选择 */}
+      {specs.length > 0 && (
+        <div className="px-5 pb-4">
+          <div className="text-sm font-bold text-brand-dark mb-2.5">选择规格</div>
+          <SpecSelector specs={specs} onChange={() => {}} />
         </div>
-      </main>
+      )}
+
+      {/* 品质信息 2×2 */}
+      <QualityInfo sweetness={product.sweetness} weight={product.weight} />
+
+      {/* 水果故事 */}
+      <Description text={product.description ?? undefined} />
+
+      {/* 推荐水果 */}
+      <RecommendFruits items={recommendations} onClick={handleRecommendClick} />
+
+      {/* 底部占位 */}
+      <div className="h-[70px]" />
 
       {/* 底部购买栏 */}
       <BuyBar product={product} />
