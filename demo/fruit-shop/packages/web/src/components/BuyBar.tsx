@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Product } from 'shared';
 import { useCartStore } from '@/store/cart.store';
@@ -12,11 +13,12 @@ export function BuyBar({ product }: BuyBarProps) {
   const addItem = useCartStore((s) => s.addItem);
   const isUpdating = useCartStore((s) => s.isUpdating);
   const { showToast } = useToast();
+  const [qty, setQty] = useState(1);
 
   const handleAddToCart = async () => {
     try {
-      await addItem({ productId: product.id, specLabel: '默认', quantity: 1 });
-      showToast('已加入购物车', 'success');
+      await addItem({ productId: product.id, specLabel: '默认', quantity: qty });
+      showToast(`已加入购物车 ×${qty}`, 'success');
     } catch {
       showToast('添加失败，请重试', 'error');
     }
@@ -24,7 +26,7 @@ export function BuyBar({ product }: BuyBarProps) {
 
   const handleBuyNow = async () => {
     try {
-      await addItem({ productId: product.id, specLabel: '默认', quantity: 1 });
+      await addItem({ productId: product.id, specLabel: '默认', quantity: qty });
       navigate('/cart');
     } catch {
       showToast('操作失败，请重试', 'error');
@@ -32,35 +34,41 @@ export function BuyBar({ product }: BuyBarProps) {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 safe-bottom z-40">
-      <div className="flex items-center h-14 max-w-lg mx-auto px-4 gap-3">
-        <button
-          onClick={() => navigate('/cart')}
-          className="flex flex-col items-center justify-center text-gray-500 min-w-[48px]"
+    <div className="fixed bottom-0 inset-x-0 flex items-center gap-3 px-4 py-3 bg-white/95 backdrop-blur-[12px] border-t-[1.5px] border-brand-border z-40">
+      {/* 数量 */}
+      <div className="flex items-center gap-2">
+        <div
+          onClick={() => setQty(Math.max(1, qty - 1))}
+          className="w-[30px] h-[30px] rounded-[10px] flex items-center justify-center bg-brand-btn-bg cursor-pointer text-base font-bold text-brand-dark transition-transform duration-150 active:scale-90"
         >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="9" cy="21" r="1" />
-            <circle cx="20" cy="21" r="1" />
-            <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" />
-          </svg>
-          <span className="text-[10px] mt-0.5">购物车</span>
-        </button>
-
-        <button
-          onClick={handleAddToCart}
-          disabled={isUpdating}
-          className="flex-1 py-2.5 rounded-xl bg-accent text-gray-900 font-medium text-sm disabled:opacity-50 transition-opacity"
+          −
+        </div>
+        <span className="text-base font-extrabold min-w-6 text-center font-display">{qty}</span>
+        <div
+          onClick={() => setQty(qty + 1)}
+          className="w-[30px] h-[30px] rounded-[10px] flex items-center justify-center bg-brand-btn-bg cursor-pointer text-base font-bold text-brand-dark transition-transform duration-150 active:scale-90"
         >
-          加入购物车
-        </button>
-
-        <button
-          onClick={handleBuyNow}
-          disabled={isUpdating}
-          className="flex-1 py-2.5 rounded-xl bg-primary text-white font-medium text-sm disabled:opacity-50 transition-opacity"
-        >
-          立即购买
-        </button>
+          +
+        </div>
+      </div>
+      {/* 加购 */}
+      <div
+        onClick={handleAddToCart}
+        className={`flex-1 py-3 rounded-2xl text-center bg-brand-secondary text-brand-dark font-bold text-[15px] cursor-pointer transition-transform duration-150 ${
+          isUpdating ? 'opacity-50 pointer-events-none' : ''
+        }`}
+      >
+        加入购物车
+      </div>
+      {/* 立即购买 */}
+      <div
+        onClick={handleBuyNow}
+        className={`animate-pulse-glow flex-1 py-3 rounded-2xl text-center text-white font-bold text-[15px] cursor-pointer transition-transform duration-150 ${
+          isUpdating ? 'opacity-50 pointer-events-none' : ''
+        }`}
+        style={{ background: 'linear-gradient(135deg, #FF6B35, #FF7675)' }}
+      >
+        立即购买
       </div>
     </div>
   );
