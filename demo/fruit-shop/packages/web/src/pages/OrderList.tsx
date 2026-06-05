@@ -154,7 +154,7 @@ function OrderCard({ order, onClick }: { order: Order; onClick: () => void }) {
         </div>
         <div className="text-right">
           <p className="text-lg font-bold text-primary">
-            ¥{order.totalAmount.toFixed(2)}
+            ¥{Number(order.totalAmount).toFixed(2)}
           </p>
           <p className="text-xs text-gray-400">
             {order.address?.slice(0, 15)}{order.address?.length > 15 ? '...' : ''}

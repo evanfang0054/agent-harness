@@ -282,11 +282,11 @@ export default function AdminProducts() {
                         </td>
                         <td className="px-4 py-3">
                           <span className="text-primary font-medium">
-                            ¥{product.price.toFixed(2)}
+                            ¥{Number(product.price).toFixed(2)}
                           </span>
                           {product.originalPrice && (
                             <span className="text-xs text-gray-400 line-through ml-1">
-                              ¥{product.originalPrice.toFixed(2)}
+                              ¥{Number(product.originalPrice).toFixed(2)}
                             </span>
                           )}
                         </td>

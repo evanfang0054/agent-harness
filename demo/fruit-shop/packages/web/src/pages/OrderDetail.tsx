@@ -149,7 +149,7 @@ export default function OrderDetail() {
                 </div>
                 <div className="text-right flex-shrink-0">
                   <p className="text-sm font-medium text-primary">
-                    ¥{item.price.toFixed(2)}
+                    ¥{Number(item.price).toFixed(2)}
                   </p>
                   <p className="text-xs text-gray-400">x{item.quantity}</p>
                 </div>
@@ -160,7 +160,7 @@ export default function OrderDetail() {
           <div className="border-t border-gray-100 mt-3 pt-3 flex justify-between items-center">
             <span className="text-sm text-gray-500">订单总额</span>
             <span className="text-lg font-bold text-primary">
-              ¥{order.totalAmount.toFixed(2)}
+              ¥{Number(order.totalAmount).toFixed(2)}
             </span>
           </div>
         </section>

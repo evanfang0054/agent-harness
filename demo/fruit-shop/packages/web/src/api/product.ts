@@ -15,7 +15,7 @@ export interface ProductQuery extends PaginationQuery {
 
 export const productApi = {
   getList(params?: ProductQuery) {
-    return apiClient.get<PaginatedResponse<Product>>('/products', { params });
+    return apiClient.get<ApiResponse<PaginatedResponse<Product>>>('/products', { params });
   },
 
   getDetail(id: number) {

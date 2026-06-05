@@ -31,7 +31,7 @@ export const useOrderStore = create<OrderState>()((set, get) => ({
     set({ isLoading: true });
     try {
       const response = await orderApi.getList(params);
-      const paginatedData = response.data;
+      const paginatedData = response.data.data!;
       set((state) => ({
         orders: params?.page === 1 || !params?.page ? paginatedData.list : [...state.orders, ...paginatedData.list],
         total: paginatedData.total,

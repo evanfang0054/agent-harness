@@ -14,7 +14,7 @@ export const orderApi = {
   },
 
   getList(params?: PaginationQuery) {
-    return apiClient.get<PaginatedResponse<Order>>('/orders', { params });
+    return apiClient.get<ApiResponse<PaginatedResponse<Order>>>('/orders', { params });
   },
 
   getDetail(id: number) {
@@ -22,6 +22,6 @@ export const orderApi = {
   },
 
   cancel(id: number) {
-    return apiClient.patch<ApiResponse<Order>>(`/orders/${id}/cancel`);
+    return apiClient.put<ApiResponse<Order>>(`/orders/${id}/cancel`);
   },
 };

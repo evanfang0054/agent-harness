@@ -145,7 +145,7 @@ export default function Checkout() {
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="text-sm font-medium text-primary">
-                      ¥{item.product.price.toFixed(2)}
+                      ¥{Number(item.product.price).toFixed(2)}
                     </p>
                     <p className="text-xs text-gray-400">x{item.quantity}</p>
                   </div>
@@ -159,23 +159,23 @@ export default function Checkout() {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between text-gray-600">
                 <span>商品小计</span>
-                <span>¥{subtotal.toFixed(2)}</span>
+                <span>¥{Number(subtotal).toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-gray-600">
                 <span>配送费</span>
                 <span className={shippingFee === 0 ? 'text-success' : ''}>
-                  {shippingFee === 0 ? '免运费' : `¥${shippingFee.toFixed(2)}`}
+                  {shippingFee === 0 ? '免运费' : `¥${Number(shippingFee).toFixed(2)}`}
                 </span>
               </div>
               {shippingFee > 0 && (
                 <p className="text-xs text-gray-400">
-                  再买¥{(99 - subtotal).toFixed(2)}即可免运费
+                  再买¥{(99 - Number(subtotal)).toFixed(2)}即可免运费
                 </p>
               )}
               <div className="border-t border-gray-100 pt-2 flex justify-between items-center">
                 <span className="font-medium text-gray-800">合计</span>
                 <span className="text-xl font-bold text-primary">
-                  ¥{totalAmount.toFixed(2)}
+                  ¥{Number(totalAmount).toFixed(2)}
                 </span>
               </div>
             </div>
@@ -189,7 +189,7 @@ export default function Checkout() {
           <div>
             <span className="text-sm text-gray-500">应付：</span>
             <span className="text-xl font-bold text-primary">
-              ¥{totalAmount.toFixed(2)}
+              ¥{Number(totalAmount).toFixed(2)}
             </span>
           </div>
           <button

@@ -159,7 +159,7 @@ export default function Cart() {
 
               <div className="flex items-center justify-between mt-2">
                 <span className="text-primary font-semibold text-sm">
-                  ¥{item.product.price.toFixed(2)}
+                  ¥{Number(item.product.price).toFixed(2)}
                   {item.product.unit && (
                     <span className="text-xs text-gray-400 font-normal">
                       /{item.product.unit}
@@ -235,7 +235,7 @@ export default function Cart() {
             <div className="text-right">
               <span className="text-sm text-gray-500">合计：</span>
               <span className="text-lg font-bold text-primary">
-                ¥{total.toFixed(2)}
+                ¥{Number(total).toFixed(2)}
               </span>
             </div>
             <button
