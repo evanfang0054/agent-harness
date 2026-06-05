@@ -14,7 +14,7 @@ export function LoadingSpinner({ size = 'md', color }: LoadingSpinnerProps) {
   return (
     <div
       className={`${sizeMap[size]} animate-spin`}
-      style={{ color: color || 'var(--color-primary)' }}
+      style={{ color: color || 'var(--color-brand-primary)' }}
     >
       <svg
         viewBox="0 0 24 24"
