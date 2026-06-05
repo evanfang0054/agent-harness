@@ -1,20 +1,20 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { productApi, type ProductQuery } from '@/api/product';
 import type { Product, Category } from 'shared';
 import { ProductCard } from '@/components/ProductCard';
 import { CategoryTabs } from '@/components/CategoryTabs';
 import { SearchBar } from '@/components/SearchBar';
 import { PromoBanner } from '@/components/PromoBanner';
+import { DecorDots } from '@/components/DecorDots';
 import { TabBar } from '@/components/TabBar';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-
-const MOCK_BANNERS = [
-  { id: 1, image: '/banners/summer.jpg', title: '夏日鲜果季 限时特惠' },
-  { id: 2, image: '/banners/mango.jpg', title: '海南芒果 产地直发' },
-  { id: 3, image: '/banners/organic.jpg', title: '有机认证 安心好果' },
-];
+import { useCartStore } from '@/store/cart.store';
 
 export default function Home() {
+  const navigate = useNavigate();
+  const cartCount = useCartStore((s) => s.totalCount());
+
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,7 +37,7 @@ export default function Home() {
         setProducts((prev) => (p === 1 ? items : [...prev, ...items]));
         setHasMore(items.length >= 12);
       } catch {
-        // 静默处理，显示空状态
+        // 静默
       } finally {
         setIsLoading(false);
       }
@@ -46,9 +46,12 @@ export default function Home() {
   );
 
   useEffect(() => {
-    productApi.getCategories().then((res) => {
-      setCategories(res.data.data || []);
-    }).catch(() => {});
+    productApi
+      .getCategories()
+      .then((res) => {
+        setCategories(res.data.data || []);
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -71,99 +74,114 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="relative bg-brand-bg min-h-screen pb-20">
+      <DecorDots />
+
       {/* 顶部导航 */}
-      <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-sm safe-top">
-        <div className="max-w-lg mx-auto px-4 pt-3 pb-2">
-          <div className="flex items-center justify-between mb-3">
-            <h1 className="font-display text-2xl font-bold text-primary">
-              鲜果集
-            </h1>
-            <div className="flex items-center gap-2">
-              <button className="text-gray-500 hover:text-primary transition-colors">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                  <path d="M13.73 21a2 2 0 01-3.46 0" />
-                </svg>
-              </button>
-            </div>
-          </div>
-          <SearchBar onSearch={handleSearch} />
+      <div className="flex items-center justify-between px-4 py-3 bg-brand-bg/90 backdrop-blur-[10px] sticky top-0 z-50">
+        <div className="flex items-center gap-2">
+          <span className="text-2xl">🍊</span>
+          <span className="font-black text-xl text-brand-dark font-display">鲜果集</span>
         </div>
-      </header>
-
-      <main className="max-w-lg mx-auto px-4">
-        {/* 轮播 Banner */}
-        <section className="mt-4">
-          <PromoBanner banners={MOCK_BANNERS} />
-        </section>
-
-        {/* 分类标签 */}
-        <section className="mt-4">
-          <CategoryTabs
-            categories={categories}
-            activeId={activeCategory}
-            onChange={handleCategoryChange}
-          />
-        </section>
-
-        {/* 快捷入口 */}
-        <section className="mt-4 grid grid-cols-4 gap-3">
-          {categories.slice(0, 4).map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => handleCategoryChange(cat.id)}
-              className="flex flex-col items-center gap-1 py-2"
+        <div className="flex items-center gap-3">
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#2D3436"
+            strokeWidth="2"
+            strokeLinecap="round"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <div className="relative cursor-pointer" onClick={() => navigate('/cart')}>
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#2D3436"
+              strokeWidth="2"
+              strokeLinecap="round"
             >
-              <span className="text-2xl">{cat.icon}</span>
-              <span className="text-xs text-gray-600">{cat.name}</span>
-            </button>
-          ))}
-        </section>
-
-        {/* 商品列表 */}
-        <section className="mt-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-display text-lg font-semibold text-gray-800">
-              {activeCategory
-                ? categories.find((c) => c.id === activeCategory)?.name || '精选好果'
-                : '精选好果'}
-            </h2>
-          </div>
-
-          {isLoading && page === 1 ? (
-            <div className="flex justify-center py-20">
-              <LoadingSpinner size="lg" />
-            </div>
-          ) : products.length === 0 ? (
-            <div className="text-center py-20">
-              <p className="text-gray-400 text-sm">
-                {keyword ? `未找到"${keyword}"相关水果` : '暂无商品'}
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-2 gap-3">
-                {products.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
+              <circle cx="9" cy="21" r="1" />
+              <circle cx="20" cy="21" r="1" />
+              <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" />
+            </svg>
+            {cartCount > 0 && (
+              <div className="absolute -top-1 -right-1.5 w-4 h-4 rounded-full bg-brand-accent text-white text-[10px] font-bold flex items-center justify-center">
+                {cartCount > 99 ? '99+' : cartCount}
               </div>
+            )}
+          </div>
+        </div>
+      </div>
 
-              {hasMore && (
-                <div className="flex justify-center mt-6">
-                  <button
-                    onClick={handleLoadMore}
-                    disabled={isLoading}
-                    className="px-6 py-2 text-sm text-primary border border-primary/30 rounded-full hover:bg-primary/5 disabled:opacity-50 transition-colors"
-                  >
-                    {isLoading ? '加载中...' : '查看更多'}
-                  </button>
+      {/* 搜索栏 */}
+      <SearchBar onSearch={handleSearch} />
+
+      {/* 分类标签 */}
+      <div className="px-4 py-2">
+        <CategoryTabs
+          categories={categories}
+          activeId={activeCategory}
+          onChange={handleCategoryChange}
+        />
+      </div>
+
+      {/* 促销 Banner */}
+      <PromoBanner />
+
+      {/* 商品列表 */}
+      <div className="px-4 pb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-display text-lg font-semibold text-brand-dark">
+            {activeCategory
+              ? categories.find((c) => c.id === activeCategory)?.name || '精选好果'
+              : '精选好果'}
+          </h2>
+        </div>
+
+        {isLoading && page === 1 ? (
+          <div className="flex justify-center py-20">
+            <LoadingSpinner size="lg" />
+          </div>
+        ) : products.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-brand-muted text-sm">
+              {keyword ? `未找到"${keyword}"相关水果` : '暂无商品'}
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-3">
+              {products.map((product, i) => (
+                <div
+                  key={product.id}
+                  className="animate-slide-up"
+                  style={{ animationDelay: `${i * 60}ms`, animationFillMode: 'both' }}
+                >
+                  <ProductCard product={product} />
                 </div>
-              )}
-            </>
-          )}
-        </section>
-      </main>
+              ))}
+            </div>
+
+            {hasMore && (
+              <div className="flex justify-center mt-6">
+                <button
+                  onClick={handleLoadMore}
+                  disabled={isLoading}
+                  className="px-6 py-2 text-sm text-brand-primary border border-brand-primary/30 rounded-full hover:bg-brand-primary/5 disabled:opacity-50 transition-colors"
+                >
+                  {isLoading ? '加载中...' : '查看更多'}
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
       <TabBar />
     </div>
