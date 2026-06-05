@@ -13,11 +13,13 @@ import { DecorDots } from '@/components/DecorDots';
 import { BuyBar } from '@/components/BuyBar';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useToast } from '@/components/Toast';
+import { useCartStore } from '@/store/cart.store';
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const cartCount = useCartStore((s) => s.totalCount());
 
   const [product, setProduct] = useState<Product | null>(null);
   const [recommendations, setRecommendations] = useState<Product[]>([]);
@@ -139,6 +141,11 @@ export default function ProductDetail() {
               <circle cx="20" cy="21" r="1" />
               <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" />
             </svg>
+            {cartCount > 0 && (
+              <div className="absolute -top-1 -right-1.5 w-4 h-4 rounded-full bg-brand-accent text-white text-[10px] font-bold flex items-center justify-center">
+                {cartCount > 99 ? '99+' : cartCount}
+              </div>
+            )}
           </div>
         </div>
       </div>
