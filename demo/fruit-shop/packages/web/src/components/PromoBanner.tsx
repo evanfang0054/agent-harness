@@ -4,7 +4,7 @@ export function PromoBanner() {
       <div
         className="relative rounded-3xl overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, #FF6B35 0%, #FF7675 50%, #F7C948 100%)',
+          background: 'var(--gradient-promo)',
         }}
       >
         <div className="px-6 py-5 relative z-10">

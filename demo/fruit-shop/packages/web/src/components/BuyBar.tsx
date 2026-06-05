@@ -66,7 +66,7 @@ export function BuyBar({ product }: BuyBarProps) {
         className={`animate-pulse-glow flex-1 py-3 rounded-2xl text-center text-white font-bold text-[15px] cursor-pointer transition-transform duration-150 ${
           isUpdating ? 'opacity-50 pointer-events-none' : ''
         }`}
-        style={{ background: 'linear-gradient(135deg, #FF6B35, #FF7675)' }}
+        style={{ background: 'var(--gradient-cta)' }}
       >
         立即购买
       </div>

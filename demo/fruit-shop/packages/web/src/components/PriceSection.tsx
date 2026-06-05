@@ -25,11 +25,15 @@ export function PriceSection({ price, originalPrice, unit, tags }: PriceSectionP
           {tags.map((tag, i) => (
             <span
               key={i}
-              className="py-1 px-3 rounded-[20px] text-[11px] font-semibold"
+              className="py-1 px-3 rounded-full text-[11px] font-semibold"
               style={{
-                background: i === 0 ? '#FF6B3518' : '#F7C94830',
-                color: i === 0 ? '#FF6B35' : '#2D3436',
-                border: i === 0 ? '1.5px solid #FF6B3544' : '1.5px solid #F7C94855',
+                background: i === 0
+                  ? 'color-mix(in srgb, var(--color-brand-primary) 9%, transparent)'
+                  : 'color-mix(in srgb, var(--color-brand-secondary) 19%, transparent)',
+                color: i === 0 ? 'var(--color-brand-primary)' : 'var(--color-brand-dark)',
+                border: i === 0
+                  ? '1.5px solid color-mix(in srgb, var(--color-brand-primary) 27%, transparent)'
+                  : '1.5px solid color-mix(in srgb, var(--color-brand-secondary) 33%, transparent)',
               }}
             >
               {tag}

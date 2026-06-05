@@ -14,7 +14,7 @@ export function ProductHero({ image, name, color }: ProductHeroProps) {
       <div
         className="absolute inset-0"
         style={{
-          background: `linear-gradient(135deg, ${color}22 0%, #FFF8F0 100%)`,
+          background: `linear-gradient(135deg, ${color}22 0%, var(--color-brand-bg) 100%)`,
         }}
       />
       <div className={`flex justify-center px-6 pt-5 pb-4 ${loaded ? 'animate-bounce-in' : ''}`}>

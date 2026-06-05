@@ -10,8 +10,8 @@ export function Description({ text }: DescriptionProps) {
       <div
         className="py-4 px-[18px] rounded-[20px] border-[1.5px]"
         style={{
-          background: 'linear-gradient(135deg, #FFEAA744 0%, #F7C94822 100%)',
-          borderColor: '#FFEAA766',
+          background: 'var(--gradient-desc)',
+          borderColor: 'color-mix(in srgb, var(--color-brand-peach) 40%, transparent)',
         }}
       >
         <div className="text-sm font-bold text-brand-dark mb-1.5">「水果故事」</div>
