@@ -32,7 +32,7 @@ export default function Home() {
         if (catId) params.categoryId = catId;
 
         const response = await productApi.getList(params);
-        const items = response.data.list;
+        const items = response.data.data?.list || [];
 
         setProducts((prev) => (p === 1 ? items : [...prev, ...items]));
         setHasMore(items.length >= 12);

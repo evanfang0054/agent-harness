@@ -12,7 +12,7 @@ export const databaseConfig = (
   database: configService.get<string>('DB_DATABASE', 'fruit_shop'),
   // autoLoadEntities: true — 每个 module 中 TypeOrmModule.forFeature() 注册的 Entity 自动加载
   autoLoadEntities: true,
-  synchronize: false, // 生产环境禁止 true，使用 init.sql 管理表结构
+  synchronize: true, // 开发环境自动同步表结构
   logging: configService.get<string>('DB_LOGGING', 'false') === 'true',
   timezone: '+08:00', // 东八区
   charset: 'utf8mb4',
