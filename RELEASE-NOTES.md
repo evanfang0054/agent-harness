@@ -1,10 +1,17 @@
 # Superpowers Release Notes
 
+## v5.0.21-beta.4 (2026-06-18)
+
+### Changes
+
+- 把上游 v5.1.0 / v6.0.0 中与 **SDD 审查机制** 和 **bug/安全修复** 相关的变更，按需同步到 fork，同时**完整保留** fork 已有的魔改（ralph-loop 驱动、harness 系列、learnings 体系等）
+
 ## v5.0.21-beta.3 (2026-06-18)
 
 ### Changes
 
 - 同步上游v6相关更新
+
 ## v5.0.21-beta.2 (2026-06-05)
 
 ### Changes
