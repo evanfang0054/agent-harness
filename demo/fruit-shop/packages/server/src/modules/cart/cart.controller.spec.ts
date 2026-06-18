@@ -51,8 +51,8 @@ describe('CartController', () => {
       const items = [{ id: 1, quantity: 3 }];
       cartService.update.mockResolvedValue(items as any);
 
-      expect(await controller.update(1, 1, dto)).toEqual(items);
-      expect(cartService.update).toHaveBeenCalledWith(1, 1, dto);
+      expect(await controller.update(7, 3, dto)).toEqual(items);
+      expect(cartService.update).toHaveBeenCalledWith(3, 7, dto);
     });
   });
 
@@ -61,8 +61,8 @@ describe('CartController', () => {
       const items: any[] = [];
       cartService.remove.mockResolvedValue(items as any);
 
-      expect(await controller.remove(1, 1)).toEqual(items);
-      expect(cartService.remove).toHaveBeenCalledWith(1, 1);
+      expect(await controller.remove(7, 3)).toEqual(items);
+      expect(cartService.remove).toHaveBeenCalledWith(3, 7);
     });
   });
 });
