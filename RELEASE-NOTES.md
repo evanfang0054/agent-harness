@@ -1,5 +1,11 @@
 # Superpowers Release Notes
 
+## v5.0.21-beta.2 (2026-06-05)
+
+### Changes
+
+- 更新harness-design支持生成DESIGN.md
+
 ## v5.0.21-beta.1 (2026-06-03)
 
 ### Changes
