@@ -77,6 +77,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
     let httpStatus: HttpStatus;
     if (exception instanceof ThrottlerException) {
       httpStatus = HttpStatus.TOO_MANY_REQUESTS;
+      code = HttpStatus.TOO_MANY_REQUESTS;
+      message = 'Too Many Requests';
     } else if (exception instanceof ServiceUnavailableException) {
       httpStatus = HttpStatus.SERVICE_UNAVAILABLE;
 

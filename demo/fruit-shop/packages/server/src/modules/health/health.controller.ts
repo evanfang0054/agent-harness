@@ -5,6 +5,7 @@ import {
   TypeOrmHealthIndicator,
   HealthIndicatorResult,
 } from '@nestjs/terminus';
+import { SkipThrottle } from '@nestjs/throttler';
 import { Redis } from 'ioredis';
 import { Public } from '../../common/decorators/public.decorator';
 import { SKIP_TRANSFORM_KEY } from '../../common/interceptors/transform.interceptor';
@@ -19,6 +20,7 @@ export class HealthController {
 
   @Get()
   @Public()
+  @SkipThrottle()
   @HealthCheck()
   @SetMetadata(SKIP_TRANSFORM_KEY, true)
   check() {
