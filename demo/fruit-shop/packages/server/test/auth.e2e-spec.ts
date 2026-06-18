@@ -143,4 +143,25 @@ describe('Auth (e2e)', () => {
         });
     });
   });
+
+  describe('Rate limiting', () => {
+    it('should rate-limit login after 10 requests per minute', async () => {
+      // 注：ThrottlerModule 使用进程级 in-memory store，限流按 IP 计数。
+      // 本文件前面的 login/register 测试已经消耗了部分配额，且共享同一个 helper
+      // 实例（同一进程、同一 IP）。为使限流可在本测试稳定触发，直接循环发起
+      // 请求直到命中 429，避免对具体起始计数做硬编码假设。
+      let rateLimitedResponse: any;
+      for (let i = 0; i < 15; i++) {
+        const res = await request(helper.httpServer)
+          .post('/api/auth/login')
+          .send({ phone: '13800000099', password: 'wrong' });
+        if (res.status === 429) {
+          rateLimitedResponse = res;
+          break;
+        }
+      }
+      expect(rateLimitedResponse).toBeDefined();
+      expect(rateLimitedResponse.body.code).toBe(429);
+    });
+  });
 });
