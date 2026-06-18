@@ -955,7 +955,8 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { AppModule } from '../../src/app.module';
 import { TransformInterceptor } from '../../src/common/interceptors/transform.interceptor';
 import { HttpExceptionFilter } from '../../src/common/filters/http-exception.filter';
-import * as request from 'supertest';
+import { DataSource } from 'typeorm';
+import request from 'supertest';
 import { Server } from 'http';
 
 export class TestHelper {
@@ -977,7 +978,8 @@ export class TestHelper {
         transformOptions: { enableImplicitConversion: true },
       }),
     );
-    this.app.useGlobalInterceptors(new TransformInterceptor());
+    // 与 main.ts 保持一致：通过 DI 获取 interceptor/filter，确保 Reflector/PinoLogger 正确注入
+    this.app.useGlobalInterceptors(this.app.get(TransformInterceptor));
     this.app.useGlobalFilters(this.app.get(HttpExceptionFilter));
 
     await this.app.init();
@@ -988,6 +990,20 @@ export class TestHelper {
     if (this.app) {
       await this.app.close();
     }
+  }
+
+  /**
+   * 清空 e2e 测试相关表，避免跨 run 数据污染（手机号已注册等）。
+   * 不清 categories / products：这些是种子数据，且 e2e 依赖其存在。
+   */
+  async cleanDatabase() {
+    const dataSource = this.app.get(DataSource);
+    await dataSource.query('SET FOREIGN_KEY_CHECKS = 0');
+    await dataSource.query('TRUNCATE TABLE order_items');
+    await dataSource.query('TRUNCATE TABLE orders');
+    await dataSource.query('TRUNCATE TABLE carts');
+    await dataSource.query('TRUNCATE TABLE users');
+    await dataSource.query('SET FOREIGN_KEY_CHECKS = 1');
   }
 
   /**
@@ -1006,8 +1022,10 @@ export class TestHelper {
       .send(body);
 
     // 响应被 TransformInterceptor 包装: { code: 0, data: { accessToken, refreshToken, user } }
-    const { accessToken, refreshToken, user } = res.body.data;
-    return { accessToken, refreshToken, userId: user.id };
+    // 防御性解析：注册失败时 data 可能为 undefined
+    const data = res.body?.data ?? {};
+    const { accessToken, refreshToken, user } = data;
+    return { accessToken, refreshToken, userId: user?.id };
   }
 
   /**
@@ -1055,7 +1073,7 @@ git commit -m "test(server): add e2e test helper with app bootstrap and auth uti
 `packages/server/test/auth.e2e-spec.ts`:
 
 ```typescript
-import * as request from 'supertest';
+import request from 'supertest';
 import { TestHelper } from './helpers/test-helper';
 
 describe('Auth (e2e)', () => {
@@ -1063,6 +1081,7 @@ describe('Auth (e2e)', () => {
 
   beforeAll(async () => {
     await helper.setup();
+    await helper.cleanDatabase();
   });
 
   afterAll(async () => {
@@ -1087,9 +1106,11 @@ describe('Auth (e2e)', () => {
       return request(helper.httpServer)
         .post('/api/auth/register')
         .send({ phone: '13800000001', password: 'test123456' })
-        .expect(201)
+        .expect(200)
         .expect((res) => {
-          expect(res.body.code).toBe(40102); // PHONE_EXISTS
+          // ConflictException(status 409) 经 HttpExceptionFilter 透传 status 作为 code
+          expect(res.body.code).toBe(409);
+          expect(res.body.message).toContain('已注册');
         });
     });
 
@@ -1097,9 +1118,9 @@ describe('Auth (e2e)', () => {
       return request(helper.httpServer)
         .post('/api/auth/register')
         .send({ phone: '123', password: 'test123456' })
-        .expect(201)
+        .expect(200)
         .expect((res) => {
-          expect(res.body.code).toBe(400); // ValidationPipe
+          expect(res.body.code).toBe(400); // ValidationPipe Bad Request
         });
     });
 
@@ -1107,7 +1128,7 @@ describe('Auth (e2e)', () => {
       return request(helper.httpServer)
         .post('/api/auth/register')
         .send({ phone: '13800000002', password: '123' })
-        .expect(201)
+        .expect(200)
         .expect((res) => {
           expect(res.body.code).toBe(400);
         });
@@ -1132,7 +1153,8 @@ describe('Auth (e2e)', () => {
         .send({ phone: '13800000001', password: 'wrongpassword' })
         .expect(200)
         .expect((res) => {
-          expect(res.body.code).toBe(40001); // AUTH_FAILED
+          // UnauthorizedException(status 401) 经 HttpExceptionFilter 透传 status 作为 code
+          expect(res.body.code).toBe(401);
         });
     });
   });
@@ -1162,7 +1184,8 @@ describe('Auth (e2e)', () => {
         .send({ refreshToken: 'invalid-token' })
         .expect(200)
         .expect((res) => {
-          expect(res.body.code).toBe(40004); // REFRESH_TOKEN_INVALID
+          // UnauthorizedException(status 401) 经 HttpExceptionFilter 透传 status 作为 code
+          expect(res.body.code).toBe(401);
         });
     });
   });
@@ -1190,12 +1213,17 @@ describe('Auth (e2e)', () => {
         .post('/api/auth/logout')
         .expect(200)
         .expect((res) => {
-          expect(res.body.code).toBe(40005); // UNAUTHORIZED
+          // JwtAuthGuard 抛出 UnauthorizedException(status 401) → code 401
+          expect(res.body.code).toBe(401);
         });
     });
   });
 });
 ```
+
+**注意（错误码语义）**：本仓库的 `HttpExceptionFilter` 对所有错误返回 HTTP 200，业务码放在 body 的 `code` 字段。当异常是 NestJS 内置异常（如 `UnauthorizedException`、`ConflictException`）且 message 为字符串时（不含 `code` 属性），filter 会使用 HTTP status 作为 `code`：所以 `UnauthorizedException(401)` → `code: 401`、`ConflictException(409)` → `code: 409`、`ValidationPipe(400)` → `code: 400`。
+
+**DB 隔离**：TestHelper 提供 `cleanDatabase()` 方法（见 Task 10），在 `beforeAll` 中调用以清空 `users`/`carts`/`orders`/`order_items` 表，避免跨 run 的数据污染（如手机号已注册）。
 
 - [ ] **Step 2: 确保 Docker 服务运行并运行测试**
 
