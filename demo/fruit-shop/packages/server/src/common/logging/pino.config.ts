@@ -1,5 +1,6 @@
 // packages/server/src/common/logging/pino.config.ts
 
+import { randomUUID } from 'node:crypto';
 import type { Params } from 'nestjs-pino';
 import { redactPaths, maskPersonalData } from './redact.serializer';
 
@@ -18,6 +19,12 @@ export function buildPinoOptions(): Params {
 
   return {
     pinoHttp: {
+      genReqId: (req: any, res: any) => {
+        const existing = req.headers['x-request-id'];
+        const id = (typeof existing === 'string' && existing.length > 0) ? existing : randomUUID();
+        res.setHeader('X-Request-Id', id);
+        return id;
+      },
       level,
       // 开发用 pretty；生产留空走默认 JSON
       transport: isDev
@@ -62,14 +69,13 @@ export function buildPinoOptions(): Params {
           slow ? ' [SLOW]' : ''
         }`;
       },
-      customErrorMessage: (req: any, res: any, _err: Error) => {
-        const time = (res as any).responseTime ?? 0;
+      customErrorMessage: (req: any, res: any, _err: Error, responseTime?: number) => {
+        const time = responseTime ?? 0;
         const slow = time > SLOW_REQUEST_MS;
         return `${req.method} ${req.url} ${res.statusCode} ${time}ms${
           slow ? ' [SLOW]' : ''
         } [ERROR]`;
       },
-      // 响应头回写 X-Request-ID（pino-http 默认开启）
     },
   };
 }

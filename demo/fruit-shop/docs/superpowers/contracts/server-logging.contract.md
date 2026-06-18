@@ -11,7 +11,7 @@
 - [ ] **D4** 业务异常 warn：构造业务异常（如重复注册、参数校验失败），stdout 出现 `level: warn` 日志，含 `code` 与 `message`
 - [ ] **D5** 未知异常 error：构造未知异常（临时在 controller 抛 `new Error('test')`），stdout 出现 `level: error` 日志，含完整 stack
 - [ ] **D6** 请求脱敏：注册接口 `/api/auth/register` 请求日志中 `body.password` 显示为 `***`；`headers.authorization` 显示为 `***`
-- [ ] **D7** 响应脱敏：登录接口 `/api/auth/login` 响应日志中 `body.accessToken` 与 `body.refreshToken` 显示为 `***`
+- [ ] **D7** 响应脱敏：登录接口 `/api/auth/login` 的响应 body 不被日志记录（res serializer 仅输出 statusCode），token 永不落盘。若未来 res serializer 扩展输出 body，redact.paths 中 `res.body.*` 路径自动接管脱敏
 - [ ] **D8** 慢请求标记：人为延迟 > 500ms 的接口，access log 的 message 含 `[SLOW]`，且 `responseTime > 500`
 - [ ] **D9** 下单业务日志：完成下单（响应 `code:0`），stdout 出现 `level: info` 日志含 `orderId / userId / totalAmount`，`requestId` 与对应 access log 一致
 - [ ] **D10** 认证业务日志：登录成功 → `info` 日志含 `userId`；登出 → `info` 日志含 `jti` 且标注「黑名单」

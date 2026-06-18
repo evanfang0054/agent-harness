@@ -105,10 +105,7 @@ export class AuthService {
     const tokens = await this.generateTokens(user.id, user.phone, user.role);
 
     this.logger.info(
-      {
-        userId: user.id,
-        phone: user.phone,
-      },
+      { userId: user.id },
       '用户登录成功',
     );
 

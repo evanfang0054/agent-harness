@@ -17,6 +17,8 @@ export const redactPaths: string[] = [
   // 请求体 - token 类
   'req.body.token',
   'req.body.refreshToken',
+  // 以下响应体路径为防御性配置 —— 当前 res serializer 仅输出 statusCode，不记录 body。
+  // 若未来扩展 res serializer 输出 body，这些路径自动生效，确保 token 不落盘。
   // 响应体 - token 类（auth.service 返回）
   'res.body.accessToken',
   'res.body.refreshToken',
