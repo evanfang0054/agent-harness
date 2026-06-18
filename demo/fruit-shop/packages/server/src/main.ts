@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { Logger } from 'nestjs-pino';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
@@ -20,6 +21,18 @@ async function bootstrap() {
     origin: true,
     credentials: true,
   });
+
+  // Swagger API 文档（可通过 SWAGGER_ENABLED=false 关闭）
+  if (process.env.SWAGGER_ENABLED !== 'false') {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('鲜果集 API')
+      .setDescription('水果电商接口文档')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
+    const document = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('api/docs', app, document);
+  }
 
   // 全局 ValidationPipe — 自动 trim + 白名单 + 禁止多余字段
   app.useGlobalPipes(

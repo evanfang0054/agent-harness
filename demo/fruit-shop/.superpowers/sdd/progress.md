@@ -5,7 +5,7 @@
 
 ## Tasks
 
-- [ ] Task 1: 安装依赖与 Jest 配置
+- [x] Task 1: 安装依赖与 Jest 配置 (b8ad206..1afdcac, review clean; Important: NestJS-version peer dep risk flagged)
 - [ ] Task 2: 接入 Swagger
 - [ ] Task 3: 接入速率限制
 - [ ] Task 4: 接入健康检查
