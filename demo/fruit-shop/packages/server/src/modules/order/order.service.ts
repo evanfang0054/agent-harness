@@ -10,6 +10,7 @@ import { CartService } from '../cart/cart.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { QueryOrderDto } from './dto/query-order.dto';
 import { OrderStatus, ErrorCode, ErrorMessage } from 'shared';
+import { PinoLogger } from 'nestjs-pino';
 
 @Injectable()
 export class OrderService {
@@ -22,7 +23,10 @@ export class OrderService {
     private readonly cartRepo: Repository<CartEntity>,
     private readonly cartService: CartService,
     private readonly dataSource: DataSource,
-  ) {}
+    private readonly logger: PinoLogger,
+  ) {
+    this.logger.setContext(OrderService.name);
+  }
 
   async create(userId: number, dto: CreateOrderDto) {
     // Get cart items with product info
@@ -94,6 +98,17 @@ export class OrderService {
         .execute();
 
       await queryRunner.commitTransaction();
+
+      this.logger.info(
+        {
+          orderId: savedOrder.id,
+          orderNo,
+          userId,
+          totalAmount,
+          itemCount: orderItems.length,
+        },
+        '订单创建成功',
+      );
 
       return this.findOne(userId, savedOrder.id);
     } catch (err) {
