@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Clean the SDD working tree's short-lived artifacts: task briefs, implementer
+# reports, review packages, and the progress ledger. Keeps the directory itself
+# (empty) so sdd-workspace doesn't need to recreate it on next use.
+#
+# Failure does NOT block callers: warnings go to stderr, exit code is always 0.
+# Rationale: this is best-effort cleanup after finishing a development branch;
+# a cleanup error should not undo an otherwise-successful merge/PR.
+#
+# Usage: cleanup-workspace
+set -euo pipefail
+
+dir=$(git rev-parse --show-toplevel 2>/dev/null)/.superpowers/sdd
+
+if [ ! -d "$dir" ]; then
+  exit 0
+fi
+
+shopt -s dotglob nullglob
+if rm -rf "${dir:?}/"*; then
+  echo "cleaned: $dir"
+else
+  echo "warning: cleanup-workspace failed to remove contents of $dir" >&2
+fi
+
+exit 0
