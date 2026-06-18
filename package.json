@@ -1,6 +1,6 @@
 {
   "name": "superpowers",
-  "version": "5.0.21-beta.2",
+  "version": "5.0.21-beta.3",
   "type": "module",
   "scripts": {
     "release": "./scripts/bump-version.sh"
