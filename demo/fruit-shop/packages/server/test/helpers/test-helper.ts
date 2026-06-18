@@ -70,8 +70,13 @@ export class TestHelper {
       .send(body);
 
     // 响应被 TransformInterceptor 包装: { code: 0, data: { accessToken, refreshToken, user } }
-    const data = res.body?.data ?? {};
-    const { accessToken, refreshToken, user } = data;
+    // 注册失败时显式抛错，避免下游 TypeError，便于定位 DB 污染等问题
+    if (res.body?.code !== 0 || !res.body?.data?.user) {
+      throw new Error(
+        `registerAndLogin(${phone}) failed: code=${res.body?.code} message=${res.body?.message}`,
+      );
+    }
+    const { accessToken, refreshToken, user } = res.body.data;
     return { accessToken, refreshToken, userId: user.id };
   }
 
