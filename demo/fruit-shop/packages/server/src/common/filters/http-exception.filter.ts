@@ -4,28 +4,24 @@ import {
   ArgumentsHost,
   HttpException,
   HttpStatus,
-  Logger,
 } from '@nestjs/common';
+import { PinoLogger } from 'nestjs-pino';
 import { Response } from 'express';
 
 /**
  * 统一异常响应格式
  * { code: number, message: string }
  *
- * 业务异常 (HttpException):
- *   - 从 exception.getResponse() 中提取 code 和 message
- *   - 如果 response 是字符串，则 code 使用 HTTP status
- *
- * 未知异常:
- *   - code: 500
- *   - message: '服务器内部错误'
+ * 业务异常 (HttpException) → warn 级别日志
+ * 未知异常              → error 级别日志 + 完整 stack
  */
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger(HttpExceptionFilter.name);
+  constructor(private readonly logger: PinoLogger) {}
 
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
+    const req = ctx.getRequest<{ method: string; url: string }>();
     const response = ctx.getResponse<Response>();
 
     let code = HttpStatus.INTERNAL_SERVER_ERROR;
@@ -36,9 +32,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
       const exceptionResponse = exception.getResponse();
 
       if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
-        // class-validator 验证错误格式: { message: string[], error: string, statusCode: number }
         const resp = exceptionResponse as Record<string, any>;
         if (Array.isArray(resp.message)) {
+          // class-validator 验证错误
           code = status;
           message = resp.message.join('; ');
         } else if (typeof resp.code === 'number') {
@@ -53,9 +49,27 @@ export class HttpExceptionFilter implements ExceptionFilter {
         code = status;
         message = exceptionResponse;
       }
+
+      // 业务异常 - warn 级别
+      this.logger.warn(
+        {
+          method: req.method,
+          url: req.url,
+          code,
+          message,
+        },
+        `业务异常: ${message}`,
+      );
     } else {
-      // 非HttpException的未知错误，记录日志
-      this.logger.error('Unhandled exception:', exception);
+      // 未知异常 - error 级别 + 完整 stack
+      this.logger.error(
+        {
+          method: req.method,
+          url: req.url,
+          err: exception,
+        },
+        'Unhandled exception',
+      );
     }
 
     response.status(HttpStatus.OK).json({

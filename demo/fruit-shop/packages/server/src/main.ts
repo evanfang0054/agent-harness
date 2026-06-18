@@ -37,7 +37,7 @@ async function bootstrap() {
   app.useGlobalInterceptors(new TransformInterceptor());
 
   // 全局异常过滤器 — 统一返回 { code, message }
-  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalFilters(app.get(HttpExceptionFilter));
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
