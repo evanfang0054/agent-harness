@@ -123,10 +123,12 @@ Superpowers uses a layered architecture: **Decision Layer** ensures "doing the r
 │                      "How to design? How to build?"                          │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
-│   ┌─────────────┐  ┌────────────────┐  ┌───────────────┐ ┌──────────────┐  │
-│   │brainstorming│─►│sprint-contract │─►│ writing-plans │─►│subagent-dev /│  │
-│   │  "Design?"  │  │  "Done when?" │  │ "Break tasks" │ │exec-plans   │  │
-│   └─────────────┘  └────────────────┘  └───────────────┘ └──────────────┘  │
+│   ┌─────────────┐  ┌────────────────┐  ┌─────────────┐  ┌───────────────┐  │
+│   │brainstorming│─►│gate-driven-    │─►│writing-plans│─►│subagent-dev / │  │
+│   │  "Design?"  │  │ test-design *  │  │ "Break tasks"│  │ exec-plans    │  │
+│   └─────────────┘  └────────────────┘  └─────────────┘  └───────────────┘  │
+│                     * optional: recursively derive                         │
+│                       test pyramid                                        │
 │                                                         │                   │
 │   ┌─────────────────────────────────────────────────────┼───────────────┐  │
 │   │                  Implementation Loop                 ▼               │  │
@@ -200,6 +202,7 @@ Superpowers uses a layered architecture: **Decision Layer** ensures "doing the r
 
 **Collaboration**
 - **brainstorming** - Socratic design refinement
+- **gate-driven-test-design** - Between brainstorming and writing-plans, recursively derive a risk-based test coverage tree (Level Items + Gates + Assertions) from the design spec; the tree structure naturally forms a test pyramid
 - **writing-plans** - Detailed implementation plans
 - **sprint-contract** - Negotiate explicit Definition of Done between brainstorming and writing-plans
 - **executing-plans** - Ralph-loop driven execution, enforces TDD/Review/finishing workflow, supports custom rules
