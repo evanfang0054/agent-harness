@@ -12,6 +12,8 @@ import { OrderModule } from './modules/order/order.module';
 import { HealthModule } from './modules/health/health.module';
 import { RedisProviderModule } from './common/redis-provider.module';
 import { LoggingModule } from './common/logging/logging.module';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 @Module({
   imports: [
@@ -43,6 +45,8 @@ import { LoggingModule } from './common/logging/logging.module';
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
+    TransformInterceptor,
+    HttpExceptionFilter,
   ],
 })
 export class AppModule {}
