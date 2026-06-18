@@ -173,7 +173,7 @@ Then: Done
 - **Problem:** "What should I do next?" → ambiguous
 - **Fix:** Present exactly 4 structured options
 
-**Automatic cleanup**
+**Automatic branch cleanup**
 - **Problem:** Remove work when might need it (Option 2, 3)
 - **Fix:** Only cleanup for Options 1 and 4
 
