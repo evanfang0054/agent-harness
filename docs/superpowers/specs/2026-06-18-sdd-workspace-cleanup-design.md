@@ -125,7 +125,7 @@ exit 0
 ```markdown
 Then: Run SDD workspace cleanup:
 ```bash
-bash "$(git rev-parse --show-toplevel)/skills/subagent-driven-development/scripts/cleanup-workspace"
+bash "${CLAUDE_PLUGIN_ROOT}/skills/subagent-driven-development/scripts/cleanup-workspace"
 ```
 
 Then: Done

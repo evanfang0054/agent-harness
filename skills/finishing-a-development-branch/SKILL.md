@@ -87,7 +87,7 @@ git branch -d <feature-branch>
 Then: Run SDD workspace cleanup:
 
 ```bash
-bash "$(git rev-parse --show-toplevel)/skills/subagent-driven-development/scripts/cleanup-workspace"
+bash "${CLAUDE_PLUGIN_ROOT}/skills/subagent-driven-development/scripts/cleanup-workspace"
 ```
 
 Then: Done
@@ -112,7 +112,7 @@ EOF
 Then: Run SDD workspace cleanup:
 
 ```bash
-bash "$(git rev-parse --show-toplevel)/skills/subagent-driven-development/scripts/cleanup-workspace"
+bash "${CLAUDE_PLUGIN_ROOT}/skills/subagent-driven-development/scripts/cleanup-workspace"
 ```
 
 Then: Done
@@ -124,7 +124,7 @@ Report: "Keeping branch <name>."
 Then: Run SDD workspace cleanup:
 
 ```bash
-bash "$(git rev-parse --show-toplevel)/skills/subagent-driven-development/scripts/cleanup-workspace"
+bash "${CLAUDE_PLUGIN_ROOT}/skills/subagent-driven-development/scripts/cleanup-workspace"
 ```
 
 #### Option 4: Discard
@@ -149,7 +149,7 @@ git branch -D <feature-branch>
 Then: Run SDD workspace cleanup:
 
 ```bash
-bash "$(git rev-parse --show-toplevel)/skills/subagent-driven-development/scripts/cleanup-workspace"
+bash "${CLAUDE_PLUGIN_ROOT}/skills/subagent-driven-development/scripts/cleanup-workspace"
 ```
 
 Then: Done
