@@ -3,7 +3,8 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { AppModule } from '../../src/app.module';
 import { TransformInterceptor } from '../../src/common/interceptors/transform.interceptor';
 import { HttpExceptionFilter } from '../../src/common/filters/http-exception.filter';
-import * as request from 'supertest';
+import { DataSource } from 'typeorm';
+import request from 'supertest';
 import { Server } from 'http';
 
 export class TestHelper {
@@ -40,6 +41,20 @@ export class TestHelper {
   }
 
   /**
+   * 清空 e2e 测试相关表，避免跨 run 数据污染（手机号已注册等）。
+   * 不清 categories / products：这些是种子数据，且 e2e 依赖其存在。
+   */
+  async cleanDatabase() {
+    const dataSource = this.app.get(DataSource);
+    await dataSource.query('SET FOREIGN_KEY_CHECKS = 0');
+    await dataSource.query('TRUNCATE TABLE order_items');
+    await dataSource.query('TRUNCATE TABLE orders');
+    await dataSource.query('TRUNCATE TABLE carts');
+    await dataSource.query('TRUNCATE TABLE users');
+    await dataSource.query('SET FOREIGN_KEY_CHECKS = 1');
+  }
+
+  /**
    * 注册用户并返回 auth tokens
    */
   async registerAndLogin(
@@ -55,7 +70,8 @@ export class TestHelper {
       .send(body);
 
     // 响应被 TransformInterceptor 包装: { code: 0, data: { accessToken, refreshToken, user } }
-    const { accessToken, refreshToken, user } = res.body.data;
+    const data = res.body?.data ?? {};
+    const { accessToken, refreshToken, user } = data;
     return { accessToken, refreshToken, userId: user.id };
   }
 
