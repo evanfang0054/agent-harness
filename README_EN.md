@@ -169,7 +169,7 @@ Superpowers uses a layered architecture: **Decision Layer** ensures "doing the r
 
 3. **writing-plans** - Activates with sprint contract confirmed. Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
 
-4. **subagent-driven-development** or **executing-plans** - Activates with plan. Both driven by ralph-loop to ensure completion. subagent-driven-development acts as orchestrator dispatching subagents (implementer → spec review → quality review), executing-plans runs directly in main session. Both support user-defined additional rules.
+4. **subagent-driven-development** or **executing-plans** - Activates with plan. Both driven by ralph-loop to ensure completion. subagent-driven-development acts as orchestrator dispatching subagents (implementer → spec review → quality review), executing-plans runs directly in main session. Both support user-defined additional rules. SDD adopts the v6.0 unified review mechanism: a single `task-reviewer` returns a double verdict (spec compliance + code quality) in one pass, backed by `scripts/task-brief` and `scripts/review-package` which write task text and diff to files, avoiding controller context pollution.
 
 5. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
 
@@ -207,7 +207,7 @@ Superpowers uses a layered architecture: **Decision Layer** ensures "doing the r
 - **requesting-code-review** - Pre-review checklist
 - **receiving-code-review** - Responding to feedback
 - **finishing-a-development-branch** - Merge/PR decision workflow
-- **subagent-driven-development** - Ralph-loop driven orchestrator mode, dispatches subagents + two-stage review
+- **subagent-driven-development** - Ralph-loop driven orchestrator mode, dispatches subagents + v6.0 unified review (single reviewer, double verdict, backed by `task-brief` / `review-package` scripts)
 - **computational-sensors** - Run deterministic checks (lint/typecheck/test/coverage) before semantic review
 
 **Quality Assurance**
