@@ -4,6 +4,7 @@ import {
   ArgumentsHost,
   HttpException,
   HttpStatus,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { ThrottlerException } from '@nestjs/throttler';
 import { PinoLogger } from 'nestjs-pino';
@@ -73,9 +74,14 @@ export class HttpExceptionFilter implements ExceptionFilter {
       );
     }
 
-    const httpStatus = exception instanceof ThrottlerException
-      ? HttpStatus.TOO_MANY_REQUESTS
-      : HttpStatus.OK;
+    let httpStatus: HttpStatus;
+    if (exception instanceof ThrottlerException) {
+      httpStatus = HttpStatus.TOO_MANY_REQUESTS;
+    } else if (exception instanceof ServiceUnavailableException) {
+      httpStatus = HttpStatus.SERVICE_UNAVAILABLE;
+    } else {
+      httpStatus = HttpStatus.OK;
+    }
 
     response.status(httpStatus).json({
       code,

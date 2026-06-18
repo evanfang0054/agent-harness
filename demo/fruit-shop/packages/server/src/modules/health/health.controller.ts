@@ -1,4 +1,4 @@
-import { Controller, Get, Inject } from '@nestjs/common';
+import { Controller, Get, Inject, SetMetadata } from '@nestjs/common';
 import {
   HealthCheckService,
   HealthCheck,
@@ -7,6 +7,7 @@ import {
 } from '@nestjs/terminus';
 import { Redis } from 'ioredis';
 import { Public } from '../../common/decorators/public.decorator';
+import { SKIP_TRANSFORM_KEY } from '../../common/interceptors/transform.interceptor';
 
 @Controller('health')
 export class HealthController {
@@ -19,6 +20,7 @@ export class HealthController {
   @Get()
   @Public()
   @HealthCheck()
+  @SetMetadata(SKIP_TRANSFORM_KEY, true)
   check() {
     return this.health.check([
       () => this.db.pingCheck('database'),
