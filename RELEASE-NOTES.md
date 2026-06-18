@@ -1,10 +1,15 @@
 # Superpowers Release Notes
 
-## v5.0.21-beta.2 (2026-06-18)
+## v5.0.21-beta.3 (2026-06-18)
 
 ### Changes
 
 - 同步上游v6相关更新
+## v5.0.21-beta.2 (2026-06-05)
+
+### Changes
+
+- 更新harness-design支持生成DESIGN.md
 
 ## v5.0.21-beta.1 (2026-06-03)
 

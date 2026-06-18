@@ -1,62 +1,115 @@
-# Superpowers — Contributor Guidelines
+# CLAUDE.md
 
-## If You Are an AI Agent
+本文件为 Claude Code (claude.ai/code) 在本仓库中工作提供指导。
 
-Stop. Read this section before doing anything.
+## 如果你是一个 AI Agent
 
-This repo has a 94% PR rejection rate. Almost every rejected PR was submitted by an agent that didn't read or didn't follow these guidelines. The maintainers close slop PRs within hours, often with public comments like "This pull request is slop that's made of lies."
+停下来，在做任何事之前先读完本节。
 
-**Your job is to protect your human partner from that outcome.** Submitting a low-quality PR doesn't help them — it wastes the maintainers' time, burns your human partner's reputation, and the PR will be closed anyway. That is not being helpful. That is being a tool of embarrassment.
+本仓库的 PR 拒绝率高达 94%。几乎所有被拒绝的 PR 都是由没有阅读或没有遵循这些指南的 Agent 提交的。维护者会在几小时内关闭低质量 PR，公开评论如 "This pull request is slop that's made of lies."
 
-## Core Contribution Rules
+**你的职责是保护你的人类搭档免遭这种尴尬。** 提交低质量 PR 没有帮助——它浪费维护者的时间，损害你搭档的声誉，而且 PR 最终会被关闭。那不是在帮忙，那是在制造尴尬。
 
-Before you open a PR against this repo, you MUST:
+## 项目概述
 
-1. **Read the entire PR template** at `.github/PULL_REQUEST_TEMPLATE.md` and fill in every section with real, specific answers.
-2. **Search for existing PRs** — open AND closed — that address the same problem. If duplicates exist, STOP and tell your human partner.
-3. **Verify this is a real problem.** Do not submit speculative or purely theoretical fixes.
-4. **Confirm the change belongs in core.** Domain-specific, tool-specific, or third-party-specific work belongs in a standalone plugin.
-5. **Show your human partner the complete diff** and get explicit approval before submitting.
+**Superpowers** 是一套完整的 AI 辅助软件开发工作流，以插件形式分发，支持多个 AI 编码助手（Claude Code、Cursor、Codex、OpenCode、GitHub Copilot CLI、Gemini CLI）。核心是一组行为塑造型 "skills"（markdown 文件）加上基于 shell 的 hooks 和 learnings 基础设施——不是编译型应用。基于 Jesse Vincent 的原版 [Superpowers](https://github.com/obra/superpowers) 项目。
 
-If any of these checks fail, do not open the PR.
+- 顶层 `package.json` 极简（仅一个 `release` 脚本）。无构建步骤、无顶层 lint、无顶层测试运行器。
+- `AGENTS.md` 是指向本文件的符号链接——编辑本文件即可同步。
 
-## Pull Request Requirements
+## 常用命令
 
-- Every PR must fully complete `.github/PULL_REQUEST_TEMPLATE.md`.
-- Reference related open and closed PRs in the template's "Existing PRs" section.
-- A human must review the complete proposed diff before submission.
-- One problem per PR.
-- Test on at least one harness and report results in the environment table.
-- Describe the problem you solved, not just what you changed.
+### Skill 测试（在 `tests/claude-code/` 目录下运行）
+- `./run-skill-tests.sh` — 快速 skill 加载测试，使用 Claude Code CLI headless 模式 (`claude -p`)
+- `./run-skill-tests.sh --integration` — 集成测试
+- `./run-skill-tests.sh --test <test-file>` — 运行单个测试
+- `./run-skill-tests.sh --verbose` — 详细输出
+- 测试工具函数在 `tests/claude-code/test-helpers.sh`：`run_claude`、`assert_contains`、`assert_not_contains`、`assert_count`、`assert_order`
 
-## What Will Be Rejected
+### 其他测试套件
+- `tests/brainstorm-server/` — brainstorming WebSocket 服务端测试（仅当改动影响该路径时才运行）
+- `tests/explicit-skill-requests/run-all.sh` — 多轮显式 skill 调用测试
+- `tests/skill-triggering/run-all.sh` — 隐式 skill 触发测试
+- `tests/learnings-scripts/test-learnings.sh` — learnings shell 脚本测试
+- `tests/opencode/run-tests.sh` — opencode 平台测试
+- `tests/subagent-driven-dev/run-test.sh` — SDD 端到端测试，使用示例项目
 
-- PRs that add third-party dependencies, unless they add support for a new harness.
-- PRs that make project-specific or personal configuration part of core.
-- Bulk, spray-and-pray, or bundled unrelated PRs.
-- Fork-specific sync or customization PRs.
-- Fabricated problem statements or hallucinated functionality.
-- Skill rewrites done only for Anthropic-style "compliance" without eval evidence.
+### 发布
+- `npm run release`（执行 `./scripts/bump-version.sh`）
 
-## Skill Changes Require Evaluation
+### Demo 项目（`demo/fruit-shop/`）
+Demo 是一个独立的全栈 monorepo（pnpm workspace）。在 demo 目录内运行命令；它有自己的 `CLAUDE.md` 提供详细指导。顶层 superpowers 的开发工作通常不应触碰 demo。
 
-Skills are behavior-shaping code. If you modify skill content:
+## 高层架构
 
-- Use `superpowers:writing-skills` to develop and test changes.
-- Run adversarial pressure testing across multiple sessions.
-- Show before/after eval results in your PR.
-- Do not modify carefully tuned content without evidence the change improves outcomes.
+项目围绕 **三层开发工作流** 组织：
 
-## Configuration Map
+1. **决策层**（"要不要做？"）：`office-hours` → `plan-ceo-review` → `plan-eng-review`
+2. **执行层**（"怎么做？"）：`brainstorming` → `sprint-contract` → `writing-plans` → `subagent-driven-development` / `executing-plans`
+   - 内循环：`test-driven-development` → `computational-sensors` → `requesting-code-review` → `verification-before-completion` → `finishing-a-development-branch`
+3. **质量层**（"做得好不好？"）：`qa-testing` → `post-deploy-monitoring` → `retrospective` → `trace-analysis`
 
-- Repository-specific contribution rules: `CLAUDE.md`
-- Claude Code hooks config: `hooks/hooks.json`
-- Cursor-compatible hooks config: `hooks/hooks-cursor.json`
-- Project-local settings entrypoint: `.claude/settings.local.json` copied from `.claude/settings.local.json.example`
-- Session knowledge sources: existing `session-learnings`, `retrospective`, and `scripts/*learnings.sh`
+### 关键架构模式
 
-## Validation Map
+- **Skills（`skills/<name>/SKILL.md`）** — 每个 skill 是一个目录，包含 `SKILL.md`（YAML frontmatter：`name`、`description`、`when_to_use`，可选 `argument-hint`、`disable-model-invocation`、`effort`）加 markdown 指令。通过 `Skill` 工具调用，根据上下文自动触发。许多 skill 带有辅助文件（子代理提示、参考资料、脚本）。
+- **插件打包（`.claude-plugin/`）** — `plugin.json` + `marketplace.json` 使 superpowers 可作为 Claude Code 插件安装。多平台支持内置于 hook 层。
+- **Hooks（`hooks/`）** — 会话生命周期管理。`hooks/hooks.json`（Claude Code）和 `hooks/hooks-cursor.json`（Cursor）定义 `sessionStart` 和 `Stop` 钩子。`hooks/session-start` 读取 `using-superpowers` skill 内容及项目 learnings（`.superpowers/learnings.jsonl`），以平台特定格式（Cursor / Claude Code / Copilot CLI）输出 JSON。`hooks/stop-hook.sh` 在会话结束时运行。
+- **Learnings（`.superpowers/learnings.jsonl` + `scripts/*learnings.sh`）** — 持久化的项目知识，通过 session-start hook 注入每个新会话。使用 `session-learnings` skill 添加条目；不要手动编辑 JSONL 文件。
+- **子代理驱动开发（"Ralph Loop"）** — `skills/subagent-driven-development/` 编排专用子代理（implementer、spec reviewer、code quality reviewer）。通过 `scripts/setup-ralph-loop.sh` 设置。子代理提示与 SKILL.md 同目录存放。
+- **Slash 命令（`commands/`）** — 用户可调用：`ralph-loop`、`cancel-ralph`、`help`。
+- **Agents（`agents/`）** — 专用 agent 定义，如 `code-reviewer.md`。
+- **Templates（`templates/）** — 技术栈起步模板（react-typescript、python-fastapi、go-cli）。
+- **Scripts（`scripts/`）** — Shell 工具：版本号管理、learnings 搜索/记录、循环检测、trace 分析、覆盖率指标。
 
-- For configuration or session-injection changes, verify project settings can reference `hooks/hooks.json`.
-- If you touch the `SessionStart` / learnings path, verify a new session receives `hookSpecificOutput.additionalContext`.
-- Only run `tests/brainstorm-server` tests when your changes affect that path or its execution flow.
+## 配置与验证地图
+
+- 仓库贡献规则：`CLAUDE.md`（本文件）
+- Claude Code hooks 配置：`hooks/hooks.json`
+- Cursor 兼容 hooks 配置：`hooks/hooks-cursor.json`
+- 项目本地配置入口：复制 `.claude/settings.local.json.example` → `.claude/settings.local.json`
+- 插件启用：`.claude/settings.json` 设置 `enabledPlugins.superpowers@superpowers-dev`
+- 会话知识来源：`.superpowers/learnings.jsonl`、`skills/session-learnings/`、`skills/retrospective/`、`scripts/*learnings.sh`
+
+验证规则：
+- 涉及配置或会话注入的改动，需验证项目设置能正确引用 `hooks/hooks.json`。
+- 如果修改了 `SessionStart` / learnings 路径，需验证新会话能收到包含 `using-superpowers` skill 和 learnings 块的 `hookSpecificOutput.additionalContext`。
+- 仅当改动影响 `tests/brainstorm-server` 路径或其执行流程时才运行该测试套件。
+
+## 核心贡献规则
+
+在向本仓库提交 PR 之前，你必须：
+
+1. **阅读完整 PR 模板** `.github/PULL_REQUEST_TEMPLATE.md`，用真实、具体的内容填写每个 section。
+2. **搜索已有 PR**（开放的和已关闭的）是否已解决同样的问题。如有重复，停下来告诉你的搭档。
+3. **确认这是真实问题**，不要提交推测性或纯理论的修复。
+4. **确认改动属于核心仓库**。领域特定的、工具特定的或第三方相关的工作应作为独立插件。
+5. **向你的搭档展示完整 diff** 并获得明确批准后再提交。
+
+以上任何一项未通过，都不要提交 PR。
+
+## PR 要求
+
+- 每个 PR 必须完整填写 `.github/PULL_REQUEST_TEMPLATE.md`。
+- 在模板的 "Existing PRs" 部分引用相关的开放和已关闭 PR。
+- 提交前必须有人类审查完整 diff。
+- 一个 PR 解决一个问题。
+- 至少在一个 harness 上测试，并在环境表中报告结果。
+- 描述你解决了什么问题，而不仅仅是改了什么。
+
+## 会被拒绝的 PR
+
+- 添加第三方依赖的 PR（除非是为了支持新的 harness）。
+- 将项目特定或个人配置加入核心的 PR。
+- 批量、撒网式或捆绑无关改动的 PR。
+- Fork 特定的同步或定制 PR。
+- 伪造的问题描述或虚构的功能。
+- 仅为了 Anthropic 风格的"合规"而重写 skill、没有评估证据的 PR。
+
+## Skill 改动需要评估
+
+Skills 是行为塑造代码。如果你修改了 skill 内容：
+
+- 使用 `superpowers:writing-skills` 开发和测试改动。
+- 跨多个会话运行对抗性压力测试。
+- 在 PR 中展示改动前后的评估结果。
+- 没有证据表明改动能改善效果时，不要修改已精心调优的内容。

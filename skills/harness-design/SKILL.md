@@ -1,6 +1,6 @@
 ---
 name: harness-design
-description: 用HTML做高保真原型、交互Demo、幻灯片、动画、设计变体探索+设计方向顾问+专家评审的一体化设计能力。HTML是工具不是媒介，根据任务embody不同专家（UX设计师/动画师/幻灯片设计师/原型师），避免web design tropes。触发词：做原型、设计Demo、交互原型、HTML演示、动画Demo、设计变体、hi-fi设计、UI mockup、prototype、设计探索、做个HTML页面、做个可视化、app原型、iOS原型、移动应用mockup、导出MP4、导出GIF、60fps视频、设计风格、设计方向、设计哲学、配色方案、视觉风格、推荐风格、选个风格、做个好看的、评审、好不好看、review this design。**主干能力**：Junior Designer工作流（先给假设+reasoning+placeholder再迭代）、反AI slop清单、**默认单文件inline React+Tailwind CSS**（所有JSX写进一个HTML的script标签，Tailwind CDN引入，双击就能开，用户不要React时才降级纯HTML+CSS）、Tweaks变体切换、Speaker Notes演示、Starter Components（幻灯片外壳/变体画布/动画引擎/设备边框）、App原型专属守则（默认从Wikimedia/Met/Unsplash取真图、每台iPhone包AppPhone状态管理器可交互、交付前跑Playwright点击测试）、Playwright验证、HTML动画→MP4/GIF视频导出（25fps基础 + 60fps插帧 + palette优化GIF + 6首场景化BGM + 自动fade）。**需求模糊时的Fallback**：设计方向顾问模式——从5流派×20种设计哲学（Pentagram信息建筑/Field.io运动诗学/Kenya Hara东方极简/Sagmeister实验先锋等）推荐3个差异化方向，展示24个预制showcase（8场景×3风格），并行生成3个视觉Demo让用户选。**交付后可选**：专家级5维度评审（哲学一致性/视觉层级/细节执行/功能性/创新性各打10分+修复清单）。
+description: 用HTML做高保真原型、交互Demo、幻灯片、动画、设计变体探索+设计方向顾问+专家评审的一体化设计能力。HTML是工具不是媒介，根据任务embody不同专家（UX设计师/动画师/幻灯片设计师/原型师），避免web design tropes。触发词：做原型、设计Demo、交互原型、HTML演示、动画Demo、设计变体、hi-fi设计、UI mockup、prototype、设计探索、做个HTML页面、做个可视化、app原型、iOS原型、移动应用mockup、导出MP4、导出GIF、60fps视频、设计风格、设计方向、设计哲学、配色方案、视觉风格、推荐风格、选个风格、做个好看的、评审、好不好看、review this design。**主干能力**：Junior Designer工作流（先给假设+reasoning+placeholder再迭代）、反AI slop清单、**默认单文件inline React+Tailwind CSS**（所有JSX写进一个HTML的script标签，Tailwind CDN引入，双击就能开，用户不要React时才降级纯HTML+CSS）、Tweaks变体切换、Speaker Notes演示、Starter Components（幻灯片外壳/变体画布/动画引擎/设备边框）、App原型专属守则（默认从Wikimedia/Met/Unsplash取真图、每台iPhone包AppPhone状态管理器可交互、交付前跑Playwright点击测试）、Playwright验证、HTML动画→MP4/GIF视频导出（25fps基础 + 60fps插帧 + palette优化GIF + 6首场景化BGM + 自动fade）。**需求模糊时的Fallback**：设计方向顾问模式——从5流派×20种设计哲学（Pentagram信息建筑/Field.io运动诗学/Kenya Hara东方极简/Sagmeister实验先锋等）推荐3个差异化方向，展示24个预制showcase（8场景×3风格），并行生成3个视觉Demo让用户选。**交付后可选**：专家级5维度评审（哲学一致性/视觉层级/细节执行/功能性/创新性各打10分+修复清单）。**可选输出 DESIGN.md**：用户确认后在 HTML 交付并验证通过时，从实际代码反向提取颜色/字体/圆角/间距 token，输出符合 awesome-design-md 社区标准的设计系统规范文件（9 section + YAML frontmatter），可被其他 AI agent 读取生成风格一致 UI。
 ---
 
 # Design
@@ -258,6 +258,8 @@ curl -A "Mozilla/5.0" -L "<hero-image-url>" -o assets/<brand>-brand/product-hero
 ### 气质关键词
 - <3-5 个形容词>
 ```
+
+> **与 DESIGN.md 的关系**：如果用户在需求确认阶段选择了生成 DESIGN.md，`brand-spec.md` 中采集的品牌名、气质关键词、禁区等信息将作为 DESIGN.md 对应 section 的输入。`brand-spec.md` 结构保持不变，仍是品牌资产的采集载体——DESIGN.md 是消费端的设计系统文档，由 agent 在 HTML 验证通过后从实际代码反向提取 token 生成。详见 `references/design-md-spec.md`。
 
 **写完 spec 后的执行纪律（硬要求）**：
 - 所有 HTML 必须**引用** `brand-spec.md` 里的资产文件路径，不允许用 CSS 剪影/SVG 手画代替
@@ -661,6 +663,7 @@ Screen 组件接 callback props（`onEnter`、`onClose`、`onTabChange`、`onOpe
    - **跳过音频的条件**：用户明确说「不要音频」「纯画面」「我要自己配音」——否则默认带。
    - 参考完整流程见 `references/video-export.md` + `references/audio-design-rules.md` + `references/sfx-library.md`。
 10. **（可选）专家评审**：用户若提「评审」「好不好看」「review」「打分」，或你对产出有疑问想主动质检，按 `references/critique-guide.md` 走 5 维度评审——哲学一致性 / 视觉层级 / 细节执行 / 功能性 / 创新性各 0-10 分，输出总评 + Keep（做得好的）+ Fix（严重程度 ⚠️致命 / ⚡重要 / 💡优化）+ Quick Wins（5 分钟能做的前 3 件事）。评审设计不评设计师。
+11. **（可选）生成 DESIGN.md**：用户在需求确认阶段选择「是」时，在 HTML 验证通过后执行。详见下方「工作流末尾 · 生成 DESIGN.md」section。
 
 **检查点原则**：碰到🛑就停下，明确告诉用户"我做了X，下一步打算Y，你确认吗？"然后真的**等**。不要说完自己就开始做。
 
@@ -738,6 +741,42 @@ Screen 组件接 callback props（`onEnter`、`onClose`、`onTabChange`、`onOpe
 
 用法：读取对应 assets 文件内容 → inline 进你的 HTML `<script>` 标签 → slot 进你的设计。
 
+## 工作流末尾 · 生成 DESIGN.md（可选 · 用户确认时执行）
+
+**触发条件**：用户在需求确认阶段回答「是否需要生成 DESIGN.md」时选择「是」。
+**不触发的场景**：纯动画任务、纯幻灯片任务、用户明确说"不需要"、HTML 仍含大量 placeholder 未完成。
+
+### 执行步骤
+
+1. **读取 `references/design-md-spec.md`** 了解完整输出格式和质量标准
+
+2. **从 HTML 代码反向提取 token**（不凭记忆，必须实际读代码）：
+   - 颜色：`grep -hoE '#[0-9A-Fa-f]{6}' <html文件>` 按频次排序，过滤黑白灰，映射语义角色
+   - 字体：从 `<link>` 标签和 `font-family` 提取字体栈，按字号层级推断 display / body / mono
+   - 圆角：从 `border-radius` 和 `rounded-*` Tailwind classes 提取使用频次
+   - 间距：从 padding / margin / gap 中提取规律性值，归类为 t-shirt 尺度
+   - 组件：挑出 5+ 核心组件（Button / Card / Input / Nav / Modal 等），读取实际样式
+
+3. **合并 brand-spec.md 信息**（如存在）：
+   - 品牌名 → frontmatter `name` + Section 1 标题
+   - 气质关键词 → Section 1「Visual Theme & Atmosphere」
+   - 禁区 → Section 7「Don'ts」
+   - 品牌色值 → 与从代码提取的色值交叉验证（如有冲突，以代码实际值为准，差异处加注释）
+
+4. **按 9 section 模板填充**，每个 section 基于实际设计决策描述，不写空话
+
+5. **写入 `DESIGN.md`** 到项目目录（与 HTML 文件同级，不要写到 `assets/` 或 `~/Downloads`）
+
+### 质量自检（生成后必须执行）
+
+- [ ] YAML frontmatter 中每个 hex 值都来自实际 HTML 代码
+- [ ] typography 至少包含 display / body / mono 三个 role
+- [ ] Component stylings 至少覆盖 5 个核心组件
+- [ ] Do's 和 Don'ts 各至少 3 条，每条带原因
+- [ ] 总长度 300-600 行
+
+不达标 → 重新提取 token / 补充 section，直到达标。
+
 ## References路由表
 
 根据任务类型深入读对应references：
@@ -755,6 +794,7 @@ Screen 组件接 callback props（`onEnter`、`onClose`、`onTabChange`、`onOpe
 | 没有design context怎么办 | `references/design-context.md`（薄 fallback） 或 `references/design-styles.md`（厚 fallback：20 种设计哲学详细库） |
 | **需求模糊要推荐风格方向** | `references/design-styles.md`（20 种风格+AI prompt 模板）+ `assets/showcases/INDEX.md`（24 个预制样例） |
 | **按输出类型查场景模板**（封面/PPT/信息图） | `references/scene-templates.md` |
+| **生成 DESIGN.md**（设计系统规范，可选） | `references/design-md-spec.md` |
 | 输出完后验证 | `references/verification.md` + `scripts/verify.py` |
 | **设计评审/打分**（设计完成后可选） | `references/critique-guide.md`（5 维度评分+常见问题清单） |
 | **动画导出MP4/GIF/加BGM** | `references/video-export.md` + `scripts/render-video.js` + `scripts/convert-formats.sh` + `scripts/add-music.sh` |
@@ -817,3 +857,4 @@ Skill 路径引用均采用**相对本 skill 根目录**的形式（`references/
 - **涉及具体品牌**：走「核心资产协议」（§1.a）——Logo（必需）+ 产品图（实体产品必需）+ UI 截图（数字产品必需），色值只是辅助。**不要用 CSS 剪影代替真实产品图**。
 - **做动画之前**：必读 `references/animation-pitfalls.md`——里面 14 条规则每条都来自真实踩过的坑，跳过会让你重做 1-3 轮。
 - **手写 Stage / Sprite**（不用 `assets/animations.jsx`）：必须实现两件事——(a) tick 第一帧同步设 `window.__ready = true` (b) 检测 `window.__recording === true` 时强制 loop=false。否则录视频必出问题。
+- **生成 DESIGN.md（可选）**：用户在需求确认阶段选择「是」时执行。HTML 验证通过后从实际代码反向提取 token（颜色/字体/圆角/间距），合并 brand-spec.md 信息，按 `references/design-md-spec.md` 的 9 section + YAML frontmatter 模板生成，写入项目根目录。
