@@ -9,6 +9,7 @@ import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Redis } from 'ioredis';
+import { PinoLogger } from 'nestjs-pino';
 import * as bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { UserEntity } from '../../entities/user.entity';
@@ -30,7 +31,10 @@ export class AuthService {
     private readonly configService: ConfigService,
     @Inject('REDIS_CLIENT')
     private readonly redis: Redis,
-  ) {}
+    private readonly logger: PinoLogger,
+  ) {
+    this.logger.setContext(AuthService.name);
+  }
 
   /**
    * 注册
@@ -99,6 +103,14 @@ export class AuthService {
 
     // 生成 token
     const tokens = await this.generateTokens(user.id, user.phone, user.role);
+
+    this.logger.info(
+      {
+        userId: user.id,
+        phone: user.phone,
+      },
+      '用户登录成功',
+    );
 
     // 返回时排除 password
     const { password: _, ...userWithoutPassword } = user;
@@ -186,6 +198,15 @@ export class AuthService {
             'EX',
             ttl,
           );
+
+          this.logger.info(
+            {
+              userId,
+              jti,
+              ttl,
+            },
+            'JWT 已加入黑名单（登出）',
+          );
         }
       }
     } catch {
@@ -239,6 +260,15 @@ export class AuthService {
         type: 'refresh',
       },
       { expiresIn: refreshExpiresIn },
+    );
+
+    this.logger.debug(
+      {
+        userId,
+        accessJti,
+        refreshJti,
+      },
+      'JWT 签发',
     );
 
     return { accessToken, refreshToken };
