@@ -1,0 +1,151 @@
+# Review package: f05348d..HEAD
+
+## Commits
+eb05cde feat(logging): auth.service 接入 PinoLogger（登录/JWT/登出）
+
+## Files changed
+ .../server/src/modules/auth/auth.service.ts        | 32 +++++++++++++++++++++-
+ 1 file changed, 31 insertions(+), 1 deletion(-)
+
+## Diff
+diff --git a/demo/fruit-shop/packages/server/src/modules/auth/auth.service.ts b/demo/fruit-shop/packages/server/src/modules/auth/auth.service.ts
+index 323db3b..30c9077 100644
+--- a/demo/fruit-shop/packages/server/src/modules/auth/auth.service.ts
++++ b/demo/fruit-shop/packages/server/src/modules/auth/auth.service.ts
+@@ -2,20 +2,21 @@ import {
+   Injectable,
+   ConflictException,
+   UnauthorizedException,
+   Inject,
+ } from '@nestjs/common';
+ import { InjectRepository } from '@nestjs/typeorm';
+ import { Repository } from 'typeorm';
+ import { JwtService } from '@nestjs/jwt';
+ import { ConfigService } from '@nestjs/config';
+ import { Redis } from 'ioredis';
++import { PinoLogger } from 'nestjs-pino';
+ import * as bcrypt from 'bcryptjs';
+ import { v4 as uuidv4 } from 'uuid';
+ import { UserEntity } from '../../entities/user.entity';
+ import { RegisterDto } from './dto/register.dto';
+ import { LoginDto } from './dto/login.dto';
+ import { RefreshTokenDto } from './dto/refresh-token.dto';
+ import {
+   UserRole,
+   ErrorCode,
+   ErrorMessage,
+@@ -23,21 +24,24 @@ import {
+ 
+ @Injectable()
+ export class AuthService {
+   constructor(
+     @InjectRepository(UserEntity)
+     private readonly userRepo: Repository<UserEntity>,
+     private readonly jwtService: JwtService,
+     private readonly configService: ConfigService,
+     @Inject('REDIS_CLIENT')
+     private readonly redis: Redis,
+-  ) {}
++    private readonly logger: PinoLogger,
++  ) {
++    this.logger.setContext(AuthService.name);
++  }
+ 
+   /**
+    * 注册
+    * - 首个注册用户自动设为 admin
+    * - bcrypt 加密密码 (salt rounds: 10)
+    */
+   async register(dto: RegisterDto) {
+     // 检查手机号是否已注册
+     const existing = await this.userRepo.findOne({
+       where: { phone: dto.phone },
+@@ -93,20 +97,28 @@ export class AuthService {
+ 
+     // bcrypt 校验
+     const isPasswordValid = await bcrypt.compare(dto.password, user.password);
+     if (!isPasswordValid) {
+       throw new UnauthorizedException(ErrorMessage[ErrorCode.AUTH_FAILED]);
+     }
+ 
+     // 生成 token
+     const tokens = await this.generateTokens(user.id, user.phone, user.role);
+ 
++    this.logger.info(
++      {
++        userId: user.id,
++        phone: user.phone,
++      },
++      '用户登录成功',
++    );
++
+     // 返回时排除 password
+     const { password: _, ...userWithoutPassword } = user;
+ 
+     return {
+       accessToken: tokens.accessToken,
+       refreshToken: tokens.refreshToken,
+       user: userWithoutPassword,
+     };
+   }
+ 
+@@ -179,20 +191,29 @@ export class AuthService {
+ 
+       if (decoded?.exp) {
+         const ttl = decoded.exp - Math.floor(Date.now() / 1000);
+         if (ttl > 0) {
+           await this.redis.set(
+             `token:blacklist:${jti}`,
+             '1',
+             'EX',
+             ttl,
+           );
++
++          this.logger.info(
++            {
++              userId,
++              jti,
++              ttl,
++            },
++            'JWT 已加入黑名单（登出）',
++          );
+         }
+       }
+     } catch {
+       // 即使 decode 失败也静默处理，登出不应抛出异常
+     }
+ 
+     return null;
+   }
+ 
+   // ========== 私有方法 ==========
+@@ -234,20 +255,29 @@ export class AuthService {
+       {
+         sub: userId,
+         phone,
+         role,
+         jti: refreshJti,
+         type: 'refresh',
+       },
+       { expiresIn: refreshExpiresIn },
+     );
+ 
++    this.logger.debug(
++      {
++        userId,
++        accessJti,
++        refreshJti,
++      },
++      'JWT 签发',
++    );
++
+     return { accessToken, refreshToken };
+   }
+ 
+   private generateAccessToken(
+     userId: number,
+     phone: string,
+     role: string,
+   ): string {
+     const accessJti = uuidv4();
+     const accessExpiresIn = this.configService.get<number>(

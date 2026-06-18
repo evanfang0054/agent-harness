@@ -1,0 +1,28 @@
+# Review package: 37f2cd1..HEAD
+
+## Commits
+27470a6 docs(server): .env.example 补充 LOG_LEVEL
+
+## Files changed
+ demo/fruit-shop/packages/server/.env.example | 3 +++
+ 1 file changed, 3 insertions(+)
+
+## Diff
+diff --git a/demo/fruit-shop/packages/server/.env.example b/demo/fruit-shop/packages/server/.env.example
+index c7fd07a..c3acaba 100644
+--- a/demo/fruit-shop/packages/server/.env.example
++++ b/demo/fruit-shop/packages/server/.env.example
+@@ -10,10 +10,13 @@ DB_LOGGING=false
+ REDIS_HOST=localhost
+ REDIS_PORT=6379
+ 
+ # JWT
+ JWT_SECRET=your-jwt-secret-change-in-prod
+ JWT_ACCESS_EXPIRES_IN=900
+ JWT_REFRESH_EXPIRES_IN=604800
+ 
+ # Server
+ PORT=3000
++
++# Logging
++LOG_LEVEL=info

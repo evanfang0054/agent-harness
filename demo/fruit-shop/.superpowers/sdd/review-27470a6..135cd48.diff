@@ -1,0 +1,288 @@
+# Review package: 27470a6..HEAD
+
+## Commits
+135cd48 fix(logging): final review 修复 genReqId/phone/redact 注释/error responseTime
+
+## Files changed
+ demo/fruit-shop/.superpowers/sdd/task-9-report.md  | 118 +++++++++++++++++++++
+ .../contracts/server-logging.contract.md           |   2 +-
+ .../server/src/common/logging/pino.config.ts       |  12 ++-
+ .../server/src/common/logging/redact.serializer.ts |   2 +
+ .../server/src/modules/auth/auth.service.ts        |   5 +-
+ 5 files changed, 131 insertions(+), 8 deletions(-)
+
+## Diff
+diff --git a/demo/fruit-shop/.superpowers/sdd/task-9-report.md b/demo/fruit-shop/.superpowers/sdd/task-9-report.md
+new file mode 100644
+index 0000000..94afb30
+--- /dev/null
++++ b/demo/fruit-shop/.superpowers/sdd/task-9-report.md
+@@ -0,0 +1,118 @@
++# Task 9 Report
++
++## Status: DONE (Step 1 & Step 2 only)
++
++## File Modified
++- `packages/server/.env.example` — appended Logging section at EOF
++
++## Commit
++- SHA: `27470a6`
++- Subject: `docs(server): .env.example 补充 LOG_LEVEL`
++
++## Diff Summary
++```diff
++@@ -17,3 +17,6 @@ JWT_REFRESH_EXPIRES_IN=604800
++
++ # Server
++ PORT=3000
+++
+++# Logging
+++LOG_LEVEL=info
++```
++
++## Self-Review
++- [x] Only `.env.example` changed (1 file, +3 lines)
++- [x] Section header `# Logging` present
++- [x] `LOG_LEVEL=info` present
++- [x] No accidental edits to existing lines (DB / Redis / JWT / Server sections untouched)
++- [x] Leading blank line preserved before `# Logging` for readability
++
++## Deferred
++Step 3 (D1–D13 contract verification) is deferred to the user as a manual runtime checklist — requires MySQL/Redis server + curl + multi-terminal inspection.
++
++## Final Review Fixes
++
++针对全分支终审提出的 4 项 findings（1 Critical + 3 Important），本次单次提交集中修复。
++
++### C1 (Critical) — genReqId + X-Request-Id 响应头
++
++- **文件**：`packages/server/src/common/logging/pino.config.ts:3, 22-27`
++- **Before**：未配置 `genReqId`。pino-http v11 默认生成递增整数 ID，且不会回写 `X-Request-ID` 响应头 → 不满足 D3。
++- **After**：
++  ```ts
++  import { randomUUID } from 'node:crypto';
++  // ...
++  genReqId: (req: any, res: any) => {
++    const existing = req.headers['x-request-id'];
++    const id = (typeof existing === 'string' && existing.length > 0) ? existing : randomUUID();
++    res.setHeader('X-Request-Id', id);
++    return id;
++  },
++  ```
++  同时删除了 pinoHttp 末尾那条误导性注释 `// 响应头回写 X-Request-ID（pino-http 默认开启）` —— pino-http 默认不开启，回写由我们的 `genReqId` 完成。
++- **Why**：满足 D3「`curl -i` 响应头含 `X-Request-ID: <uuid>`」。
++
++### I1 (Important) — 登录日志移除原始 phone
++
++- **文件**：`packages/server/src/modules/auth/auth.service.ts:107-110`
++- **Before**：
++  ```ts
++  this.logger.info(
++    { userId: user.id, phone: user.phone },
++    '用户登录成功',
++  );
++  ```
++- **After**：
++  ```ts
++  this.logger.info(
++    { userId: user.id },
++    '用户登录成功',
++  );
++  ```
++- **Why**：Pino redact 仅覆盖 `req.body.phone`（access log 路径），对业务 logger 任意 payload 无效。`phone` 明文落盘属 PII 泄露，`userId` 足以定位用户。
++
++### I2 (Important) — customErrorMessage 第 4 参数 responseTime
++
++- **文件**：`packages/server/src/common/logging/pino.config.ts:72-78`
++- **Before**：
++  ```ts
++  customErrorMessage: (req: any, res: any, _err: Error) => {
++    const time = (res as any).responseTime ?? 0;
++    // ...
++  ```
++  pino-http v11 不通过 `res.responseTime` 传时延，恒读 0 → 错误请求日志无耗时 / 无 `[SLOW]`。
++- **After**：
++  ```ts
++  customErrorMessage: (req: any, res: any, _err: Error, responseTime?: number) => {
++    const time = responseTime ?? 0;
++    const slow = time > SLOW_REQUEST_MS;
++    return `${req.method} ${req.url} ${res.statusCode} ${time}ms${slow ? ' [SLOW]' : ''} [ERROR]`;
++  },
++  ```
++- **Why**：与 `customSuccessMessage` 行为对齐，错误路径也能正确显示耗时并触发 `[SLOW]` 标记（D8）。
++
++### I3 (Important) — redact 响应体路径加防御性注释 + 同步 contract D7
++
++- **文件**：`packages/server/src/common/logging/redact.serializer.ts:20-25`、`docs/superpowers/contracts/server-logging.contract.md:14`
++- **Before**：redact 中 `res.body.*` 4 条路径属死代码（res serializer 仅输出 statusCode），原 D7「`body.accessToken` 显示为 `***`」无法验证。
++- **After**：
++  - 在 redact.serializer.ts 对应区段加注释：
++    ```ts
++    // 以下响应体路径为防御性配置 —— 当前 res serializer 仅输出 statusCode，不记录 body。
++    // 若未来扩展 res serializer 输出 body，这些路径自动生效，确保 token 不落盘。
++    ```
++  - contract D7 改为：「响应 body 不被日志记录（res serializer 仅输出 statusCode），token 永不落盘；若未来 res serializer 扩展输出 body，redact.paths 中 `res.body.*` 路径自动接管脱敏」。
++- **Why**：避免后续维护者误判死代码而删除，并把契约措辞与实现真相对齐。
++
++### 验证
++
++- **tsc**：`cd packages/server && pnpm exec tsc --noEmit` → 无输出（clean）。
++- **变更文件（共 4 个）**：
++  - `packages/server/src/common/logging/pino.config.ts`
++  - `packages/server/src/modules/auth/auth.service.ts`
++  - `packages/server/src/common/logging/redact.serializer.ts`
++  - `docs/superpowers/contracts/server-logging.contract.md`
++
++### Commit
++
++见本次提交元数据（subject：`fix(logging): final review 修复 genReqId/phone/redact 注释/error responseTime`）。
+diff --git a/demo/fruit-shop/docs/superpowers/contracts/server-logging.contract.md b/demo/fruit-shop/docs/superpowers/contracts/server-logging.contract.md
+index 241d269..a74ab75 100644
+--- a/demo/fruit-shop/docs/superpowers/contracts/server-logging.contract.md
++++ b/demo/fruit-shop/docs/superpowers/contracts/server-logging.contract.md
+@@ -4,21 +4,21 @@
+ - **协商日期**：2026-06-18
+ 
+ ## Definition of Done
+ 
+ - [ ] **D1** 启动日志：`pnpm --filter server dev` 启动后，stdout 第一行输出运行端口（`http://localhost:3000`），格式为 JSON（`NODE_ENV=production`）/ pretty（默认开发）
+ - [ ] **D2** Access log 字段完整性：访问任意 API，stdout 输出一条 access log，字段含 `requestId / method / url / statusCode / responseTime / ip`；`userId` 在已认证请求中为数字，未认证请求中字段缺失（undefined）
+ - [ ] **D3** X-Request-ID 串联：`curl -i http://localhost:3000/api/products` 响应头含 `X-Request-ID: <uuid>`，且 grep 该 uuid 能在 stdout 中找到对应 access log 行
+ - [ ] **D4** 业务异常 warn：构造业务异常（如重复注册、参数校验失败），stdout 出现 `level: warn` 日志，含 `code` 与 `message`
+ - [ ] **D5** 未知异常 error：构造未知异常（临时在 controller 抛 `new Error('test')`），stdout 出现 `level: error` 日志，含完整 stack
+ - [ ] **D6** 请求脱敏：注册接口 `/api/auth/register` 请求日志中 `body.password` 显示为 `***`；`headers.authorization` 显示为 `***`
+-- [ ] **D7** 响应脱敏：登录接口 `/api/auth/login` 响应日志中 `body.accessToken` 与 `body.refreshToken` 显示为 `***`
++- [ ] **D7** 响应脱敏：登录接口 `/api/auth/login` 的响应 body 不被日志记录（res serializer 仅输出 statusCode），token 永不落盘。若未来 res serializer 扩展输出 body，redact.paths 中 `res.body.*` 路径自动接管脱敏
+ - [ ] **D8** 慢请求标记：人为延迟 > 500ms 的接口，access log 的 message 含 `[SLOW]`，且 `responseTime > 500`
+ - [ ] **D9** 下单业务日志：完成下单（响应 `code:0`），stdout 出现 `level: info` 日志含 `orderId / userId / totalAmount`，`requestId` 与对应 access log 一致
+ - [ ] **D10** 认证业务日志：登录成功 → `info` 日志含 `userId`；登出 → `info` 日志含 `jti` 且标注「黑名单」
+ - [ ] **D11** 日志级别控制：
+   - 默认 `LOG_LEVEL=info`：可见 access log + info 业务日志
+   - `LOG_LEVEL=warn`：access log 与 debug 日志均消失，仅 warn/error 可见
+   - `LOG_LEVEL=debug`：可见 JWT 签发 debug 日志
+ - [ ] **D12** 端到端回归：注册 → 登录 → 浏览商品 → 加购 → 下单 全流程 HTTP 200 + `code:0`，无 5xx，无未捕获异常日志
+ - [ ] **D13** TypeORM 兼容：`DB_LOGGING=true` 时 TypeORM SQL 日志照常输出（与 pino 日志并存，不冲突）
+ 
+diff --git a/demo/fruit-shop/packages/server/src/common/logging/pino.config.ts b/demo/fruit-shop/packages/server/src/common/logging/pino.config.ts
+index 4b95fb8..bf078aa 100644
+--- a/demo/fruit-shop/packages/server/src/common/logging/pino.config.ts
++++ b/demo/fruit-shop/packages/server/src/common/logging/pino.config.ts
+@@ -1,30 +1,37 @@
+ // packages/server/src/common/logging/pino.config.ts
+ 
++import { randomUUID } from 'node:crypto';
+ import type { Params } from 'nestjs-pino';
+ import { redactPaths, maskPersonalData } from './redact.serializer';
+ 
+ /** 慢请求阈值（毫秒） */
+ const SLOW_REQUEST_MS = 500;
+ 
+ /**
+  * Pino 配置工厂
+  * - 开发环境：pino-pretty 着色
+  * - 生产环境：纯 JSON 到 stdout
+  * - 默认级别由 LOG_LEVEL 控制，缺省 info
+  */
+ export function buildPinoOptions(): Params {
+   const isDev = process.env.NODE_ENV !== 'production';
+   const level = process.env.LOG_LEVEL || 'info';
+ 
+   return {
+     pinoHttp: {
++      genReqId: (req: any, res: any) => {
++        const existing = req.headers['x-request-id'];
++        const id = (typeof existing === 'string' && existing.length > 0) ? existing : randomUUID();
++        res.setHeader('X-Request-Id', id);
++        return id;
++      },
+       level,
+       // 开发用 pretty；生产留空走默认 JSON
+       transport: isDev
+         ? {
+             target: 'pino-pretty',
+             options: {
+               colorize: true,
+               translateTime: 'SYS:yyyy-mm-dd HH:MM:ss.l',
+               ignore: 'pid,hostname',
+               singleLine: false,
+@@ -55,21 +62,20 @@ export function buildPinoOptions(): Params {
+         paths: redactPaths,
+         censor: '***',
+       },
+       // 慢请求标记
+       customSuccessMessage: (req: any, res: any, time: number) => {
+         const slow = time > SLOW_REQUEST_MS;
+         return `${req.method} ${req.url} ${res.statusCode} ${time}ms${
+           slow ? ' [SLOW]' : ''
+         }`;
+       },
+-      customErrorMessage: (req: any, res: any, _err: Error) => {
+-        const time = (res as any).responseTime ?? 0;
++      customErrorMessage: (req: any, res: any, _err: Error, responseTime?: number) => {
++        const time = responseTime ?? 0;
+         const slow = time > SLOW_REQUEST_MS;
+         return `${req.method} ${req.url} ${res.statusCode} ${time}ms${
+           slow ? ' [SLOW]' : ''
+         } [ERROR]`;
+       },
+-      // 响应头回写 X-Request-ID（pino-http 默认开启）
+     },
+   };
+ }
+diff --git a/demo/fruit-shop/packages/server/src/common/logging/redact.serializer.ts b/demo/fruit-shop/packages/server/src/common/logging/redact.serializer.ts
+index 6e6823c..f431e34 100644
+--- a/demo/fruit-shop/packages/server/src/common/logging/redact.serializer.ts
++++ b/demo/fruit-shop/packages/server/src/common/logging/redact.serializer.ts
+@@ -10,20 +10,22 @@
+ export const redactPaths: string[] = [
+   // 请求头
+   'req.headers.authorization',
+   // 请求体 - 密码类
+   'req.body.password',
+   'req.body.oldPassword',
+   'req.body.newPassword',
+   // 请求体 - token 类
+   'req.body.token',
+   'req.body.refreshToken',
++  // 以下响应体路径为防御性配置 —— 当前 res serializer 仅输出 statusCode，不记录 body。
++  // 若未来扩展 res serializer 输出 body，这些路径自动生效，确保 token 不落盘。
+   // 响应体 - token 类（auth.service 返回）
+   'res.body.accessToken',
+   'res.body.refreshToken',
+   // 响应体 - data 包装后的 token（TransformInterceptor 包装层）
+   'res.body.data.accessToken',
+   'res.body.data.refreshToken',
+ ];
+ 
+ const PHONE_RE = /^1[3-9]\d{9}$/;
+ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+diff --git a/demo/fruit-shop/packages/server/src/modules/auth/auth.service.ts b/demo/fruit-shop/packages/server/src/modules/auth/auth.service.ts
+index 30c9077..50e3d9e 100644
+--- a/demo/fruit-shop/packages/server/src/modules/auth/auth.service.ts
++++ b/demo/fruit-shop/packages/server/src/modules/auth/auth.service.ts
+@@ -98,24 +98,21 @@ export class AuthService {
+     // bcrypt 校验
+     const isPasswordValid = await bcrypt.compare(dto.password, user.password);
+     if (!isPasswordValid) {
+       throw new UnauthorizedException(ErrorMessage[ErrorCode.AUTH_FAILED]);
+     }
+ 
+     // 生成 token
+     const tokens = await this.generateTokens(user.id, user.phone, user.role);
+ 
+     this.logger.info(
+-      {
+-        userId: user.id,
+-        phone: user.phone,
+-      },
++      { userId: user.id },
+       '用户登录成功',
+     );
+ 
+     // 返回时排除 password
+     const { password: _, ...userWithoutPassword } = user;
+ 
+     return {
+       accessToken: tokens.accessToken,
+       refreshToken: tokens.refreshToken,
+       user: userWithoutPassword,

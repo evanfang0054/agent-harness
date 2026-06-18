@@ -1,0 +1,55 @@
+# Review package: 034a433..HEAD
+
+## Commits
+41a1dba feat(logging): main.ts 接入 PinoLogger 替换 console.log
+
+## Files changed
+ demo/fruit-shop/packages/server/src/main.ts | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+## Diff
+diff --git a/demo/fruit-shop/packages/server/src/main.ts b/demo/fruit-shop/packages/server/src/main.ts
+index fe61837..1dfb668 100644
+--- a/demo/fruit-shop/packages/server/src/main.ts
++++ b/demo/fruit-shop/packages/server/src/main.ts
+@@ -1,19 +1,23 @@
+ import 'reflect-metadata';
+ import { NestFactory } from '@nestjs/core';
+ import { ValidationPipe } from '@nestjs/common';
++import { Logger } from 'nestjs-pino';
+ import { AppModule } from './app.module';
+ import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+ 
+ async function bootstrap() {
+-  const app = await NestFactory.create(AppModule);
++  const app = await NestFactory.create(AppModule, { bufferLogs: true });
++
++  // 使用 pino 作为全局 logger（覆盖 NestJS 内置 Logger）
++  app.useLogger(app.get(Logger));
+ 
+   // 全局路由前缀 — nginx 反向代理 /api/ → /api/
+   app.setGlobalPrefix('api');
+ 
+   // 全局 CORS
+   app.enableCors({
+     origin: true,
+     credentials: true,
+   });
+ 
+@@ -30,14 +34,14 @@ async function bootstrap() {
+   );
+ 
+   // 全局响应拦截器 — 包装 { code: 0, data, message: 'success' }
+   app.useGlobalInterceptors(new TransformInterceptor());
+ 
+   // 全局异常过滤器 — 统一返回 { code, message }
+   app.useGlobalFilters(new HttpExceptionFilter());
+ 
+   const port = process.env.PORT || 3000;
+   await app.listen(port);
+-  console.log(`[Nest] Application is running on: http://localhost:${port}`);
++  app.get(Logger).log(`Application is running on: http://localhost:${port}`);
+ }
+ 
+ bootstrap();

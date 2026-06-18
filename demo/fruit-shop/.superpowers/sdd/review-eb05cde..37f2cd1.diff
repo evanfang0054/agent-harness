@@ -1,0 +1,85 @@
+# Review package: eb05cde..HEAD
+
+## Commits
+37f2cd1 feat(logging): order.service 接入 PinoLogger（下单成功）
+
+## Files changed
+ .../packages/server/src/modules/order/order.service.ts  | 17 ++++++++++++++++-
+ 1 file changed, 16 insertions(+), 1 deletion(-)
+
+## Diff
+diff --git a/demo/fruit-shop/packages/server/src/modules/order/order.service.ts b/demo/fruit-shop/packages/server/src/modules/order/order.service.ts
+index ad0517c..007c188 100644
+--- a/demo/fruit-shop/packages/server/src/modules/order/order.service.ts
++++ b/demo/fruit-shop/packages/server/src/modules/order/order.service.ts
+@@ -3,33 +3,37 @@ import {
+   NotFoundException,
+   BadRequestException,
+ } from '@nestjs/common';
+ import { InjectRepository } from '@nestjs/typeorm';
+ import { Repository, DataSource } from 'typeorm';
+ import { OrderEntity, OrderItemEntity, CartEntity } from '../../entities';
+ import { CartService } from '../cart/cart.service';
+ import { CreateOrderDto } from './dto/create-order.dto';
+ import { QueryOrderDto } from './dto/query-order.dto';
+ import { OrderStatus, ErrorCode, ErrorMessage } from 'shared';
++import { PinoLogger } from 'nestjs-pino';
+ 
+ @Injectable()
+ export class OrderService {
+   constructor(
+     @InjectRepository(OrderEntity)
+     private readonly orderRepo: Repository<OrderEntity>,
+     @InjectRepository(OrderItemEntity)
+     private readonly orderItemRepo: Repository<OrderItemEntity>,
+     @InjectRepository(CartEntity)
+     private readonly cartRepo: Repository<CartEntity>,
+     private readonly cartService: CartService,
+     private readonly dataSource: DataSource,
+-  ) {}
++    private readonly logger: PinoLogger,
++  ) {
++    this.logger.setContext(OrderService.name);
++  }
+ 
+   async create(userId: number, dto: CreateOrderDto) {
+     // Get cart items with product info
+     const cartItems = await this.cartRepo.find({
+       where: { userId },
+       relations: ['product'],
+     });
+ 
+     if (cartItems.length === 0) {
+       throw new BadRequestException(ErrorMessage[ErrorCode.CART_EMPTY]);
+@@ -88,20 +92,31 @@ export class OrderService {
+       await queryRunner.manager
+         .createQueryBuilder()
+         .delete()
+         .from(CartEntity)
+         .where('user_id = :userId', { userId })
+         .andWhere('product_id IN (:...productIds)', { productIds })
+         .execute();
+ 
+       await queryRunner.commitTransaction();
+ 
++      this.logger.info(
++        {
++          orderId: savedOrder.id,
++          orderNo,
++          userId,
++          totalAmount,
++          itemCount: orderItems.length,
++        },
++        '订单创建成功',
++      );
++
+       return this.findOne(userId, savedOrder.id);
+     } catch (err) {
+       await queryRunner.rollbackTransaction();
+       throw err;
+     } finally {
+       await queryRunner.release();
+     }
+   }
+ 
+   async findAll(userId: number, query: QueryOrderDto) {
