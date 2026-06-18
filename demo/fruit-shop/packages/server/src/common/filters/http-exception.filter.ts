@@ -5,6 +5,7 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
+import { ThrottlerException } from '@nestjs/throttler';
 import { PinoLogger } from 'nestjs-pino';
 import { Response } from 'express';
 
@@ -72,7 +73,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
       );
     }
 
-    response.status(HttpStatus.OK).json({
+    const httpStatus = exception instanceof ThrottlerException
+      ? HttpStatus.TOO_MANY_REQUESTS
+      : HttpStatus.OK;
+
+    response.status(httpStatus).json({
       code,
       message,
     });

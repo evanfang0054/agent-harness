@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -27,6 +28,7 @@ export class AuthController {
    */
   @Post('register')
   @Public()
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
@@ -37,6 +39,7 @@ export class AuthController {
    */
   @Post('login')
   @Public()
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   @HttpCode(HttpStatus.OK)
   async login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
