@@ -9,6 +9,7 @@ import { UserModule } from './modules/user/user.module';
 import { ProductModule } from './modules/product/product.module';
 import { CartModule } from './modules/cart/cart.module';
 import { OrderModule } from './modules/order/order.module';
+import { HealthModule } from './modules/health/health.module';
 import { RedisProviderModule } from './common/redis-provider.module';
 import { LoggingModule } from './common/logging/logging.module';
 
@@ -34,6 +35,7 @@ import { LoggingModule } from './common/logging/logging.module';
     ProductModule,
     CartModule,
     OrderModule,
+    HealthModule,
   ],
   controllers: [],
   providers: [
