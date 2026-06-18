@@ -2,14 +2,11 @@ import type { Config } from 'jest';
 
 const config: Config = {
   moduleFileExtensions: ['js', 'json', 'ts'],
-  rootDir: 'src',
-  testRegex: '.*\\.spec\\.ts$',
+  rootDir: '.',
+  testRegex: '.e2e-spec.ts$',
   transform: {
     '^.+\\.ts$': 'ts-jest',
   },
-  collectCoverageFrom: ['**/*.ts', '!main.ts', '!**/*.module.ts'],
-  coverageDirectory: '../coverage',
-  testEnvironment: 'node',
   moduleNameMapper: {
     '^shared(.*)$': '<rootDir>/../../shared/dist$1',
   },
