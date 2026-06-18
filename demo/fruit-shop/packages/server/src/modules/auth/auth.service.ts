@@ -228,13 +228,11 @@ export class AuthService {
     const accessJti = uuidv4();
     const refreshJti = uuidv4();
 
-    const accessExpiresIn = this.configService.get<number>(
-      'JWT_ACCESS_EXPIRES_IN',
-      900,
+    const accessExpiresIn = Number(
+      this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '900'),
     ); // 15 min = 900s
-    const refreshExpiresIn = this.configService.get<number>(
-      'JWT_REFRESH_EXPIRES_IN',
-      604800,
+    const refreshExpiresIn = Number(
+      this.configService.get<string>('JWT_REFRESH_EXPIRES_IN', '604800'),
     ); // 7 days = 604800s
 
     const accessToken = this.jwtService.sign(
@@ -277,9 +275,8 @@ export class AuthService {
     role: string,
   ): string {
     const accessJti = uuidv4();
-    const accessExpiresIn = this.configService.get<number>(
-      'JWT_ACCESS_EXPIRES_IN',
-      900,
+    const accessExpiresIn = Number(
+      this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '900'),
     );
 
     return this.jwtService.sign(

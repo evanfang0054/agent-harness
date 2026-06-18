@@ -19,7 +19,11 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env.local', '.env'],
+      // 测试环境优先加载 .env.test（隔离的 fruit_shop_test + REDIS_DB=1）
+      envFilePath:
+        process.env.NODE_ENV === 'test'
+          ? ['.env.test', '.env.local', '.env']
+          : ['.env.local', '.env'],
     }),
     ThrottlerModule.forRoot({
       throttlers: [{ ttl: 60000, limit: 60 }],
