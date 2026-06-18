@@ -47,7 +47,7 @@ async function bootstrap() {
   );
 
   // 全局响应拦截器 — 包装 { code: 0, data, message: 'success' }
-  app.useGlobalInterceptors(new TransformInterceptor());
+  app.useGlobalInterceptors(app.get(TransformInterceptor));
 
   // 全局异常过滤器 — 统一返回 { code, message }
   app.useGlobalFilters(app.get(HttpExceptionFilter));

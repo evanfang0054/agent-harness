@@ -79,6 +79,22 @@ export class HttpExceptionFilter implements ExceptionFilter {
       httpStatus = HttpStatus.TOO_MANY_REQUESTS;
     } else if (exception instanceof ServiceUnavailableException) {
       httpStatus = HttpStatus.SERVICE_UNAVAILABLE;
+
+      // Pass through the original terminus health check response body
+      const exceptionResponse = exception.getResponse() as Record<string, any>;
+      const terminusBody = exceptionResponse?.response;
+      if (terminusBody?.status && terminusBody?.details) {
+        this.logger.error(
+          {
+            method: req.method,
+            url: req.url,
+            status: terminusBody.status,
+            details: terminusBody.details,
+          },
+          'Health check failed',
+        );
+        return response.status(httpStatus).json(terminusBody);
+      }
     } else {
       httpStatus = HttpStatus.OK;
     }
