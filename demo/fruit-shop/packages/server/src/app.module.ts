@@ -8,6 +8,7 @@ import { ProductModule } from './modules/product/product.module';
 import { CartModule } from './modules/cart/cart.module';
 import { OrderModule } from './modules/order/order.module';
 import { RedisProviderModule } from './common/redis-provider.module';
+import { LoggingModule } from './common/logging/logging.module';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { RedisProviderModule } from './common/redis-provider.module';
       isGlobal: true,
       envFilePath: ['.env.local', '.env'],
     }),
-
+    LoggingModule,
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: databaseConfig,
