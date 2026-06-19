@@ -39,34 +39,61 @@ export class OrderService {
       throw new BadRequestException(ErrorMessage[ErrorCode.CART_EMPTY]);
     }
 
-    // Calculate total and snapshot items
-    let totalAmount = 0;
-    const orderItems: Partial<OrderItemEntity>[] = [];
-
-    for (const item of cartItems) {
-      if (!item.product) continue;
-      const price = Number(item.product.price);
-      totalAmount += price * item.quantity;
-      orderItems.push({
-        productId: item.productId,
-        productName: item.product.name,
-        specLabel: item.specLabel,
-        price,
-        quantity: item.quantity,
-        image: item.product.image,
-      });
-    }
-
-    // Generate order number: timestamp + random
-    const orderNo = `${Date.now()}${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-
-    // Execute in transaction
+    // Execute in transaction (row-lock products, validate stock, deduct)
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      // Create order
+      // 1. 行锁 + 读取最新库存
+      const productIds = cartItems.map((item) => item.productId);
+      const lockedProducts: { id: number; stock: number; name: string }[] =
+        await queryRunner.manager.query(
+          'SELECT id, stock, name FROM products WHERE id IN (?) FOR UPDATE',
+          [productIds],
+        );
+      const stockMap = new Map(lockedProducts.map((p) => [p.id, p]));
+
+      // 2. 库存校验
+      for (const item of cartItems) {
+        if (!item.product) continue;
+        const latest = stockMap.get(item.productId);
+        if (!latest || latest.stock < item.quantity) {
+          throw new BadRequestException({
+            code: ErrorCode.STOCK_INSUFFICIENT,
+            message: ErrorMessage[ErrorCode.STOCK_INSUFFICIENT],
+          });
+        }
+      }
+
+      // 3. 计算总额 + 快照
+      let totalAmount = 0;
+      const orderItems: Partial<OrderItemEntity>[] = [];
+      for (const item of cartItems) {
+        if (!item.product) continue;
+        const price = Number(item.product.price);
+        totalAmount += price * item.quantity;
+        orderItems.push({
+          productId: item.productId,
+          productName: item.product.name,
+          specLabel: item.specLabel,
+          price,
+          quantity: item.quantity,
+          image: item.product.image,
+        });
+      }
+
+      // 4. 扣减库存（批量 UPDATE）
+      for (const item of cartItems) {
+        if (!item.product) continue;
+        await queryRunner.manager.query(
+          'UPDATE products SET stock = stock - ? WHERE id = ?',
+          [item.quantity, item.productId],
+        );
+      }
+
+      // 5. 创建订单
+      const orderNo = `${Date.now()}${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
       const order = queryRunner.manager.create(OrderEntity, {
         orderNo,
         userId,
@@ -78,7 +105,7 @@ export class OrderService {
       });
       const savedOrder = await queryRunner.manager.save(OrderEntity, order);
 
-      // Create order items
+      // 6. 创建订单项
       const items = orderItems.map((item) =>
         queryRunner.manager.create(OrderItemEntity, {
           ...item,
@@ -87,8 +114,7 @@ export class OrderService {
       );
       await queryRunner.manager.save(OrderItemEntity, items);
 
-      // Clear cart
-      const productIds = cartItems.map((item) => item.productId);
+      // 7. 清空购物车
       await queryRunner.manager
         .createQueryBuilder()
         .delete()
@@ -171,8 +197,40 @@ export class OrderService {
       );
     }
 
-    order.status = OrderStatus.CANCELLED;
-    await this.orderRepo.save(order);
+    // 事务内：改状态 + 回补库存
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // 行锁订单项对应商品
+      const items = await queryRunner.manager.find(OrderItemEntity, {
+        where: { orderId: id },
+      });
+      const productIds = items.map((i) => i.productId);
+      if (productIds.length > 0) {
+        await queryRunner.manager.query(
+          'SELECT id FROM products WHERE id IN (?) FOR UPDATE',
+          [productIds],
+        );
+        for (const item of items) {
+          await queryRunner.manager.query(
+            'UPDATE products SET stock = stock + ? WHERE id = ?',
+            [item.quantity, item.productId],
+          );
+        }
+      }
+
+      order.status = OrderStatus.CANCELLED;
+      await queryRunner.manager.save(OrderEntity, order);
+
+      await queryRunner.commitTransaction();
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
 
     return this.findOne(userId, id);
   }

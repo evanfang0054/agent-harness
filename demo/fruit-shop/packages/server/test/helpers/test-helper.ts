@@ -137,4 +137,27 @@ export class TestHelper {
       throw new Error(`addToCartAsUser failed: code=${res.body?.code} message=${res.body?.message}`);
     }
   }
+
+  /**
+   * 读取商品当前库存（直接查 DB）
+   */
+  async getProductStock(productId: number): Promise<number> {
+    const dataSource = this.app.get(DataSource);
+    const rows: any[] = await dataSource.query(
+      'SELECT stock FROM products WHERE id = ?',
+      [productId],
+    );
+    return rows.length > 0 ? Number(rows[0].stock) : -1;
+  }
+
+  /**
+   * 直接修改商品库存（绕过 service，用于测试前置条件）
+   */
+  async setProductStock(productId: number, stock: number): Promise<void> {
+    const dataSource = this.app.get(DataSource);
+    await dataSource.query(
+      'UPDATE products SET stock = ? WHERE id = ?',
+      [stock, productId],
+    );
+  }
 }

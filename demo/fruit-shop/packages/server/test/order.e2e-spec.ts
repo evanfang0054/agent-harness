@@ -116,6 +116,58 @@ describe('Order (e2e)', () => {
     });
   });
 
+  describe('库存校验与扣减', () => {
+    let stockProductId: number;
+    let stockOrderId: number;
+    const initialStock = 5;
+
+    beforeAll(async () => {
+      stockProductId = await helper.createProductAsAdmin(adminToken, {
+        name: '库存扣减测试商品',
+        stock: initialStock,
+        price: 9.9,
+      });
+    });
+
+    it('下单后应扣减库存', async () => {
+      await helper.addToCartAsUser(userToken, stockProductId, '1kg', 2);
+      const res = await request(helper.httpServer)
+        .post('/api/orders')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({ address: '北京市', phone: '13800000040' });
+      expect(res.body.code).toBe(0);
+      stockOrderId = res.body.data.id;
+
+      const stockAfter = await helper.getProductStock(stockProductId);
+      expect(stockAfter).toBe(initialStock - 2);
+    });
+
+    it('取消订单后应回补库存', async () => {
+      const stockBeforeCancel = await helper.getProductStock(stockProductId);
+      const res = await request(helper.httpServer)
+        .put(`/api/orders/${stockOrderId}/cancel`)
+        .set('Authorization', `Bearer ${userToken}`);
+      expect(res.body.code).toBe(0);
+
+      const stockAfterCancel = await helper.getProductStock(stockProductId);
+      expect(stockAfterCancel).toBe(stockBeforeCancel + 2);
+    });
+
+    it('库存不足时应返回业务码 40501', async () => {
+      // 设置库存为 1，请求 5 件
+      await helper.setProductStock(stockProductId, 1);
+      await helper.addToCartAsUser(userToken, stockProductId, '2kg', 5);
+      const res = await request(helper.httpServer)
+        .post('/api/orders')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({ address: '北京市', phone: '13800000040' });
+      expect(res.body.code).toBe(40501);
+      // 库存应未变化
+      const stock = await helper.getProductStock(stockProductId);
+      expect(stock).toBe(1);
+    });
+  });
+
   describe('PUT /api/orders/:id/cancel', () => {
     it('should cancel a pending order', () => {
       return request(helper.httpServer)
