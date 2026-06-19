@@ -14,6 +14,7 @@ const Profile = lazy(() => import('@/pages/Profile'));
 const Login = lazy(() => import('@/pages/Login'));
 const Register = lazy(() => import('@/pages/Register'));
 const AdminProducts = lazy(() => import('@/pages/AdminProducts'));
+const AdminBanners = lazy(() => import('@/pages/AdminBanners'));
 
 function SuspenseWrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -86,5 +87,9 @@ export const router = createBrowserRouter([
   {
     path: '/admin/products',
     element: <SuspenseWrapper><AdminRoute><AdminProducts /></AdminRoute></SuspenseWrapper>,
+  },
+  {
+    path: '/admin/banners',
+    element: <SuspenseWrapper><AdminRoute><AdminBanners /></AdminRoute></SuspenseWrapper>,
   },
 ]);
