@@ -57,7 +57,10 @@ export class OrderService {
     });
 
     if (cartItems.length === 0) {
-      throw new BadRequestException(ErrorMessage[ErrorCode.CART_EMPTY]);
+      throw new BadRequestException({
+        code: ErrorCode.CART_EMPTY,
+        message: ErrorMessage[ErrorCode.CART_EMPTY],
+      });
     }
 
     // 若传入 addressId，从地址薄读取最新快照覆盖 dto.address / dto.phone
@@ -68,9 +71,10 @@ export class OrderService {
         where: { id: dto.addressId, userId },
       });
       if (!address) {
-        throw new BadRequestException(
-          ErrorMessage[ErrorCode.ADDRESS_NOT_FOUND],
-        );
+        throw new BadRequestException({
+          code: ErrorCode.ADDRESS_NOT_FOUND,
+          message: ErrorMessage[ErrorCode.ADDRESS_NOT_FOUND],
+        });
       }
       orderAddress = `${address.province}${address.city}${address.district}${address.detail}`;
       orderPhone = address.phone;
@@ -277,7 +281,10 @@ export class OrderService {
     });
 
     if (!order) {
-      throw new NotFoundException(ErrorMessage[ErrorCode.ORDER_NOT_FOUND]);
+      throw new NotFoundException({
+        code: ErrorCode.ORDER_NOT_FOUND,
+        message: ErrorMessage[ErrorCode.ORDER_NOT_FOUND],
+      });
     }
 
     const items = await this.orderItemRepo.find({
@@ -304,13 +311,17 @@ export class OrderService {
           [id, userId],
         );
       if (rows.length === 0) {
-        throw new NotFoundException(ErrorMessage[ErrorCode.ORDER_NOT_FOUND]);
+        throw new NotFoundException({
+        code: ErrorCode.ORDER_NOT_FOUND,
+        message: ErrorMessage[ErrorCode.ORDER_NOT_FOUND],
+      });
       }
       // 2. 状态校验（rows[0].status 从 mysql 返回为 smallint → number）
       if (rows[0].status !== OrderStatus.PENDING) {
-        throw new BadRequestException(
-          ErrorMessage[ErrorCode.ORDER_CANCEL_NOT_ALLOWED],
-        );
+        throw new BadRequestException({
+          code: ErrorCode.ORDER_CANCEL_NOT_ALLOWED,
+          message: ErrorMessage[ErrorCode.ORDER_CANCEL_NOT_ALLOWED],
+        });
       }
 
       // 3. 锁订单项对应商品 + 回补库存
@@ -373,7 +384,10 @@ export class OrderService {
           [id, userId],
         );
       if (rows.length === 0) {
-        throw new NotFoundException(ErrorMessage[ErrorCode.ORDER_NOT_FOUND]);
+        throw new NotFoundException({
+        code: ErrorCode.ORDER_NOT_FOUND,
+        message: ErrorMessage[ErrorCode.ORDER_NOT_FOUND],
+      });
       }
       if (rows[0].status !== OrderStatus.PENDING) {
         throw new BadRequestException({
@@ -406,7 +420,10 @@ export class OrderService {
           [id],
         );
       if (rows.length === 0) {
-        throw new NotFoundException(ErrorMessage[ErrorCode.ORDER_NOT_FOUND]);
+        throw new NotFoundException({
+        code: ErrorCode.ORDER_NOT_FOUND,
+        message: ErrorMessage[ErrorCode.ORDER_NOT_FOUND],
+      });
       }
       if (rows[0].status !== OrderStatus.PAID) {
         throw new BadRequestException({
@@ -447,7 +464,10 @@ export class OrderService {
           [id, userId],
         );
       if (rows.length === 0) {
-        throw new NotFoundException(ErrorMessage[ErrorCode.ORDER_NOT_FOUND]);
+        throw new NotFoundException({
+        code: ErrorCode.ORDER_NOT_FOUND,
+        message: ErrorMessage[ErrorCode.ORDER_NOT_FOUND],
+      });
       }
       if (rows[0].status !== OrderStatus.SHIPPED) {
         throw new BadRequestException({
@@ -480,14 +500,20 @@ export class OrderService {
           [id, userId],
         );
       if (rows.length === 0) {
-        throw new NotFoundException(ErrorMessage[ErrorCode.ORDER_NOT_FOUND]);
+        throw new NotFoundException({
+        code: ErrorCode.ORDER_NOT_FOUND,
+        message: ErrorMessage[ErrorCode.ORDER_NOT_FOUND],
+      });
       }
       const currentStatus = rows[0].status;
       if (
         currentStatus !== OrderStatus.PAID &&
         currentStatus !== OrderStatus.SHIPPED
       ) {
-        throw new BadRequestException(ErrorMessage[ErrorCode.REFUND_NOT_ALLOWED]);
+        throw new BadRequestException({
+          code: ErrorCode.REFUND_NOT_ALLOWED,
+          message: ErrorMessage[ErrorCode.REFUND_NOT_ALLOWED],
+        });
       }
       const refund = queryRunner.manager.create(RefundEntity, {
         orderId: id,
@@ -514,7 +540,10 @@ export class OrderService {
   async findShipping(id: number) {
     const order = await this.orderRepo.findOne({ where: { id } });
     if (!order) {
-      throw new NotFoundException(ErrorMessage[ErrorCode.ORDER_NOT_FOUND]);
+      throw new NotFoundException({
+        code: ErrorCode.ORDER_NOT_FOUND,
+        message: ErrorMessage[ErrorCode.ORDER_NOT_FOUND],
+      });
     }
     const shipping = await this.shippingRepo.findOne({
       where: { orderId: id },
@@ -526,7 +555,10 @@ export class OrderService {
   private async findOneInternal(id: number) {
     const order = await this.orderRepo.findOne({ where: { id } });
     if (!order) {
-      throw new NotFoundException(ErrorMessage[ErrorCode.ORDER_NOT_FOUND]);
+      throw new NotFoundException({
+        code: ErrorCode.ORDER_NOT_FOUND,
+        message: ErrorMessage[ErrorCode.ORDER_NOT_FOUND],
+      });
     }
     const items = await this.orderItemRepo.find({ where: { orderId: id } });
     return { ...order, items };

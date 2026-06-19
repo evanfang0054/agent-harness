@@ -176,4 +176,27 @@ describe('Order Flow (e2e)', () => {
       .set('Authorization', `Bearer ${userToken}`);
     expect(orderRes.body.data.status).toBe(1); // PAID
   });
+
+  it('REFUNDING 状态的订单不可 cancel', async () => {
+    // 创建订单 → pay → refund 申请 → 尝试 cancel 应失败
+    const productId = await helper.createProductAsAdmin(adminToken, { stock: 10 });
+    await helper.addToCartAsUser(userToken, productId, '默认', 1);
+    const createRes = await request(helper.httpServer)
+      .post('/api/orders')
+      .set('Authorization', `Bearer ${userToken}`)
+      .send({ address: '北京市', phone: '13800000030' });
+    const tempOrderId = createRes.body.data.id;
+
+    await request(helper.httpServer).put(`/api/orders/${tempOrderId}/pay`).set('Authorization', `Bearer ${userToken}`);
+    await request(helper.httpServer)
+      .post(`/api/orders/${tempOrderId}/refund`)
+      .set('Authorization', `Bearer ${userToken}`)
+      .send({ reason: '测试' });
+
+    // REFUNDING 状态下 cancel 应失败
+    const cancelRes = await request(helper.httpServer)
+      .put(`/api/orders/${tempOrderId}/cancel`)
+      .set('Authorization', `Bearer ${userToken}`);
+    expect(cancelRes.body.code).toBe(40403); // ORDER_CANCEL_NOT_ALLOWED
+  });
 });

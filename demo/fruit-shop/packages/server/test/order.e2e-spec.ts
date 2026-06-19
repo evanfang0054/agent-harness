@@ -72,8 +72,8 @@ describe('Order (e2e)', () => {
         .send({ address: '北京市朝阳区', phone: '13800000040' })
         .expect(200)
         .expect((res) => {
-          // BadRequestException(CART_EMPTY) → code = HTTP status = 400
-          expect(res.body.code).toBe(400);
+          // BadRequestException({ code: ErrorCode.CART_EMPTY }) → 业务码 40303
+          expect(res.body.code).toBe(40303);
         });
     });
   });
@@ -104,14 +104,14 @@ describe('Order (e2e)', () => {
         });
     });
 
-    it('should return 404 for non-existent order', () => {
+    it('should return 40401 for non-existent order', () => {
       return request(helper.httpServer)
         .get('/api/orders/99999')
         .set('Authorization', `Bearer ${userToken}`)
         .expect(200)
         .expect((res) => {
-          // NotFoundException(ORDER_NOT_FOUND) → code = HTTP status = 404
-          expect(res.body.code).toBe(404);
+          // NotFoundException({ code: ErrorCode.ORDER_NOT_FOUND }) → 业务码 40401
+          expect(res.body.code).toBe(40401);
         });
     });
   });
@@ -186,8 +186,8 @@ describe('Order (e2e)', () => {
         .set('Authorization', `Bearer ${userToken}`)
         .expect(200)
         .expect((res) => {
-          // BadRequestException(ORDER_CANCEL_NOT_ALLOWED) → code = HTTP status = 400
-          expect(res.body.code).toBe(400);
+          // BadRequestException({ code: ORDER_CANCEL_NOT_ALLOWED }) → 业务码 40403
+          expect(res.body.code).toBe(40403);
         });
     });
   });
@@ -210,23 +210,23 @@ describe('Order (e2e)', () => {
       userBOrderId = res.body.data.id;
     });
 
-    it('should reject A cancelling B order (404)', () => {
+    it('should reject A cancelling B order (40401)', () => {
       return request(helper.httpServer)
         .put(`/api/orders/${userBOrderId}/cancel`)
         .set('Authorization', `Bearer ${userA.accessToken}`)
         .expect(200)
         .expect((res) => {
-          expect(res.body.code).toBe(404);
+          expect(res.body.code).toBe(40401);
         });
     });
 
-    it('should reject A viewing B order detail (404)', () => {
+    it('should reject A viewing B order detail (40401)', () => {
       return request(helper.httpServer)
         .get(`/api/orders/${userBOrderId}`)
         .set('Authorization', `Bearer ${userA.accessToken}`)
         .expect(200)
         .expect((res) => {
-          expect(res.body.code).toBe(404);
+          expect(res.body.code).toBe(40401);
         });
     });
 
@@ -240,13 +240,13 @@ describe('Order (e2e)', () => {
         });
     });
 
-    it('should reject cancelling non-existent order (404)', () => {
+    it('should reject cancelling non-existent order (40401)', () => {
       return request(helper.httpServer)
         .put('/api/orders/99999/cancel')
         .set('Authorization', `Bearer ${userA.accessToken}`)
         .expect(200)
         .expect((res) => {
-          expect(res.body.code).toBe(404);
+          expect(res.body.code).toBe(40401);
         });
     });
   });

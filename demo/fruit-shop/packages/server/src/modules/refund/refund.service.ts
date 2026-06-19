@@ -62,9 +62,10 @@ export class RefundService {
       }
       const refundRow = refundRows[0];
       if (refundRow.status !== RefundStatus.PENDING) {
-        throw new BadRequestException(
-          ErrorMessage[ErrorCode.ORDER_STATUS_ERROR],
-        );
+        throw new BadRequestException({
+          code: ErrorCode.ORDER_STATUS_ERROR,
+          message: ErrorMessage[ErrorCode.ORDER_STATUS_ERROR],
+        });
       }
       const orderId = refundRow.order_id;
 
@@ -151,9 +152,10 @@ export class RefundService {
       }
       const refundRow = refundRows[0];
       if (refundRow.status !== RefundStatus.PENDING) {
-        throw new BadRequestException(
-          ErrorMessage[ErrorCode.ORDER_STATUS_ERROR],
-        );
+        throw new BadRequestException({
+          code: ErrorCode.ORDER_STATUS_ERROR,
+          message: ErrorMessage[ErrorCode.ORDER_STATUS_ERROR],
+        });
       }
 
       // 恢复 prevStatus
