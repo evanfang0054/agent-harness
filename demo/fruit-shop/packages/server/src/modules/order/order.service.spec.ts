@@ -21,6 +21,11 @@ describe('OrderService', () => {
       andWhere: jest.fn().mockReturnThis(),
       execute,
     };
+    // `manager.query` mocks TypeORM's raw SQL interface used for row locks
+    // and bulk updates inside transactions. Default returns empty array
+    // (sufficient for UPDATE/DELETE statements whose return value the
+    // service ignores). Specific tests override via mockResolvedValueOnce.
+    const managerQuery = jest.fn().mockResolvedValue([]);
     queryRunner = {
       connect: jest.fn(),
       startTransaction: jest.fn(),
@@ -28,6 +33,8 @@ describe('OrderService', () => {
         create: jest.fn((_, x) => x),
         save: jest.fn(),
         createQueryBuilder: jest.fn(() => deleteQb),
+        query: managerQuery,
+        find: jest.fn(),
       },
       commitTransaction: jest.fn(),
       rollbackTransaction: jest.fn(),
@@ -82,6 +89,12 @@ describe('OrderService', () => {
       // create() tail calls findOne(userId, savedOrder.id) which calls orderRepo.findOne
       orderRepo.findOne.mockResolvedValue({ id: 100 });
       orderItemRepo.find.mockResolvedValue([{ id: 1, orderId: 100 }]);
+      // create() issues FOR UPDATE SELECT on products then UPDATEs stock;
+      // provide locked rows so stock validation passes.
+      queryRunner.manager.query.mockResolvedValueOnce([
+        { id: 1, stock: 100, name: 'A' },
+        { id: 2, stock: 100, name: 'B' },
+      ]);
 
       const result = await service.create(1, { address: 'a', phone: 'p' } as any);
 
@@ -109,6 +122,10 @@ describe('OrderService', () => {
           quantity: 1,
           product: { price: '1', name: 'A', image: 'i' },
         },
+      ]);
+      // FOR UPDATE returns enough stock; subsequent save() rejects to trigger rollback.
+      queryRunner.manager.query.mockResolvedValueOnce([
+        { id: 1, stock: 100, name: 'A' },
       ]);
       queryRunner.manager.save.mockRejectedValue(new Error('db down'));
 
@@ -176,26 +193,42 @@ describe('OrderService', () => {
 
   describe('cancel', () => {
     it('should throw NotFound when order missing', async () => {
+      // cancel() now does FOR UPDATE on orders before NotFoundException check,
+      // so query must return empty rows → service throws ORDER_NOT_FOUND.
+      queryRunner.manager.query.mockResolvedValueOnce([]);
       orderRepo.findOne.mockResolvedValue(null);
       await expect(service.cancel(1, 999)).rejects.toThrow(NotFoundException);
     });
 
     it('should throw BadRequest when not PENDING', async () => {
       // OrderStatus.PAID=1 — non-PENDING value
+      // FOR UPDATE returns one row with status=PAID; status check throws.
+      queryRunner.manager.query.mockResolvedValueOnce([
+        { id: 1, status: OrderStatus.PAID },
+      ]);
       orderRepo.findOne.mockResolvedValue({ id: 1, status: OrderStatus.PAID });
       await expect(service.cancel(1, 1)).rejects.toThrow(BadRequestException);
     });
 
     it('should update status to CANCELLED and persist via orderRepo.save', async () => {
       const order = { id: 1, status: OrderStatus.PENDING }; // PENDING = 0
+      // FOR UPDATE on orders returns the PENDING row (status=0).
+      queryRunner.manager.query.mockResolvedValueOnce([
+        { id: 1, status: OrderStatus.PENDING },
+      ]);
+      // cancel() reads order items via queryRunner.manager.find (not orderItemRepo);
+      // empty list → no stock restock queries needed.
+      queryRunner.manager.find.mockResolvedValue([]);
       orderRepo.findOne.mockResolvedValue(order);
-      orderItemRepo.find.mockResolvedValue([]);
       await service.cancel(1, 1);
-      expect(order.status).toBe(OrderStatus.CANCELLED); // CANCELLED = 4
-      // Implementation calls orderRepo.save(order) — verify the persistence occurred
-      expect(orderRepo.save).toHaveBeenCalledWith(
-        expect.objectContaining({ id: 1, status: OrderStatus.CANCELLED }),
+      // Implementation now persists via raw UPDATE query (no orderRepo.save call),
+      // but the trailing findOne() returns the mocked order object. Verify the
+      // status UPDATE was issued with CANCELLED status.
+      expect(queryRunner.manager.query).toHaveBeenCalledWith(
+        'UPDATE orders SET status = ? WHERE id = ?',
+        [OrderStatus.CANCELLED, 1],
       );
+      expect(queryRunner.commitTransaction).toHaveBeenCalled();
     });
   });
 });
