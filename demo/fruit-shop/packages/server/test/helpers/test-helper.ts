@@ -50,6 +50,8 @@ export class TestHelper {
     await dataSource.query('TRUNCATE TABLE order_items');
     await dataSource.query('TRUNCATE TABLE orders');
     await dataSource.query('TRUNCATE TABLE carts');
+    await dataSource.query('TRUNCATE TABLE user_coupons');
+    await dataSource.query('TRUNCATE TABLE coupon_templates');
     await dataSource.query('TRUNCATE TABLE users');
     await dataSource.query('SET FOREIGN_KEY_CHECKS = 1');
   }
