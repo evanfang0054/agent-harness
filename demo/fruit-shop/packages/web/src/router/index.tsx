@@ -11,6 +11,8 @@ const Checkout = lazy(() => import('@/pages/Checkout'));
 const OrderList = lazy(() => import('@/pages/OrderList'));
 const OrderDetail = lazy(() => import('@/pages/OrderDetail'));
 const Profile = lazy(() => import('@/pages/Profile'));
+const Addresses = lazy(() => import('@/pages/Addresses'));
+const Favorites = lazy(() => import('@/pages/Favorites'));
 const Login = lazy(() => import('@/pages/Login'));
 const Register = lazy(() => import('@/pages/Register'));
 const AdminProducts = lazy(() => import('@/pages/AdminProducts'));
@@ -76,6 +78,14 @@ export const router = createBrowserRouter([
   {
     path: '/profile',
     element: <SuspenseWrapper><ProtectedRoute><Profile /></ProtectedRoute></SuspenseWrapper>,
+  },
+  {
+    path: '/addresses',
+    element: <SuspenseWrapper><ProtectedRoute><Addresses /></ProtectedRoute></SuspenseWrapper>,
+  },
+  {
+    path: '/favorites',
+    element: <SuspenseWrapper><ProtectedRoute><Favorites /></ProtectedRoute></SuspenseWrapper>,
   },
   {
     path: '/login',
