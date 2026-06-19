@@ -139,4 +139,63 @@ describe('Order (e2e)', () => {
         });
     });
   });
+
+  describe('越权与边界', () => {
+    let userA: { accessToken: string; userId: number };
+    let userB: { accessToken: string; userId: number };
+    let userBOrderId: number;
+
+    beforeAll(async () => {
+      userA = await helper.registerAndLogin('13800000070', 'test123456');
+      userB = await helper.registerAndLogin('13800000071', 'test123456');
+      // 为 B 创建一笔订单
+      const productId = await helper.createProductAsAdmin(adminToken, { name: 'B 的订单商品' });
+      await helper.addToCartAsUser(userB.accessToken, productId, '1kg', 1);
+      const res = await request(helper.httpServer)
+        .post('/api/orders')
+        .set('Authorization', `Bearer ${userB.accessToken}`)
+        .send({ address: '北京市', phone: '13800000071' });
+      userBOrderId = res.body.data.id;
+    });
+
+    it('should reject A cancelling B order (404)', () => {
+      return request(helper.httpServer)
+        .put(`/api/orders/${userBOrderId}/cancel`)
+        .set('Authorization', `Bearer ${userA.accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.code).toBe(404);
+        });
+    });
+
+    it('should reject A viewing B order detail (404)', () => {
+      return request(helper.httpServer)
+        .get(`/api/orders/${userBOrderId}`)
+        .set('Authorization', `Bearer ${userA.accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.code).toBe(404);
+        });
+    });
+
+    it('should reject no-token POST /orders (401)', () => {
+      return request(helper.httpServer)
+        .post('/api/orders')
+        .send({ address: 'x', phone: '13800000099' })
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.code).toBe(401);
+        });
+    });
+
+    it('should reject cancelling non-existent order (404)', () => {
+      return request(helper.httpServer)
+        .put('/api/orders/99999/cancel')
+        .set('Authorization', `Bearer ${userA.accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.code).toBe(404);
+        });
+    });
+  });
 });
