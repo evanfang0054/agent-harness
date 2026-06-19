@@ -4,3 +4,4 @@ export { ProductEntity } from './product.entity';
 export { CartEntity } from './cart.entity';
 export { OrderEntity } from './order.entity';
 export { OrderItemEntity } from './order-item.entity';
+export { BannerEntity } from './banner.entity';
