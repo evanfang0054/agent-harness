@@ -1,27 +1,71 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import type { Banner } from 'shared';
+import { bannerApi } from '@/api/banner';
+
 export function PromoBanner() {
+  const navigate = useNavigate();
+  const [banner, setBanner] = useState<Banner | null>(null);
+
+  useEffect(() => {
+    bannerApi
+      .getActive()
+      .then((res) => {
+        const list = res.data.data ?? [];
+        setBanner(list.length > 0 ? list[0] : null);
+      })
+      .catch(() => setBanner(null));
+  }, []);
+
+  if (!banner) return null;
+
+  const handleCta = () => {
+    if (!banner.ctaText) return;
+    switch (banner.linkType) {
+      case 'product':
+        navigate(`/product/${banner.linkValue}`);
+        break;
+      case 'category':
+        navigate(`/?categoryId=${banner.linkValue}`);
+        break;
+      case 'external':
+        if (banner.linkValue) {
+          window.open(banner.linkValue, '_blank', 'noopener');
+        }
+        break;
+      case 'none':
+      default:
+        break;
+    }
+  };
+
   return (
-    <div className="px-4 py-3">
-      <div
-        className="relative rounded-3xl overflow-hidden"
-        style={{
-          background: 'var(--gradient-promo)',
-        }}
-      >
-        <div className="px-6 py-5 relative z-10">
-          <div className="text-white/80 text-xs font-semibold tracking-wider mb-1">
-            限时特惠
-          </div>
-          <div className="text-white text-xl font-black leading-tight">
-            新人首单立减 ¥10
-          </div>
-          <div className="text-white/70 text-xs mt-1">满 49 元可用 · 今日有效</div>
-          <div className="mt-3 inline-block px-4 py-1.5 bg-white rounded-full text-brand-primary text-xs font-bold cursor-pointer">
-            立即领取 →
-          </div>
+    <div
+      className="relative rounded-3xl overflow-hidden mx-4 my-4"
+      style={{ background: 'var(--gradient-promo)' }}
+    >
+      {banner.image && (
+        <img
+          src={banner.image}
+          alt={banner.title}
+          className="absolute inset-0 w-full h-full object-cover opacity-20"
+        />
+      )}
+      <div className="relative p-5 flex items-center justify-between">
+        <div className="flex-1">
+          <div className="text-white font-bold text-lg">{banner.title}</div>
+          {banner.subtitle && (
+            <div className="text-white/90 text-sm mt-1">{banner.subtitle}</div>
+          )}
         </div>
-        {/* 装饰圆 */}
-        <div className="absolute -right-4 -top-4 w-24 h-24 rounded-full bg-white/10" />
-        <div className="absolute right-8 -bottom-6 w-20 h-20 rounded-full bg-white/10" />
+        {banner.ctaText && (
+          <button
+            onClick={handleCta}
+            className="bg-white text-brand-primary font-bold text-sm px-4 py-2 rounded-full whitespace-nowrap"
+          >
+            {banner.ctaText}
+          </button>
+        )}
       </div>
     </div>
   );
