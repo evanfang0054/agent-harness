@@ -76,6 +76,35 @@ export class ProductService {
     return product;
   }
 
+  async findRecommendations(opts: { limit?: number; excludeId?: number }) {
+    const limit = Math.min(opts.limit ?? 10, 20);
+    const excludeId = opts.excludeId ?? 0;
+    const cacheKey = `products:recs:${limit}:${excludeId}`;
+
+    const cached = await this.redis.get(cacheKey);
+    if (cached) {
+      return JSON.parse(cached);
+    }
+
+    const qb = this.productRepo
+      .createQueryBuilder('p')
+      .where('p.status = :status', { status: ProductStatus.ON })
+      .andWhere('p.stock > 0');
+
+    if (excludeId > 0) {
+      qb.andWhere('p.id != :excludeId', { excludeId });
+    }
+
+    const list = await qb
+      .orderBy('p.created_at', 'DESC')
+      .take(limit)
+      .getMany();
+
+    const result = { list };
+    await this.redis.set(cacheKey, JSON.stringify(result), 'EX', 60);
+    return result;
+  }
+
   async create(dto: CreateProductDto) {
     const product = this.productRepo.create(dto);
     const saved = await this.productRepo.save(product);

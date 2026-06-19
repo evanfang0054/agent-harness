@@ -13,6 +13,7 @@ import {
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { UserRole } from 'shared';
 import { ProductService } from './product.service';
 import { QueryProductDto } from './dto/query-product.dto';
@@ -26,6 +27,18 @@ export class ProductController {
   @Get()
   findAll(@Query() query: QueryProductDto) {
     return this.productService.findAll(query);
+  }
+
+  @Public()
+  @Get('recommendations')
+  findRecommendations(
+    @Query('limit') limit?: number,
+    @Query('excludeId') excludeId?: number,
+  ) {
+    return this.productService.findRecommendations({
+      limit: limit ? Number(limit) : undefined,
+      excludeId: excludeId ? Number(excludeId) : undefined,
+    });
   }
 
   @Get(':id')
