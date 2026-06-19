@@ -58,8 +58,11 @@ if ! [[ "$CONFIDENCE" =~ ^[0-9]+$ ]] || [ "$CONFIDENCE" -lt 1 ] || [ "$CONFIDENC
     exit 1
 fi
 
+# Resolve project root: prefer CLAUDE_PROJECT_DIR (set by Claude Code harness),
+# fall back to git rev-parse for manual runs / CI.
+LEARNINGS_DIR="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}"
 # Create directory if needed
-mkdir -p .superpowers
+mkdir -p "$LEARNINGS_DIR/.superpowers"
 
 # Generate timestamp
 TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
@@ -72,7 +75,7 @@ else
     FILES_ARGS="[]"
 fi
 
-python3 << PYTHON >> .superpowers/learnings.jsonl
+python3 << PYTHON >> "$LEARNINGS_DIR/.superpowers/learnings.jsonl"
 import json
 entry = {
     "ts": "$TS",

@@ -15,7 +15,11 @@
 
 set -euo pipefail
 
-LEARNINGS_FILE=".superpowers/learnings.jsonl"
+# Resolve project root: prefer CLAUDE_PROJECT_DIR (set by Claude Code harness),
+# fall back to git rev-parse for manual runs / CI. Keep read location aligned
+# with log-learning.sh write location.
+LEARNINGS_DIR="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}"
+LEARNINGS_FILE="$LEARNINGS_DIR/.superpowers/learnings.jsonl"
 
 # Check if learnings file exists
 if [ ! -f "$LEARNINGS_FILE" ]; then
