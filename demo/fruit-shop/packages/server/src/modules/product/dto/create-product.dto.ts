@@ -3,10 +3,12 @@ import {
   IsNumber,
   IsOptional,
   IsInt,
+  IsBoolean,
+  IsArray,
   Min,
   MaxLength,
 } from 'class-validator';
-import { ProductStatus } from 'shared';
+import { ProductStatus, ProductSpec } from 'shared';
 
 export class CreateProductDto {
   @IsString()
@@ -63,4 +65,17 @@ export class CreateProductDto {
   @IsOptional()
   @IsNumber()
   status?: ProductStatus;
+
+  @IsOptional()
+  @IsArray()
+  specs?: ProductSpec[];
+
+  @IsOptional()
+  @IsBoolean()
+  isRecommended?: boolean;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  featuredSortOrder?: number;
 }
