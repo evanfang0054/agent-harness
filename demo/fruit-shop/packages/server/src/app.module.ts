@@ -13,6 +13,7 @@ import { RefundModule } from './modules/refund/refund.module';
 import { HealthModule } from './modules/health/health.module';
 import { BannerModule } from './modules/banner/banner.module';
 import { AddressModule } from './modules/address/address.module';
+import { ReviewModule } from './modules/review/review.module';
 import { RedisProviderModule } from './common/redis-provider.module';
 import { LoggingModule } from './common/logging/logging.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
@@ -48,6 +49,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     HealthModule,
     BannerModule,
     AddressModule,
+    ReviewModule,
   ],
   controllers: [],
   providers: [
