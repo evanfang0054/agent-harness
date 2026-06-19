@@ -183,4 +183,77 @@ describe('Cart (e2e)', () => {
         });
     });
   });
+
+  describe('越权与边界', () => {
+    let userAToken: string;
+    let userBToken: string;
+    let userBCartId: number;
+
+    beforeAll(async () => {
+      userAToken = (await helper.registerAndLogin('13800000060', 'test123456')).accessToken;
+      userBToken = (await helper.registerAndLogin('13800000061', 'test123456')).accessToken;
+
+      // B 加一个商品到购物车
+      const productIdForB = await helper.createProductAsAdmin(adminToken, {
+        name: 'Cart 越权测试商品',
+        price: 1,
+        categoryId: 1,
+        stock: 10,
+        unit: '斤',
+        origin: 'x',
+        sweetness: '甜',
+        weight: '1kg',
+        image: 'i',
+        color: '#fff',
+      });
+      await helper.addToCartAsUser(userBToken, productIdForB, '1kg', 1);
+
+      // 从 B 的购物车列表取 cart id
+      const listRes = await request(helper.httpServer)
+        .get('/api/cart')
+        .set('Authorization', `Bearer ${userBToken}`);
+      userBCartId = listRes.body.data[0].id;
+    });
+
+    it('should reject adding non-existent product (404)', () => {
+      return request(helper.httpServer)
+        .post('/api/cart')
+        .set('Authorization', `Bearer ${userAToken}`)
+        .send({ productId: 999999, specLabel: '1kg', quantity: 1 })
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.code).toBe(404);
+        });
+    });
+
+    it('should reject A updating B cart (404)', () => {
+      return request(helper.httpServer)
+        .put(`/api/cart/${userBCartId}`)
+        .set('Authorization', `Bearer ${userAToken}`)
+        .send({ quantity: 99 })
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.code).toBe(404);
+        });
+    });
+
+    it('should reject A deleting B cart (404)', () => {
+      return request(helper.httpServer)
+        .delete(`/api/cart/${userBCartId}`)
+        .set('Authorization', `Bearer ${userAToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.code).toBe(404);
+        });
+    });
+
+    it('should reject no-token GET /cart (401)', () => {
+      return request(helper.httpServer)
+        .get('/api/cart')
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.code).toBe(401);
+        });
+    });
+  });
 });
