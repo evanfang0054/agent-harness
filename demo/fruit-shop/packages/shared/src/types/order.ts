@@ -7,6 +7,10 @@ export interface Order {
   address: string;
   phone: string;
   remark: string | null;
+  couponId: number | null;
+  discountAmount: number;
+  paidAt: string | null;
+  shippedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -17,6 +21,8 @@ export enum OrderStatus {
   SHIPPED = 2,
   COMPLETED = 3,
   CANCELLED = 4,
+  REFUNDING = 5,
+  REFUNDED = 6,
 }
 
 export interface OrderItem {
@@ -34,6 +40,8 @@ export interface CreateOrderDTO {
   address: string;
   phone: string;
   remark?: string;
+  addressId?: number;
+  couponId?: number;
 }
 
 export interface OrderWithItems extends Order {
