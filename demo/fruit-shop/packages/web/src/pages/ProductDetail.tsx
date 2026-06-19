@@ -9,6 +9,8 @@ import { SpecSelector } from '@/components/SpecSelector';
 import { QualityInfo } from '@/components/QualityInfo';
 import { Description } from '@/components/Description';
 import { RecommendFruits } from '@/components/RecommendFruits';
+import { ReviewSection } from '@/components/ReviewSection';
+import { FavoriteToggle } from '@/components/FavoriteToggle';
 import { DecorDots } from '@/components/DecorDots';
 import { BuyBar } from '@/components/BuyBar';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -99,6 +101,7 @@ export default function ProductDetail() {
         </div>
         <span className="font-bold text-[17px] text-brand-dark">{product.name}</span>
         <div className="flex gap-3">
+          <FavoriteToggle productId={product.id} />
           <svg
             width="22"
             height="22"
@@ -168,6 +171,9 @@ export default function ProductDetail() {
 
       {/* 水果故事 */}
       <Description text={product.description ?? undefined} />
+
+      {/* 用户评价 */}
+      <ReviewSection productId={product.id} />
 
       {/* 推荐水果 */}
       <RecommendFruits items={recommendations} onClick={handleRecommendClick} />

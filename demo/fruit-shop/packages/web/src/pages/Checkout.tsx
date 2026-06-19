@@ -2,6 +2,8 @@ import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCartStore } from '@/store/cart.store';
 import { useOrderStore } from '@/store/order.store';
+import { addressApi } from '@/api/address';
+import type { Address } from 'shared';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { Toast } from '@/components/Toast';
 
@@ -14,6 +16,8 @@ export default function Checkout() {
   const [phone, setPhone] = useState('');
   const [remark, setRemark] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [defaultAddr, setDefaultAddr] = useState<Address | null>(null);
+  const [useAddressBook, setUseAddressBook] = useState(false);
 
   const selected = selectedItems();
   const subtotal = totalPrice();
@@ -26,6 +30,25 @@ export default function Checkout() {
       navigate('/cart', { replace: true });
     }
   }, [selected.length, navigate]);
+
+  // 拉取默认地址，自动填充
+  useEffect(() => {
+    addressApi
+      .getList()
+      .then((res) => {
+        const list = res.data.data ?? [];
+        const picked =
+          list.find((a) => a.isDefault) ?? (list.length > 0 ? list[0] : null);
+        if (picked) {
+          setDefaultAddr(picked);
+          setUseAddressBook(true);
+          const full = `${picked.province}${picked.city}${picked.district}${picked.detail}`;
+          setAddress(full);
+          setPhone(picked.phone);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -84,7 +107,64 @@ export default function Checkout() {
         {/* Address form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <section className="bg-white rounded-2xl p-4 space-y-4 shadow-sm">
-            <h2 className="text-sm font-semibold text-gray-800">收货信息</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-gray-800">收货信息</h2>
+              <button
+                type="button"
+                onClick={() => navigate('/addresses')}
+                className="text-[12px] text-brand-primary hover:underline"
+              >
+                管理地址簿
+              </button>
+            </div>
+
+            {defaultAddr && (
+              <div className="rounded-2xl border border-brand-border p-3 bg-brand-bg">
+                <div className="flex items-center gap-2">
+                  <span className="text-[13px] font-bold text-brand-dark">
+                    {defaultAddr.recipientName}
+                  </span>
+                  <span className="text-[12px] text-brand-muted">
+                    {defaultAddr.phone}
+                  </span>
+                  {defaultAddr.isDefault && (
+                    <span className="px-1.5 py-0.5 rounded-md bg-brand-peach text-brand-primary text-[10px] font-bold">
+                      默认
+                    </span>
+                  )}
+                </div>
+                <p className="mt-1 text-[12px] text-brand-dark">
+                  {defaultAddr.province}
+                  {defaultAddr.city}
+                  {defaultAddr.district}
+                  {defaultAddr.detail}
+                </p>
+                <div className="mt-2 flex items-center justify-between">
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={useAddressBook}
+                      onChange={(e) => {
+                        const next = e.target.checked;
+                        setUseAddressBook(next);
+                        if (next) {
+                          const full = `${defaultAddr.province}${defaultAddr.city}${defaultAddr.district}${defaultAddr.detail}`;
+                          setAddress(full);
+                          setPhone(defaultAddr.phone);
+                        }
+                      }}
+                      className="w-3.5 h-3.5 accent-brand-primary"
+                    />
+                    <span className="text-[11px] text-brand-muted">
+                      使用地址簿地址
+                    </span>
+                  </label>
+                  <span className="text-[11px] text-brand-muted">
+                    取消勾选可手动修改
+                  </span>
+                </div>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm text-gray-600 mb-1">收货地址</label>

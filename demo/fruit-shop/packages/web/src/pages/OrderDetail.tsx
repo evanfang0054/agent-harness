@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useOrderStore } from '@/store/order.store';
 import { OrderStatus } from 'shared';
+import type { CreateReviewItemDTO } from 'shared';
 import { orderApi } from '@/api/order';
+import { reviewApi } from '@/api/review';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { Toast } from '@/components/Toast';
 
@@ -36,6 +38,11 @@ export default function OrderDetail() {
   const [isRefunding, setIsRefunding] = useState(false);
   const [showRefundModal, setShowRefundModal] = useState(false);
   const [refundReason, setRefundReason] = useState('');
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewDrafts, setReviewDrafts] = useState<
+    Record<number, { rating: number; content: string }>
+  >({});
+  const [isReviewing, setIsReviewing] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -286,7 +293,14 @@ export default function OrderDetail() {
             )}
             {showReviewBtn && (
               <button
-                onClick={() => Toast.show('评价功能即将上线', 'info')}
+                onClick={() => {
+                  const drafts: Record<number, { rating: number; content: string }> = {};
+                  order.items.forEach((it) => {
+                    drafts[it.productId] = { rating: 5, content: '' };
+                  });
+                  setReviewDrafts(drafts);
+                  setShowReviewModal(true);
+                }}
                 className="flex-1 py-2.5 text-sm text-white bg-brand-primary rounded-full hover:opacity-90 transition-opacity"
               >
                 去评价
@@ -323,6 +337,136 @@ export default function OrderDetail() {
                 className="flex-1 py-2.5 text-sm text-white bg-brand-coral rounded-full hover:opacity-90 disabled:opacity-50 transition-opacity"
               >
                 {isRefunding ? '提交中...' : '提交申请'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Review modal */}
+      {showReviewModal && currentOrder && (
+        <div className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center px-4">
+          <div className="bg-white rounded-3xl w-full max-w-md p-5 shadow-xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-base font-bold text-brand-dark">评价订单</h3>
+              <button
+                onClick={() => setShowReviewModal(false)}
+                className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 text-brand-dark"
+              >
+                &times;
+              </button>
+            </div>
+            <div className="space-y-4">
+              {currentOrder.items.map((item) => {
+                const draft = reviewDrafts[item.productId] ?? {
+                  rating: 5,
+                  content: '',
+                };
+                return (
+                  <div
+                    key={item.id}
+                    className="border border-brand-border rounded-2xl p-3"
+                  >
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={item.image || '/placeholder-fruit.png'}
+                        alt={item.productName}
+                        className="w-10 h-10 rounded-lg object-cover"
+                      />
+                      <p className="text-[13px] font-bold text-brand-dark line-clamp-1">
+                        {item.productName}
+                      </p>
+                    </div>
+                    <div className="mt-2 flex items-center gap-1.5">
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() =>
+                            setReviewDrafts({
+                              ...reviewDrafts,
+                              [item.productId]: { ...draft, rating: n },
+                            })
+                          }
+                          className="p-0.5"
+                        >
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill={n <= draft.rating ? '#FF6B35' : 'none'}
+                            stroke={n <= draft.rating ? '#FF6B35' : '#636E72'}
+                            strokeWidth="2"
+                          >
+                            <polygon points="12,2 15,9 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 9,9" />
+                          </svg>
+                        </button>
+                      ))}
+                    </div>
+                    <textarea
+                      value={draft.content}
+                      onChange={(e) =>
+                        setReviewDrafts({
+                          ...reviewDrafts,
+                          [item.productId]: {
+                            ...draft,
+                            content: e.target.value,
+                          },
+                        })
+                      }
+                      placeholder="说说你对这件商品的感受"
+                      rows={2}
+                      maxLength={300}
+                      className="mt-2 w-full text-[13px] border border-brand-border rounded-xl px-3 py-2 focus:outline-none focus:border-brand-primary resize-none"
+                    />
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={() => setShowReviewModal(false)}
+                disabled={isReviewing}
+                className="flex-1 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-full hover:bg-brand-bg transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={async () => {
+                  const reviews: CreateReviewItemDTO[] = currentOrder.items.map(
+                    (item) => {
+                      const draft =
+                        reviewDrafts[item.productId] ?? {
+                          rating: 5,
+                          content: '',
+                        };
+                      return {
+                        productId: item.productId,
+                        rating: draft.rating,
+                        content: draft.content.trim(),
+                      };
+                    },
+                  );
+                  // 至少要填一条内容
+                  if (reviews.every((r) => !r.content)) {
+                    Toast.show('请至少填写一条评价内容', 'warning');
+                    return;
+                  }
+                  setIsReviewing(true);
+                  try {
+                    await reviewApi.createFromOrder(currentOrder.id, { reviews });
+                    Toast.show('评价已提交', 'success');
+                    setShowReviewModal(false);
+                  } catch {
+                    Toast.show('提交评价失败', 'error');
+                  } finally {
+                    setIsReviewing(false);
+                  }
+                }}
+                disabled={isReviewing}
+                className="flex-1 py-2.5 text-sm text-white bg-brand-primary rounded-full hover:opacity-90 disabled:opacity-50 transition-opacity"
+              >
+                {isReviewing ? '提交中...' : '提交评价'}
               </button>
             </div>
           </div>
