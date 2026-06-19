@@ -5,6 +5,7 @@
  * 40201-40299 商品相关
  * 40301-40399 购物车相关
  * 40401-40499 订单相关
+ * 40501-40599 库存相关
  */
 export const ErrorCode = {
   // 认证 40001-40099
@@ -34,6 +35,10 @@ export const ErrorCode = {
   ORDER_NOT_FOUND: 40401,
   ORDER_STATUS_ERROR: 40402,
   ORDER_CANCEL_NOT_ALLOWED: 40403,
+
+  // 库存 40501-40599
+  STOCK_INSUFFICIENT: 40501,
+  PRODUCT_OUT_OF_STOCK: 40502,
 } as const;
 
 export type ErrorCodeType = (typeof ErrorCode)[keyof typeof ErrorCode];
@@ -64,6 +69,9 @@ export const ErrorMessage: Record<ErrorCodeType, string> = {
   [ErrorCode.ORDER_NOT_FOUND]: '订单不存在',
   [ErrorCode.ORDER_STATUS_ERROR]: '订单状态异常',
   [ErrorCode.ORDER_CANCEL_NOT_ALLOWED]: '仅待付款订单可取消',
+
+  [ErrorCode.STOCK_INSUFFICIENT]: '商品库存不足',
+  [ErrorCode.PRODUCT_OUT_OF_STOCK]: '商品已售罄',
 };
 
 /**
