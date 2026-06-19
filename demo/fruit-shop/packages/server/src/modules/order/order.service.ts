@@ -11,6 +11,7 @@ import {
   CartEntity,
   ShippingEntity,
   RefundEntity,
+  AddressEntity,
 } from '../../entities';
 import { CartService } from '../cart/cart.service';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -34,6 +35,8 @@ export class OrderService {
     private readonly shippingRepo: Repository<ShippingEntity>,
     @InjectRepository(RefundEntity)
     private readonly refundRepo: Repository<RefundEntity>,
+    @InjectRepository(AddressEntity)
+    private readonly addressRepo: Repository<AddressEntity>,
     private readonly cartService: CartService,
     private readonly dataSource: DataSource,
     private readonly logger: PinoLogger,
@@ -50,6 +53,22 @@ export class OrderService {
 
     if (cartItems.length === 0) {
       throw new BadRequestException(ErrorMessage[ErrorCode.CART_EMPTY]);
+    }
+
+    // 若传入 addressId，从地址薄读取最新快照覆盖 dto.address / dto.phone
+    let orderAddress = dto.address;
+    let orderPhone = dto.phone;
+    if (dto.addressId) {
+      const address = await this.addressRepo.findOne({
+        where: { id: dto.addressId, userId },
+      });
+      if (!address) {
+        throw new BadRequestException(
+          ErrorMessage[ErrorCode.ADDRESS_NOT_FOUND],
+        );
+      }
+      orderAddress = `${address.province}${address.city}${address.district}${address.detail}`;
+      orderPhone = address.phone;
     }
 
     // Execute in transaction (row-lock products, validate stock, deduct)
@@ -112,8 +131,8 @@ export class OrderService {
         userId,
         totalAmount,
         status: OrderStatus.PENDING,
-        address: dto.address,
-        phone: dto.phone,
+        address: orderAddress,
+        phone: orderPhone,
         remark: dto.remark,
       });
       const savedOrder = await queryRunner.manager.save(OrderEntity, order);
