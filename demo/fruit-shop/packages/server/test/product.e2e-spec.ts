@@ -167,4 +167,90 @@ describe('Product & Category (e2e)', () => {
         });
     });
   });
+
+  describe('权限控制（非 admin）', () => {
+    let nonAdminToken: string;
+
+    beforeAll(async () => {
+      // 使用独立手机号 13800000050，避免与文件顶层 USER(13800000020) 冲突
+      const u = await helper.registerAndLogin(
+        '13800000050',
+        'test123456',
+      );
+      nonAdminToken = u.accessToken;
+    });
+
+    it('should reject USER creating product (403)', () => {
+      return request(helper.httpServer)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${nonAdminToken}`)
+        .send({ name: 'x', price: 1, categoryId: 1, stock: 1 })
+        .expect(200)
+        .expect((res) => {
+          // ForbiddenException(403) → code 403
+          expect(res.body.code).toBe(403);
+        });
+    });
+
+    it('should reject USER updating product (403)', () => {
+      return request(helper.httpServer)
+        .put('/api/products/1')
+        .set('Authorization', `Bearer ${nonAdminToken}`)
+        .send({ name: 'y' })
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.code).toBe(403);
+        });
+    });
+
+    it('should reject USER deleting product (403)', () => {
+      return request(helper.httpServer)
+        .delete('/api/products/1')
+        .set('Authorization', `Bearer ${nonAdminToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.code).toBe(403);
+        });
+    });
+  });
+
+  describe('查询与筛选', () => {
+    it('should filter by categoryId', () => {
+      return request(helper.httpServer)
+        .get('/api/products?categoryId=1')
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.code).toBe(0);
+          expect(Array.isArray(res.body.data.list)).toBe(true);
+          res.body.data.list.forEach((p: any) => {
+            expect(p.categoryId).toBe(1);
+          });
+        });
+    });
+
+    it('should filter by keyword', () => {
+      return request(helper.httpServer)
+        .get('/api/products?keyword=' + encodeURIComponent('商品'))
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.code).toBe(0);
+          // 种子/前序用例数据可能不含"商品"，仅校验返回结构与匹配一致性
+          expect(Array.isArray(res.body.data.list)).toBe(true);
+          res.body.data.list.forEach((p: any) => {
+            expect(p.name).toContain('商品');
+          });
+        });
+    });
+
+    it('should respect pagination', () => {
+      return request(helper.httpServer)
+        .get('/api/products?page=1&limit=2')
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.code).toBe(0);
+          expect(res.body.data.limit).toBe(2);
+          expect(res.body.data.list.length).toBeLessThanOrEqual(2);
+        });
+    });
+  });
 });
