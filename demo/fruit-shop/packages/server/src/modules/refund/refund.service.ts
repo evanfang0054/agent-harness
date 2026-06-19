@@ -33,7 +33,7 @@ export class RefundService {
     if (query.status !== undefined) {
       qb.andWhere('r.status = :status', { status: query.status });
     }
-    qb.orderBy('r.created_at', 'DESC')
+    qb.orderBy('r.createdAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
     const [list, total] = await qb.getManyAndCount();

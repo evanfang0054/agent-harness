@@ -270,7 +270,10 @@ export class OrderService {
         throw new NotFoundException(ErrorMessage[ErrorCode.ORDER_NOT_FOUND]);
       }
       if (rows[0].status !== OrderStatus.PENDING) {
-        throw new BadRequestException(ErrorMessage[ErrorCode.ORDER_STATUS_ERROR]);
+        throw new BadRequestException({
+          code: ErrorCode.ORDER_STATUS_ERROR,
+          message: ErrorMessage[ErrorCode.ORDER_STATUS_ERROR],
+        });
       }
       await queryRunner.manager.query(
         'UPDATE orders SET status = ?, paid_at = NOW() WHERE id = ?',
@@ -300,7 +303,10 @@ export class OrderService {
         throw new NotFoundException(ErrorMessage[ErrorCode.ORDER_NOT_FOUND]);
       }
       if (rows[0].status !== OrderStatus.PAID) {
-        throw new BadRequestException(ErrorMessage[ErrorCode.ORDER_STATUS_ERROR]);
+        throw new BadRequestException({
+          code: ErrorCode.ORDER_STATUS_ERROR,
+          message: ErrorMessage[ErrorCode.ORDER_STATUS_ERROR],
+        });
       }
       const shipping = queryRunner.manager.create(ShippingEntity, {
         orderId: id,
@@ -338,7 +344,10 @@ export class OrderService {
         throw new NotFoundException(ErrorMessage[ErrorCode.ORDER_NOT_FOUND]);
       }
       if (rows[0].status !== OrderStatus.SHIPPED) {
-        throw new BadRequestException(ErrorMessage[ErrorCode.ORDER_STATUS_ERROR]);
+        throw new BadRequestException({
+          code: ErrorCode.ORDER_STATUS_ERROR,
+          message: ErrorMessage[ErrorCode.ORDER_STATUS_ERROR],
+        });
       }
       await queryRunner.manager.query(
         'UPDATE orders SET status = ? WHERE id = ?',
