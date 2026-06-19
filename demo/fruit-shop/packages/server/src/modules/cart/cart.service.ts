@@ -1,6 +1,7 @@
 import {
   Injectable,
   NotFoundException,
+  BadRequestException,
   Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -56,6 +57,13 @@ export class CartService {
     });
     if (!product) {
       throw new NotFoundException(ErrorMessage[ErrorCode.PRODUCT_NOT_FOUND]);
+    }
+
+    if (product.stock <= 0) {
+      throw new BadRequestException({
+        code: ErrorCode.PRODUCT_OUT_OF_STOCK,
+        message: ErrorMessage[ErrorCode.PRODUCT_OUT_OF_STOCK],
+      });
     }
 
     const quantity = dto.quantity ?? 1;
