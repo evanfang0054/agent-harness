@@ -39,11 +39,13 @@ cleanup() {
 trap cleanup EXIT
 
 # Setup test environment (clean slate each time)
+# v2: drive log/search via CLAUDE_PROJECT_DIR so write and read align
 setup() {
     rm -rf "$TEST_DIR"
     mkdir -p "$TEST_DIR"
     cd "$TEST_DIR"
-    # Don't create .superpowers yet - let tests create it as needed
+    export CLAUDE_PROJECT_DIR="$TEST_DIR"
+    # Don't create .superpowers yet - let scripts create it as needed
 }
 
 echo "=== Learnings Scripts Tests ==="
