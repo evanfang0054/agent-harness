@@ -6,6 +6,13 @@
  * 40301-40399 购物车相关
  * 40401-40499 订单相关
  * 40501-40599 库存相关
+ * 40601-40699 退款相关
+ * 40701-40799 评价相关
+ * 40801-40899 收藏相关
+ * 40901-40999 地址相关
+ * 41001-41099 优惠券相关
+ * 41101-41199 上传相关
+ * 41201-41299 分类相关
  */
 export const ErrorCode = {
   // 认证 40001-40099
@@ -39,6 +46,40 @@ export const ErrorCode = {
   // 库存 40501-40599
   STOCK_INSUFFICIENT: 40501,
   PRODUCT_OUT_OF_STOCK: 40502,
+
+  // 退款 40601-40699
+  REFUND_NOT_ALLOWED: 40601,
+  REFUND_NOT_FOUND: 40602,
+
+  // 评价 40701-40799
+  REVIEW_EXISTS: 40701,
+  REVIEW_NOT_ALLOWED: 40702,
+  REVIEW_NOT_FOUND: 40703,
+
+  // 收藏 40801-40899
+  FAVORITE_EXISTS: 40801,
+  FAVORITE_NOT_FOUND: 40802,
+
+  // 地址 40901-40999
+  ADDRESS_NOT_FOUND: 40901,
+  ADDRESS_IS_DEFAULT: 40902,
+
+  // 优惠券 41001-41099
+  COUPON_NOT_FOUND: 41001,
+  COUPON_EXPIRED: 41002,
+  COUPON_USED: 41003,
+  COUPON_SOLD_OUT: 41004,
+  COUPON_MIN_NOT_MET: 41005,
+  COUPON_NOT_APPLICABLE: 41006,
+
+  // 上传 41101-41199
+  UPLOAD_FILE_TOO_LARGE: 41101,
+  UPLOAD_INVALID_TYPE: 41102,
+  UPLOAD_FAILED: 41103,
+
+  // 分类 41201-41299
+  CATEGORY_HAS_PRODUCTS: 41201,
+  CATEGORY_NOT_FOUND: 41202,
 } as const;
 
 export type ErrorCodeType = (typeof ErrorCode)[keyof typeof ErrorCode];
@@ -72,6 +113,33 @@ export const ErrorMessage: Record<ErrorCodeType, string> = {
 
   [ErrorCode.STOCK_INSUFFICIENT]: '商品库存不足',
   [ErrorCode.PRODUCT_OUT_OF_STOCK]: '商品已售罄',
+
+  [ErrorCode.REFUND_NOT_ALLOWED]: '当前订单状态不可申请退款',
+  [ErrorCode.REFUND_NOT_FOUND]: '退款记录不存在',
+
+  [ErrorCode.REVIEW_EXISTS]: '该商品已评价',
+  [ErrorCode.REVIEW_NOT_ALLOWED]: '当前订单不可评价',
+  [ErrorCode.REVIEW_NOT_FOUND]: '评价不存在',
+
+  [ErrorCode.FAVORITE_EXISTS]: '已收藏该商品',
+  [ErrorCode.FAVORITE_NOT_FOUND]: '未收藏该商品',
+
+  [ErrorCode.ADDRESS_NOT_FOUND]: '地址不存在',
+  [ErrorCode.ADDRESS_IS_DEFAULT]: '默认地址不可删除',
+
+  [ErrorCode.COUPON_NOT_FOUND]: '优惠券不存在',
+  [ErrorCode.COUPON_EXPIRED]: '优惠券已过期',
+  [ErrorCode.COUPON_USED]: '优惠券已使用',
+  [ErrorCode.COUPON_SOLD_OUT]: '优惠券已领完',
+  [ErrorCode.COUPON_MIN_NOT_MET]: '未达到优惠券使用门槛',
+  [ErrorCode.COUPON_NOT_APPLICABLE]: '优惠券不适用',
+
+  [ErrorCode.UPLOAD_FILE_TOO_LARGE]: '文件超过 2MB 限制',
+  [ErrorCode.UPLOAD_INVALID_TYPE]: '仅支持图片文件',
+  [ErrorCode.UPLOAD_FAILED]: '上传失败',
+
+  [ErrorCode.CATEGORY_HAS_PRODUCTS]: '分类下存在商品，不可删除',
+  [ErrorCode.CATEGORY_NOT_FOUND]: '分类不存在',
 };
 
 /**

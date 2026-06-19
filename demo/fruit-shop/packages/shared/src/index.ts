@@ -21,6 +21,27 @@ export type {
   UpdateBannerDTO,
 } from './types/banner';
 
+export type { Address, CreateAddressDTO, UpdateAddressDTO } from './types/address';
+
+export type { Review, ReviewWithUser, CreateReviewItemDTO, CreateReviewDTO } from './types/review';
+
+export type { Favorite, FavoriteWithProduct } from './types/favorite';
+
+export type {
+  CouponTemplate,
+  UserCoupon,
+  CreateCouponTemplateDTO,
+  UpdateCouponTemplateDTO,
+  CouponPreviewRequest,
+  CouponPreviewResponse,
+} from './types/coupon';
+export { CouponType } from './types/coupon';
+
+export type { Shipping } from './types/shipping';
+
+export type { Refund, CreateRefundDTO, ReviewRefundDTO } from './types/refund';
+export { RefundStatus } from './types/refund';
+
 // Constants
 export { ErrorCode, ErrorMessage, SUCCESS_CODE } from './constants';
 export type { ErrorCodeType } from './constants';
