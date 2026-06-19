@@ -9,6 +9,7 @@ import { UserModule } from './modules/user/user.module';
 import { ProductModule } from './modules/product/product.module';
 import { CartModule } from './modules/cart/cart.module';
 import { OrderModule } from './modules/order/order.module';
+import { RefundModule } from './modules/refund/refund.module';
 import { HealthModule } from './modules/health/health.module';
 import { BannerModule } from './modules/banner/banner.module';
 import { RedisProviderModule } from './common/redis-provider.module';
@@ -42,6 +43,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     ProductModule,
     CartModule,
     OrderModule,
+    RefundModule,
     HealthModule,
     BannerModule,
   ],
