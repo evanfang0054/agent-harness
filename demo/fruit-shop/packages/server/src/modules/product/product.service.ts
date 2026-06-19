@@ -6,8 +6,11 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
 import { Redis } from 'ioredis';
-import { ProductEntity, CategoryEntity } from '../../entities';
-import { QueryProductDto } from './dto/query-product.dto';
+import { ProductEntity, CategoryEntity, OrderItemEntity } from '../../entities';
+import {
+  QueryProductDto,
+  ProductSortBy,
+} from './dto/query-product.dto';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ErrorCode, ErrorMessage, ProductStatus } from 'shared';
@@ -19,13 +22,24 @@ export class ProductService {
     private readonly productRepo: Repository<ProductEntity>,
     @InjectRepository(CategoryEntity)
     private readonly categoryRepo: Repository<CategoryEntity>,
+    @InjectRepository(OrderItemEntity)
+    private readonly orderItemRepo: Repository<OrderItemEntity>,
     @Inject('REDIS_CLIENT')
     private readonly redis: Redis,
   ) {}
 
   async findAll(query: QueryProductDto) {
-    const { categoryId, keyword, page = 1, limit = 10 } = query;
-    const cacheKey = `products:${categoryId || 'all'}:${keyword || 'all'}:${page}:${limit}`;
+    const {
+      categoryId,
+      keyword,
+      page = 1,
+      limit = 10,
+      minPrice,
+      maxPrice,
+      origin,
+      sortBy = 'created_desc',
+    } = query;
+    const cacheKey = `products:${categoryId || 'all'}:${keyword || 'all'}:${page}:${limit}:${minPrice ?? 'all'}:${maxPrice ?? 'all'}:${origin || 'all'}:${sortBy}`;
 
     // Try cache first
     const cached = await this.redis.get(cacheKey);
@@ -43,11 +57,22 @@ export class ProductService {
       qb.andWhere('p.name LIKE :keyword', { keyword: `%${keyword}%` });
     }
 
+    if (minPrice !== undefined) {
+      qb.andWhere('p.price >= :minPrice', { minPrice });
+    }
+    if (maxPrice !== undefined) {
+      qb.andWhere('p.price <= :maxPrice', { maxPrice });
+    }
+    if (origin) {
+      qb.andWhere('p.origin = :origin', { origin });
+    }
+
     qb.andWhere('p.status = :status', { status: ProductStatus.ON });
+
+    this.applySort(qb, sortBy);
 
     const total = await qb.getCount();
     const list = await qb
-      .orderBy('p.created_at', 'DESC')
       .skip((page - 1) * limit)
       .take(limit)
       .getMany();
@@ -57,6 +82,92 @@ export class ProductService {
     // Cache for 60 seconds
     await this.redis.set(cacheKey, JSON.stringify(result), 'EX', 60);
 
+    return result;
+  }
+
+  /**
+   * 应用排序：sales_desc 用 OrderItem 子查询聚合；其余直接 orderBy。
+   */
+  private applySort(
+    qb: import('typeorm').SelectQueryBuilder<ProductEntity>,
+    sortBy: ProductSortBy,
+  ) {
+    switch (sortBy) {
+      case 'sales_desc': {
+        // 子查询：每个商品的销量合计
+        const salesSub = this.orderItemRepo
+          .createQueryBuilder('oi')
+          .select('COALESCE(SUM(oi.quantity), 0)', 'sales')
+          .where('oi.product_id = p.id');
+        qb.addSelect(`(${salesSub.getQuery()})`, 'p_sales')
+          .orderBy('p_sales', 'DESC')
+          .addOrderBy('p.created_at', 'DESC');
+        break;
+      }
+      case 'price_asc':
+        qb.orderBy('p.price', 'ASC').addOrderBy('p.created_at', 'DESC');
+        break;
+      case 'price_desc':
+        qb.orderBy('p.price', 'DESC').addOrderBy('p.created_at', 'DESC');
+        break;
+      case 'created_desc':
+      default:
+        qb.orderBy('p.created_at', 'DESC');
+        break;
+    }
+  }
+
+  async findBestsellers(limit = 10) {
+    const take = Math.min(Math.max(limit, 1), 50);
+    const cacheKey = 'products:bestsellers';
+    const cached = await this.redis.get(cacheKey);
+    if (cached) {
+      return JSON.parse(cached);
+    }
+
+    const salesSub = this.orderItemRepo
+      .createQueryBuilder('oi')
+      .select('COALESCE(SUM(oi.quantity), 0)', 'sales')
+      .where('oi.product_id = p.id');
+
+    const list = await this.productRepo
+      .createQueryBuilder('p')
+      .where('p.status = :status', { status: ProductStatus.ON })
+      .addSelect(`(${salesSub.getQuery()})`, 'p_sales')
+      .orderBy('p_sales', 'DESC')
+      .addOrderBy('p.created_at', 'DESC')
+      .take(take)
+      .getMany();
+
+    const result = { list };
+    await this.redis.set(cacheKey, JSON.stringify(result), 'EX', 300);
+    return result;
+  }
+
+  async suggest(keyword: string, limit = 10) {
+    const take = Math.min(Math.max(limit, 1), 20);
+    const kw = keyword?.trim();
+    const cacheKey = `products:suggest:${kw || 'all'}`;
+    const cached = await this.redis.get(cacheKey);
+    if (cached) {
+      return JSON.parse(cached);
+    }
+
+    let names: string[] = [];
+    if (kw) {
+      const rows = await this.productRepo
+        .createQueryBuilder('p')
+        .select('p.name', 'name')
+        .where('p.status = :status', { status: ProductStatus.ON })
+        .andWhere('p.name LIKE :kw', { kw: `%${kw}%` })
+        .orderBy('p.created_at', 'DESC')
+        .take(take)
+        .getRawMany<{ name: string }>();
+      names = rows.map((r) => r.name);
+    }
+
+    const result = { list: names };
+    await this.redis.set(cacheKey, JSON.stringify(result), 'EX', 60);
     return result;
   }
 

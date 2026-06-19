@@ -31,4 +31,16 @@ export const productApi = {
   getCategories() {
     return apiClient.get<ApiResponse<Category[]>>('/categories');
   },
+
+  getBestsellers(limit = 10) {
+    return apiClient.get<ApiResponse<{ list: Product[] }>>('/products/bestsellers', {
+      params: { limit },
+    });
+  },
+
+  suggest(keyword: string, limit = 10) {
+    return apiClient.get<ApiResponse<{ list: string[] }>>('/products/suggest', {
+      params: { keyword, limit },
+    });
+  },
 };

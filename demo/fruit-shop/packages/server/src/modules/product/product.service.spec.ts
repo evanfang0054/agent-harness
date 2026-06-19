@@ -5,6 +5,7 @@ describe('ProductService', () => {
   let service: ProductService;
   let productRepo: any;
   let categoryRepo: any;
+  let orderItemRepo: any;
   let redis: any;
 
   beforeEach(() => {
@@ -12,6 +13,8 @@ describe('ProductService', () => {
       andWhere: jest.fn().mockReturnThis(),
       getCount: jest.fn(),
       orderBy: jest.fn().mockReturnThis(),
+      addOrderBy: jest.fn().mockReturnThis(),
+      addSelect: jest.fn().mockReturnThis(),
       skip: jest.fn().mockReturnThis(),
       take: jest.fn().mockReturnThis(),
       getMany: jest.fn(),
@@ -24,8 +27,14 @@ describe('ProductService', () => {
       remove: jest.fn(),
     };
     categoryRepo = { find: jest.fn() };
+    const oiQb = {
+      select: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      getQuery: jest.fn().mockReturnValue('1=1'),
+    };
+    orderItemRepo = { createQueryBuilder: jest.fn(() => oiQb) };
     redis = { get: jest.fn(), set: jest.fn(), keys: jest.fn(), del: jest.fn() };
-    service = new ProductService(productRepo, categoryRepo, redis);
+    service = new ProductService(productRepo, categoryRepo, orderItemRepo, redis);
     // 暴露 qbChain 便于每用例重设
     (service as any).__qb = qbChain;
   });

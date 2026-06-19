@@ -41,6 +41,24 @@ export class ProductController {
     });
   }
 
+  @Public()
+  @Get('bestsellers')
+  findBestsellers(@Query('limit') limit?: number) {
+    return this.productService.findBestsellers(limit ? Number(limit) : undefined);
+  }
+
+  @Public()
+  @Get('suggest')
+  suggest(
+    @Query('keyword') keyword?: string,
+    @Query('limit') limit?: number,
+  ) {
+    return this.productService.suggest(
+      keyword || '',
+      limit ? Number(limit) : undefined,
+    );
+  }
+
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.productService.findOne(id);
