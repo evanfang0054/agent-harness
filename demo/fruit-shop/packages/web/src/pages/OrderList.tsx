@@ -20,6 +20,8 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
   [OrderStatus.SHIPPED]: '已发货',
   [OrderStatus.COMPLETED]: '已完成',
   [OrderStatus.CANCELLED]: '已取消',
+  [OrderStatus.REFUNDING]: '退款审核中',
+  [OrderStatus.REFUNDED]: '已退款',
 };
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
@@ -28,6 +30,8 @@ const STATUS_COLORS: Record<OrderStatus, string> = {
   [OrderStatus.SHIPPED]: 'text-brand-primary',
   [OrderStatus.COMPLETED]: 'text-brand-green',
   [OrderStatus.CANCELLED]: 'text-gray-400',
+  [OrderStatus.REFUNDING]: 'text-brand-coral',
+  [OrderStatus.REFUNDED]: 'text-gray-400',
 };
 
 export default function OrderList() {

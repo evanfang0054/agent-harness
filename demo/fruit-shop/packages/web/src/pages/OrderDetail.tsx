@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useOrderStore } from '@/store/order.store';
 import { OrderStatus } from 'shared';
+import { orderApi } from '@/api/order';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { Toast } from '@/components/Toast';
 
@@ -11,6 +12,8 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
   [OrderStatus.SHIPPED]: '已发货',
   [OrderStatus.COMPLETED]: '已完成',
   [OrderStatus.CANCELLED]: '已取消',
+  [OrderStatus.REFUNDING]: '退款审核中',
+  [OrderStatus.REFUNDED]: '已退款',
 };
 
 const STATUS_BG: Record<OrderStatus, string> = {
@@ -19,6 +22,8 @@ const STATUS_BG: Record<OrderStatus, string> = {
   [OrderStatus.SHIPPED]: 'bg-brand-primary',
   [OrderStatus.COMPLETED]: 'bg-brand-green',
   [OrderStatus.CANCELLED]: 'bg-gray-400',
+  [OrderStatus.REFUNDING]: 'bg-brand-coral',
+  [OrderStatus.REFUNDED]: 'bg-gray-400',
 };
 
 export default function OrderDetail() {
@@ -26,6 +31,11 @@ export default function OrderDetail() {
   const navigate = useNavigate();
   const { currentOrder, isLoading, fetchOrderById, cancelOrder, clearCurrentOrder } = useOrderStore();
   const [isCancelling, setIsCancelling] = useState(false);
+  const [isPaying, setIsPaying] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [isRefunding, setIsRefunding] = useState(false);
+  const [showRefundModal, setShowRefundModal] = useState(false);
+  const [refundReason, setRefundReason] = useState('');
 
   useEffect(() => {
     if (id) {
@@ -47,6 +57,59 @@ export default function OrderDetail() {
       Toast.show('取消订单失败', 'error');
     } finally {
       setIsCancelling(false);
+    }
+  };
+
+  const handlePay = async () => {
+    if (!id) return;
+    setIsPaying(true);
+    try {
+      await orderApi.pay(Number(id));
+      Toast.show('支付成功', 'success');
+      await fetchOrderById(Number(id));
+    } catch {
+      Toast.show('支付失败', 'error');
+    } finally {
+      setIsPaying(false);
+    }
+  };
+
+  const handleConfirm = async () => {
+    if (!id) return;
+    setIsConfirming(true);
+    try {
+      await orderApi.confirm(Number(id));
+      Toast.show('确认收货成功', 'success');
+      await fetchOrderById(Number(id));
+    } catch {
+      Toast.show('确认收货失败', 'error');
+    } finally {
+      setIsConfirming(false);
+    }
+  };
+
+  const openRefundModal = () => {
+    setRefundReason('');
+    setShowRefundModal(true);
+  };
+
+  const handleRequestRefund = async () => {
+    if (!id) return;
+    const reason = refundReason.trim();
+    if (!reason) {
+      Toast.show('请填写退款原因', 'error');
+      return;
+    }
+    setIsRefunding(true);
+    try {
+      await orderApi.requestRefund(Number(id), reason);
+      Toast.show('退款申请已提交', 'success');
+      setShowRefundModal(false);
+      await fetchOrderById(Number(id));
+    } catch {
+      Toast.show('申请退款失败', 'error');
+    } finally {
+      setIsRefunding(false);
     }
   };
 
@@ -73,6 +136,15 @@ export default function OrderDetail() {
   }
 
   const order = currentOrder;
+
+  const showPayBtn = order.status === OrderStatus.PENDING;
+  const showConfirmBtn = order.status === OrderStatus.SHIPPED;
+  const showRefundBtn =
+    order.status === OrderStatus.PAID || order.status === OrderStatus.SHIPPED;
+  const showReviewBtn = order.status === OrderStatus.COMPLETED;
+
+  const hasActionButtons =
+    showPayBtn || showConfirmBtn || showRefundBtn || showReviewBtn;
 
   return (
     <div className="min-h-screen bg-brand-bg pb-24">
@@ -166,8 +238,8 @@ export default function OrderDetail() {
         </section>
       </main>
 
-      {/* Cancel button for PENDING orders */}
-      {order.status === OrderStatus.PENDING && (
+      {/* Bottom action bar */}
+      {hasActionButtons && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-50 safe-bottom">
           <div className="max-w-lg mx-auto px-4 py-3 flex gap-3">
             <button
@@ -176,13 +248,83 @@ export default function OrderDetail() {
             >
               返回列表
             </button>
-            <button
-              onClick={handleCancel}
-              disabled={isCancelling}
-              className="flex-1 py-2.5 text-sm text-white bg-brand-coral rounded-full hover:opacity-90 disabled:opacity-50 transition-opacity"
-            >
-              {isCancelling ? '取消中...' : '取消订单'}
-            </button>
+            {showPayBtn && (
+              <button
+                onClick={handlePay}
+                disabled={isPaying || isCancelling}
+                className="flex-1 py-2.5 text-sm text-white bg-brand-primary rounded-full hover:opacity-90 disabled:opacity-50 transition-opacity"
+              >
+                {isPaying ? '支付中...' : '去支付'}
+              </button>
+            )}
+            {showPayBtn && (
+              <button
+                onClick={handleCancel}
+                disabled={isCancelling || isPaying}
+                className="flex-1 py-2.5 text-sm text-white bg-brand-coral rounded-full hover:opacity-90 disabled:opacity-50 transition-opacity"
+              >
+                {isCancelling ? '取消中...' : '取消订单'}
+              </button>
+            )}
+            {showConfirmBtn && (
+              <button
+                onClick={handleConfirm}
+                disabled={isConfirming}
+                className="flex-1 py-2.5 text-sm text-white bg-brand-primary rounded-full hover:opacity-90 disabled:opacity-50 transition-opacity"
+              >
+                {isConfirming ? '处理中...' : '确认收货'}
+              </button>
+            )}
+            {showRefundBtn && (
+              <button
+                onClick={openRefundModal}
+                disabled={isConfirming}
+                className="flex-1 py-2.5 text-sm text-brand-coral border border-brand-coral rounded-full hover:bg-brand-coral/5 disabled:opacity-50 transition-colors"
+              >
+                申请退款
+              </button>
+            )}
+            {showReviewBtn && (
+              <button
+                onClick={() => Toast.show('评价功能即将上线', 'info')}
+                className="flex-1 py-2.5 text-sm text-white bg-brand-primary rounded-full hover:opacity-90 transition-opacity"
+              >
+                去评价
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Refund modal */}
+      {showRefundModal && (
+        <div className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center px-6">
+          <div className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-xl">
+            <h3 className="text-base font-semibold text-gray-900 mb-3">申请退款</h3>
+            <textarea
+              value={refundReason}
+              onChange={(e) => setRefundReason(e.target.value)}
+              placeholder="请填写退款原因"
+              rows={3}
+              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-brand-primary resize-none"
+              maxLength={200}
+            />
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={() => setShowRefundModal(false)}
+                disabled={isRefunding}
+                className="flex-1 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-full hover:bg-brand-bg transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleRequestRefund}
+                disabled={isRefunding}
+                className="flex-1 py-2.5 text-sm text-white bg-brand-coral rounded-full hover:opacity-90 disabled:opacity-50 transition-opacity"
+              >
+                {isRefunding ? '提交中...' : '提交申请'}
+              </button>
+            </div>
           </div>
         </div>
       )}
