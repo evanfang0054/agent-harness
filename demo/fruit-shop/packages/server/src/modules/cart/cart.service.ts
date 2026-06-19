@@ -112,6 +112,16 @@ export class CartService {
     return this.findAll(userId);
   }
 
+  async clearByUser(userId: number) {
+    await this.cartRepo
+      .createQueryBuilder()
+      .delete()
+      .from(CartEntity)
+      .where('user_id = :userId', { userId })
+      .execute();
+    return this.findAll(userId);
+  }
+
   async removeByUserAndProductIds(
     userId: number,
     productIds: number[],

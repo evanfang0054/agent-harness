@@ -39,6 +39,11 @@ export class CartController {
     return this.cartService.update(id, userId, dto);
   }
 
+  @Delete()
+  clear(@CurrentUser('id') userId: number) {
+    return this.cartService.clearByUser(userId);
+  }
+
   @Delete(':id')
   remove(
     @CurrentUser('id') userId: number,
