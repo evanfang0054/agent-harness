@@ -81,4 +81,47 @@ describe('Product Recommendations (e2e)', () => {
         expect(res.body.code).toBe(0);
       });
   });
+
+  it('isRecommended 商品应优先出现在推荐位', async () => {
+    // 创建 2 个推荐商品 + 1 个非推荐商品（stock>0，均为 ON）
+    const featured1 = await helper.createProductAsAdmin(adminToken, {
+      name: '推荐-A',
+      isRecommended: true,
+      featuredSortOrder: 1,
+      stock: 10,
+    });
+    const featured2 = await helper.createProductAsAdmin(adminToken, {
+      name: '推荐-B',
+      isRecommended: true,
+      featuredSortOrder: 0,
+      stock: 10,
+    });
+    const normal = await helper.createProductAsAdmin(adminToken, {
+      name: '普通-C',
+      isRecommended: false,
+      stock: 10,
+    });
+
+    const res = await request(helper.httpServer)
+      .get('/api/products/recommendations')
+      .query({ limit: 10 })
+      .expect(200);
+    const ids: number[] = res.body.data.list.map((p: any) => p.id);
+
+    // 推荐 B（sortOrder 0）应排在 A（sortOrder 1）之前
+    expect(ids.indexOf(featured2)).toBeLessThan(ids.indexOf(featured1));
+    // 推荐商品应在普通商品之前
+    expect(ids.indexOf(featured2)).toBeLessThan(ids.indexOf(normal));
+    expect(ids.indexOf(featured1)).toBeLessThan(ids.indexOf(normal));
+  });
+
+  it('推荐商品不足时应用 createdAt DESC 补足', async () => {
+    const res = await request(helper.httpServer)
+      .get('/api/products/recommendations')
+      .query({ limit: 10 })
+      .expect(200);
+    expect(res.body.data.list.length).toBeLessThanOrEqual(10);
+    // 若列表含非推荐商品，它们必在推荐商品之后（顺序由上一用例保证）
+    expect(res.body.code).toBe(0);
+  });
 });

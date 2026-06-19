@@ -86,19 +86,41 @@ export class ProductService {
       return JSON.parse(cached);
     }
 
-    const qb = this.productRepo
+    const baseQb = this.productRepo
       .createQueryBuilder('p')
       .where('p.status = :status', { status: ProductStatus.ON })
       .andWhere('p.stock > 0');
 
     if (excludeId > 0) {
-      qb.andWhere('p.id != :excludeId', { excludeId });
+      baseQb.andWhere('p.id != :excludeId', { excludeId });
     }
 
-    const list = await qb
-      .orderBy('p.created_at', 'DESC')
+    // 1. 先取推荐位商品（isRecommended=true）按 featuredSortOrder ASC + createdAt DESC
+    const featured = await baseQb
+      .clone()
+      .andWhere('p.is_recommended = :isRec', { isRec: true })
+      .orderBy('p.featured_sort_order', 'ASC')
+      .addOrderBy('p.created_at', 'DESC')
       .take(limit)
       .getMany();
+
+    let list = featured;
+
+    // 2. 不足用非推荐商品按 createdAt DESC 补足
+    if (list.length < limit) {
+      const excludeIds = list.map((p) => p.id);
+      const fillQb = baseQb
+        .clone()
+        .andWhere('p.is_recommended = :isRec', { isRec: false });
+      if (excludeIds.length > 0) {
+        fillQb.andWhere('p.id NOT IN (:...excludeIds)', { excludeIds });
+      }
+      const fillers = await fillQb
+        .orderBy('p.created_at', 'DESC')
+        .take(limit - list.length)
+        .getMany();
+      list = [...list, ...fillers];
+    }
 
     const result = { list };
     await this.redis.set(cacheKey, JSON.stringify(result), 'EX', 60);
