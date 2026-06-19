@@ -10,3 +10,5 @@ export { RefundEntity } from './refund.entity';
 export { AddressEntity } from './address.entity';
 export { ReviewEntity } from './review.entity';
 export { FavoriteEntity } from './favorite.entity';
+export { CouponTemplateEntity } from './coupon-template.entity';
+export { UserCouponEntity } from './user-coupon.entity';
