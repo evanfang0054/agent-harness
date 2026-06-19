@@ -89,4 +89,52 @@ export class TestHelper {
   ) {
     return this.registerAndLogin(phone, password, 'Admin');
   }
+
+  /**
+   * 以 admin 身份创建商品，返回新商品 id
+   */
+  async createProductAsAdmin(
+    token: string,
+    overrides: Record<string, any> = {},
+  ): Promise<number> {
+    const body = {
+      name: overrides.name ?? `测试商品-${Date.now()}`,
+      origin: overrides.origin ?? '测试产地',
+      price: overrides.price ?? 19.9,
+      unit: overrides.unit ?? '斤',
+      sweetness: overrides.sweetness ?? '甜',
+      weight: overrides.weight ?? '1kg',
+      image: overrides.image ?? 'http://example.com/test.jpg',
+      color: overrides.color ?? '#FF6B35',
+      categoryId: overrides.categoryId ?? 1,
+      stock: overrides.stock ?? 100,
+      ...overrides,
+    };
+    const res = await request(this.httpServer)
+      .post('/api/products')
+      .set('Authorization', `Bearer ${token}`)
+      .send(body);
+    if (res.body?.code !== 0) {
+      throw new Error(`createProductAsAdmin failed: code=${res.body?.code} message=${res.body?.message}`);
+    }
+    return res.body.data.id;
+  }
+
+  /**
+   * 以指定用户身份加入购物车
+   */
+  async addToCartAsUser(
+    token: string,
+    productId: number,
+    specLabel: string,
+    quantity: number,
+  ): Promise<void> {
+    const res = await request(this.httpServer)
+      .post('/api/cart')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ productId, specLabel, quantity });
+    if (res.body?.code !== 0) {
+      throw new Error(`addToCartAsUser failed: code=${res.body?.code} message=${res.body?.message}`);
+    }
+  }
 }
