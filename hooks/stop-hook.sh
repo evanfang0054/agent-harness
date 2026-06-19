@@ -120,14 +120,14 @@ if [[ -z "$LAST_LINES" ]]; then
   exit 0
 fi
 
-# Parse the recent lines and pull out the final text block.
-# `last // ""` yields empty string when no text blocks exist (e.g. a turn
-# that is all tool calls). That's fine: empty text means no <promise> tag,
-# so the loop simply continues.
+# Join all text blocks from the last 100 assistant lines, not just the last
+# one. When Claude emits <promise>COMPLETE</promise> followed by other text
+# (e.g. "logged N learnings"), `last` misses the promise; join("\n") lets
+# the perl regex below find it anywhere in the captured output.
 # (Briefly disable errexit so a jq failure can be caught by the $? check.)
 set +e
 LAST_OUTPUT=$(echo "$LAST_LINES" | jq -rs '
-  map(.message.content[]? | select(.type == "text") | .text) | last // ""
+  map(.message.content[]? | select(.type == "text") | .text) | join("\n")
 ' 2>&1)
 JQ_EXIT=$?
 set -e
