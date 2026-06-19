@@ -10,6 +10,7 @@ const Cart = lazy(() => import('@/pages/Cart'));
 const Checkout = lazy(() => import('@/pages/Checkout'));
 const OrderList = lazy(() => import('@/pages/OrderList'));
 const OrderDetail = lazy(() => import('@/pages/OrderDetail'));
+const Profile = lazy(() => import('@/pages/Profile'));
 const Login = lazy(() => import('@/pages/Login'));
 const Register = lazy(() => import('@/pages/Register'));
 const AdminProducts = lazy(() => import('@/pages/AdminProducts'));
@@ -69,6 +70,10 @@ export const router = createBrowserRouter([
   {
     path: '/order/:id',
     element: <SuspenseWrapper><ProtectedRoute><OrderDetail /></ProtectedRoute></SuspenseWrapper>,
+  },
+  {
+    path: '/profile',
+    element: <SuspenseWrapper><ProtectedRoute><Profile /></ProtectedRoute></SuspenseWrapper>,
   },
   {
     path: '/login',
