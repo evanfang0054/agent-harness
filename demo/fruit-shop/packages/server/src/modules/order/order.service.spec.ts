@@ -10,6 +10,8 @@ describe('OrderService', () => {
   let shippingRepo: any;
   let refundRepo: any;
   let addressRepo: any;
+  let userCouponRepo: any;
+  let couponService: any;
   let cartService: any;
   let dataSource: any;
   let queryRunner: any;
@@ -52,6 +54,8 @@ describe('OrderService', () => {
     refundRepo = {};
     addressRepo = { findOne: jest.fn() };
     cartService = {};
+    userCouponRepo = {};
+    couponService = { getTemplate: jest.fn(), calculateDiscount: jest.fn().mockReturnValue(0) };
     logger = { setContext: jest.fn(), info: jest.fn() };
     service = new OrderService(
       orderRepo,
@@ -60,7 +64,9 @@ describe('OrderService', () => {
       shippingRepo,
       refundRepo,
       addressRepo,
+      userCouponRepo,
       cartService,
+      couponService,
       dataSource,
       logger,
     );
@@ -81,13 +87,13 @@ describe('OrderService', () => {
           productId: 1,
           specLabel: '1kg',
           quantity: 2,
-          product: { id: 1, name: 'A', price: '9.9', image: 'i' },
+          product: { id: 1, name: 'A', price: '9.9', image: 'i', categoryId: 1 },
         },
         {
           productId: 2,
           specLabel: '2kg',
           quantity: 1,
-          product: { id: 2, name: 'B', price: '5', image: 'j' },
+          product: { id: 2, name: 'B', price: '5', image: 'j', categoryId: 1 },
         },
       ]);
       queryRunner.manager.save.mockResolvedValueOnce({ id: 100 } as any); // savedOrder
@@ -129,7 +135,7 @@ describe('OrderService', () => {
         {
           productId: 1,
           quantity: 1,
-          product: { price: '1', name: 'A', image: 'i' },
+          product: { price: '1', name: 'A', image: 'i', categoryId: 1 },
         },
       ]);
       // FOR UPDATE returns enough stock; subsequent save() rejects to trigger rollback.
