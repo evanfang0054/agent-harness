@@ -26,14 +26,13 @@ log_fail() { echo -e "${RED}❌ FAIL${NC}: $1"; ((FAIL++)); }
 cleanup() { rm -rf "$TEST_DIR"; }
 trap cleanup EXIT
 
-# 每个用例在独立临时 git repo 中运行，互不影响
+# 每个用例在独立临时目录中运行，通过 CLAUDE_PROJECT_DIR 指定路径
+# （与 v2 脚本的 fallback 链一致：CLAUDE_PROJECT_DIR 优先，git rev-parse 备用）
 setup_repo() {
     rm -rf "$TEST_DIR"
     mkdir -p "$TEST_DIR"
     cd "$TEST_DIR"
-    git init -q
-    git config user.email "test@test.local"
-    git config user.name "test"
+    export CLAUDE_PROJECT_DIR="$TEST_DIR"
 }
 
 echo "=== cleanup-workspace Tests ==="
