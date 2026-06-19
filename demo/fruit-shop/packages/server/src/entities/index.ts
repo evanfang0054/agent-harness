@@ -7,3 +7,4 @@ export { OrderItemEntity } from './order-item.entity';
 export { BannerEntity } from './banner.entity';
 export { ShippingEntity } from './shipping.entity';
 export { RefundEntity } from './refund.entity';
+export { AddressEntity } from './address.entity';
