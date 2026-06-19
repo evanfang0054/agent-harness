@@ -82,7 +82,8 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (refreshError) {
         processPendingRequests(null, refreshError);
-        useAuthStore.getState().logout();
+        // 401 兜底：token 已被后端拒绝，调 /auth/logout 也会再 401，直接清前端
+        useAuthStore.setState({ user: null, token: null, refreshToken: null, error: null });
         window.location.href = '/login';
         return Promise.reject(refreshError);
       } finally {

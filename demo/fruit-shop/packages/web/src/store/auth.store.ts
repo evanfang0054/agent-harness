@@ -13,7 +13,7 @@ interface AuthState {
   setToken: (token: string) => void;
   login: (data: LoginDTO) => Promise<void>;
   register: (data: RegisterDTO) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   clearError: () => void;
   refreshUserInfo: () => Promise<void>;
 }
@@ -55,7 +55,13 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      logout: () => {
+      logout: async () => {
+        try {
+          const { authApi } = await import('@/api/auth');
+          await authApi.logout();
+        } catch {
+          // 容错：后端登出失败仍清前端状态，允许离线登出
+        }
         set({ user: null, token: null, refreshToken: null, error: null });
       },
 
