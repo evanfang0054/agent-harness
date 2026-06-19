@@ -16,6 +16,14 @@ export interface Product {
   status: ProductStatus;
   createdAt: string;
   updatedAt: string;
+  specs: ProductSpec[] | null;
+  isRecommended: boolean;
+  featuredSortOrder: number;
+}
+
+export interface ProductSpec {
+  name: string;
+  values: string[];
 }
 
 export enum ProductStatus {

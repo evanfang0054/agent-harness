@@ -12,6 +12,15 @@ export { OrderStatus } from './types/order';
 
 export type { ApiResponse, PaginatedResponse, PaginationQuery } from './types/api';
 
+export type { ProductSpec } from './types/product';
+
+export type {
+  Banner,
+  BannerLinkType,
+  CreateBannerDTO,
+  UpdateBannerDTO,
+} from './types/banner';
+
 // Constants
 export { ErrorCode, ErrorMessage, SUCCESS_CODE } from './constants';
 export type { ErrorCodeType } from './constants';
