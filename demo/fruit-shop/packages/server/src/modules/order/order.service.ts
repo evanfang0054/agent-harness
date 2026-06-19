@@ -183,27 +183,32 @@ export class OrderService {
   }
 
   async cancel(userId: number, id: number) {
-    const order = await this.orderRepo.findOne({
-      where: { id, userId },
-    });
-
-    if (!order) {
-      throw new NotFoundException(ErrorMessage[ErrorCode.ORDER_NOT_FOUND]);
-    }
-
-    if (order.status !== OrderStatus.PENDING) {
-      throw new BadRequestException(
-        ErrorMessage[ErrorCode.ORDER_CANCEL_NOT_ALLOWED],
-      );
-    }
-
-    // 事务内：改状态 + 回补库存
+    // 整个流程在事务内完成：先 FOR UPDATE 锁定订单行（同时完成归属校验），
+    // 再做状态校验，最后锁 products + 回补库存 + 改状态。
+    // 这避免了 TOCTOU：并发 cancel 同一 PENDING 订单时，第二个会因行锁阻塞，
+    // 等第一个 commit（状态已变 CANCELLED）后再读到新状态，校验失败抛错。
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      // 行锁订单项对应商品
+      // 1. 行锁 + 归属校验（一并完成）
+      const rows: { id: number; status: number }[] =
+        await queryRunner.manager.query(
+          'SELECT id, status FROM orders WHERE id = ? AND user_id = ? FOR UPDATE',
+          [id, userId],
+        );
+      if (rows.length === 0) {
+        throw new NotFoundException(ErrorMessage[ErrorCode.ORDER_NOT_FOUND]);
+      }
+      // 2. 状态校验（rows[0].status 从 mysql 返回为 smallint → number）
+      if (rows[0].status !== OrderStatus.PENDING) {
+        throw new BadRequestException(
+          ErrorMessage[ErrorCode.ORDER_CANCEL_NOT_ALLOWED],
+        );
+      }
+
+      // 3. 锁订单项对应商品 + 回补库存
       const items = await queryRunner.manager.find(OrderItemEntity, {
         where: { orderId: id },
       });
@@ -221,8 +226,11 @@ export class OrderService {
         }
       }
 
-      order.status = OrderStatus.CANCELLED;
-      await queryRunner.manager.save(OrderEntity, order);
+      // 4. 改订单状态
+      await queryRunner.manager.query(
+        'UPDATE orders SET status = ? WHERE id = ?',
+        [OrderStatus.CANCELLED, id],
+      );
 
       await queryRunner.commitTransaction();
     } catch (err) {
