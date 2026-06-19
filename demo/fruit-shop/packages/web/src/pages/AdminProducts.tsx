@@ -29,6 +29,13 @@ interface ProductFormData {
   stock: string;
   description: string;
   status: ProductStatus;
+  sweetness: string;
+  weight: string;
+  color: string;
+  tags: string;
+  specs: string;
+  isRecommended: boolean;
+  featuredSortOrder: number;
 }
 
 const emptyForm: ProductFormData = {
@@ -42,6 +49,13 @@ const emptyForm: ProductFormData = {
   stock: '100',
   description: '',
   status: ProductStatus.ON,
+  sweetness: '',
+  weight: '',
+  color: '#FF6B35',
+  tags: '',
+  specs: '',
+  isRecommended: false,
+  featuredSortOrder: 0,
 };
 
 export default function AdminProducts() {
@@ -131,6 +145,13 @@ export default function AdminProducts() {
       stock: product.stock?.toString() || '0',
       description: product.description || '',
       status: product.status,
+      sweetness: product.sweetness ?? '',
+      weight: product.weight ?? '',
+      color: product.color ?? '#FF6B35',
+      tags: product.tags?.join(',') ?? '',
+      specs: product.specs ? JSON.stringify(product.specs, null, 2) : '',
+      isRecommended: product.isRecommended ?? false,
+      featuredSortOrder: product.featuredSortOrder ?? 0,
     });
     setShowModal(true);
   };
@@ -149,6 +170,17 @@ export default function AdminProducts() {
 
     setIsSubmitting(true);
     try {
+      let parsedSpecs: unknown = null;
+      if (form.specs.trim()) {
+        try {
+          parsedSpecs = JSON.parse(form.specs);
+          if (!Array.isArray(parsedSpecs)) throw new Error('not array');
+        } catch {
+          Toast.show('规格 JSON 格式错误', 'error');
+          return;
+        }
+      }
+
       const payload = {
         name: form.name.trim(),
         price: Number(form.price),
@@ -160,6 +192,13 @@ export default function AdminProducts() {
         stock: Number(form.stock) || 0,
         description: form.description.trim() || null,
         status: form.status,
+        sweetness: form.sweetness.trim() || null,
+        weight: form.weight.trim() || null,
+        color: form.color.trim() || null,
+        tags: form.tags.split(',').map((s) => s.trim()).filter(Boolean),
+        specs: parsedSpecs,
+        isRecommended: form.isRecommended,
+        featuredSortOrder: Number(form.featuredSortOrder),
       };
 
       if (editingProduct) {
@@ -458,6 +497,63 @@ export default function AdminProducts() {
                 />
               </div>
 
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">甜度</label>
+                  <input
+                    type="text"
+                    value={form.sweetness}
+                    onChange={(e) => setForm({ ...form, sweetness: e.target.value })}
+                    placeholder="如 甜、酸甜"
+                    className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">规格重量</label>
+                  <input
+                    type="text"
+                    value={form.weight}
+                    onChange={(e) => setForm({ ...form, weight: e.target.value })}
+                    placeholder="如 500g、1kg"
+                    className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">色板色值</label>
+                  <input
+                    type="text"
+                    value={form.color}
+                    onChange={(e) => setForm({ ...form, color: e.target.value })}
+                    placeholder="如 #FF6B35"
+                    className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">标签</label>
+                  <input
+                    type="text"
+                    value={form.tags}
+                    onChange={(e) => setForm({ ...form, tags: e.target.value })}
+                    placeholder="逗号分隔，如 甜,新鲜,限时"
+                    className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">规格 JSON</label>
+                <textarea
+                  value={form.specs}
+                  onChange={(e) => setForm({ ...form, specs: e.target.value })}
+                  placeholder='如 [{"name":"规格","values":["500g/盒","1kg/袋"]}]'
+                  rows={3}
+                  className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary resize-none"
+                />
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">状态</label>
                 <select
@@ -468,6 +564,30 @@ export default function AdminProducts() {
                   <option value={ProductStatus.ON}>上架</option>
                   <option value={ProductStatus.OFF}>下架</option>
                 </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                    <input
+                      type="checkbox"
+                      checked={form.isRecommended}
+                      onChange={(e) => setForm({ ...form, isRecommended: e.target.checked })}
+                      className="rounded border-gray-300 text-brand-primary focus:ring-brand-primary/30"
+                    />
+                    <span>设为推荐商品</span>
+                  </label>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">推荐排序</label>
+                  <input
+                    type="number"
+                    value={form.featuredSortOrder}
+                    onChange={(e) => setForm({ ...form, featuredSortOrder: Number(e.target.value) })}
+                    placeholder="小的在前"
+                    className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
+                  />
+                </div>
               </div>
 
               <div className="flex gap-3 pt-2">
