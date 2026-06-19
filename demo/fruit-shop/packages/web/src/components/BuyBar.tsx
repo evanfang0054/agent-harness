@@ -6,18 +6,20 @@ import { useToast } from './Toast';
 
 interface BuyBarProps {
   product: Product;
+  selectedSpecs: Record<string, string>;
 }
 
-export function BuyBar({ product }: BuyBarProps) {
+export function BuyBar({ product, selectedSpecs }: BuyBarProps) {
   const navigate = useNavigate();
   const addItem = useCartStore((s) => s.addItem);
   const isUpdating = useCartStore((s) => s.isUpdating);
   const { showToast } = useToast();
   const [qty, setQty] = useState(1);
+  const specLabel = Object.values(selectedSpecs).join('/') || '默认';
 
   const handleAddToCart = async () => {
     try {
-      await addItem({ productId: product.id, specLabel: '默认', quantity: qty });
+      await addItem({ productId: product.id, specLabel, quantity: qty });
       showToast(`已加入购物车 ×${qty}`, 'success');
     } catch {
       showToast('添加失败，请重试', 'error');
@@ -26,7 +28,7 @@ export function BuyBar({ product }: BuyBarProps) {
 
   const handleBuyNow = async () => {
     try {
-      await addItem({ productId: product.id, specLabel: '默认', quantity: qty });
+      await addItem({ productId: product.id, specLabel, quantity: qty });
       navigate('/cart');
     } catch {
       showToast('操作失败，请重试', 'error');

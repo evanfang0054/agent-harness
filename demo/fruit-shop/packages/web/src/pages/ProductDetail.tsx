@@ -24,6 +24,7 @@ export default function ProductDetail() {
   const [product, setProduct] = useState<Product | null>(null);
   const [recommendations, setRecommendations] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedSpecs, setSelectedSpecs] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!id) return;
@@ -66,24 +67,7 @@ export default function ProductDetail() {
 
   if (!product) return null;
 
-  // 解析规格
-  const specs: Array<{ name: string; values: string[] }> = [];
-  if ((product as Product & { specs?: string }).specs) {
-    try {
-      const parsed = JSON.parse(
-        (product as Product & { specs?: string }).specs || '[]',
-      );
-      if (Array.isArray(parsed)) {
-        parsed.forEach((s: { name: string; values: string[] }) => {
-          if (s.name && Array.isArray(s.values)) {
-            specs.push(s);
-          }
-        });
-      }
-    } catch {
-      // 忽略
-    }
-  }
+  const specs = product.specs ?? [];
 
   const handleRecommendClick = (productId: number) => {
     navigate(`/product/${productId}`);
@@ -175,7 +159,7 @@ export default function ProductDetail() {
       {specs.length > 0 && (
         <div className="px-5 pb-4">
           <div className="text-sm font-bold text-brand-dark mb-2.5">选择规格</div>
-          <SpecSelector specs={specs} onChange={() => {}} />
+          <SpecSelector specs={specs} onChange={setSelectedSpecs} />
         </div>
       )}
 
@@ -192,7 +176,7 @@ export default function ProductDetail() {
       <div className="h-[70px]" />
 
       {/* 底部购买栏 */}
-      <BuyBar product={product} />
+      <BuyBar product={product} selectedSpecs={selectedSpecs} />
     </div>
   );
 }
