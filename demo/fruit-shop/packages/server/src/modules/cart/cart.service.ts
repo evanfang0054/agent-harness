@@ -46,6 +46,7 @@ export class CartService {
             unit: item.product.unit,
             stock: item.product.stock,
             status: item.product.status,
+            categoryId: item.product.categoryId,
           }
         : null,
     }));

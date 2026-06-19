@@ -136,6 +136,22 @@ export default function Profile() {
               <path d="M9 18l6-6-6-6" />
             </svg>
           </button>
+          <div className="border-t border-brand-border" />
+          <button
+            onClick={() => navigate('/coupons/mine')}
+            className="w-full px-4 py-3.5 flex items-center justify-between text-sm text-brand-dark hover:bg-brand-bg"
+          >
+            <span className="flex items-center gap-2">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-brand-secondary">
+                <path d="M20 12V8H4v4a2 2 0 010 4v4h16v-4a2 2 0 010-4z" />
+                <path d="M10 8v8" strokeDasharray="2 2" />
+              </svg>
+              我的优惠券
+            </span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-brand-muted">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
         </div>
 
         <button

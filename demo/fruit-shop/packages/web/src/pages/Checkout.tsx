@@ -1,11 +1,33 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, useMemo, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCartStore } from '@/store/cart.store';
 import { useOrderStore } from '@/store/order.store';
 import { addressApi } from '@/api/address';
-import type { Address } from 'shared';
+import { couponApi, type MineCouponsResponse } from '@/api/coupon';
+import type { Address, UserCoupon, CouponTemplate, CouponPreviewResponse } from 'shared';
+import { CouponType } from 'shared';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { Toast } from '@/components/Toast';
+
+type MyCouponItem = UserCoupon & { coupon: CouponTemplate | null };
+
+const TYPE_LABEL: Record<CouponType, string> = {
+  [CouponType.FULL_REDUCTION]: '满减',
+  [CouponType.DISCOUNT]: '折扣',
+  [CouponType.NO_THRESHOLD]: '无门槛',
+};
+
+function describeCouponLabel(t: CouponTemplate): string {
+  const discount =
+    t.type === CouponType.DISCOUNT
+      ? `${(Number(t.discountRate) * 10).toFixed(1)}折`
+      : `¥${Number(t.discountAmount).toFixed(2)}`;
+  const threshold =
+    t.type === CouponType.NO_THRESHOLD || Number(t.minAmount) <= 0
+      ? '无门槛'
+      : `满¥${Number(t.minAmount).toFixed(2)}`;
+  return `${TYPE_LABEL[t.type]} · ${threshold} 减${discount}`;
+}
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -19,10 +41,20 @@ export default function Checkout() {
   const [defaultAddr, setDefaultAddr] = useState<Address | null>(null);
   const [useAddressBook, setUseAddressBook] = useState(false);
 
+  // 优惠券
+  const [myCoupons, setMyCoupons] = useState<MyCouponItem[]>([]);
+  const [couponModalOpen, setCouponModalOpen] = useState(false);
+  const [selectedCoupon, setSelectedCoupon] = useState<MyCouponItem | null>(null);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [couponLoading, setCouponLoading] = useState(false);
+
   const selected = selectedItems();
   const subtotal = totalPrice();
   const shippingFee = subtotal >= 99 ? 0 : 8;
-  const totalAmount = subtotal + shippingFee;
+  const totalAmount = useMemo(
+    () => Math.max(0, Math.round((subtotal + shippingFee - discountAmount) * 100) / 100),
+    [subtotal, shippingFee, discountAmount],
+  );
 
   useEffect(() => {
     if (selected.length === 0) {
@@ -50,6 +82,58 @@ export default function Checkout() {
       .catch(() => {});
   }, []);
 
+  // 打开选券 modal 时拉取我的可用券
+  const openCouponModal = () => {
+    setCouponModalOpen(true);
+    if (myCoupons.length === 0) {
+      couponApi
+        .getMine(1, 50)
+        .then((res) => {
+          const body = res.data.data as MineCouponsResponse | undefined;
+          setMyCoupons(body?.list ?? []);
+        })
+        .catch(() => {
+          Toast.show('加载优惠券失败', 'error');
+        });
+    }
+  };
+
+  // 选中某张券 → 调 preview 拿折扣
+  const handleSelectCoupon = async (item: MyCouponItem) => {
+    if (!item.coupon) {
+      Toast.show('券信息缺失', 'warning');
+      return;
+    }
+    setCouponLoading(true);
+    try {
+      const payload = {
+        couponId: item.coupon.id,
+        items: selected.map((i) => ({
+          productId: i.productId,
+          quantity: i.quantity,
+          price: Number(i.product.price),
+          categoryId: i.product.categoryId,
+        })),
+      };
+      const { data } = await couponApi.preview(payload);
+      const preview = data.data as CouponPreviewResponse | undefined;
+      const discount = preview?.discountAmount ?? 0;
+      setSelectedCoupon(item);
+      setDiscountAmount(discount);
+      setCouponModalOpen(false);
+      Toast.show(`已应用，本次优惠 ¥${discount.toFixed(2)}`, 'success');
+    } catch {
+      Toast.show('此优惠券不适用当前商品', 'error');
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleClearCoupon = () => {
+    setSelectedCoupon(null);
+    setDiscountAmount(0);
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -68,6 +152,7 @@ export default function Checkout() {
         address: address.trim(),
         phone: phone.trim(),
         remark: remark.trim() || undefined,
+        couponId: selectedCoupon?.id,
       });
       Toast.show('下单成功', 'success');
       navigate(`/order/${order.id}`, { replace: true });
@@ -252,6 +337,34 @@ export default function Checkout() {
                   再买¥{(99 - Number(subtotal)).toFixed(2)}即可免运费
                 </p>
               )}
+
+              {/* 优惠券行 */}
+              <div className="flex justify-between items-center text-gray-600">
+                <span>优惠券</span>
+                {selectedCoupon ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-brand-coral">
+                      -¥{Number(discountAmount).toFixed(2)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleClearCoupon}
+                      className="text-[11px] text-brand-muted underline"
+                    >
+                      不使用
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={openCouponModal}
+                    className="text-brand-primary text-[12px] font-bold"
+                  >
+                    选择优惠券 &gt;
+                  </button>
+                )}
+              </div>
+
               <div className="border-t border-gray-100 pt-2 flex justify-between items-center">
                 <span className="font-medium text-gray-800">合计</span>
                 <span className="text-xl font-bold text-brand-primary">
@@ -262,6 +375,73 @@ export default function Checkout() {
           </section>
         </form>
       </main>
+
+      {/* Coupon picker modal */}
+      {couponModalOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50"
+          onClick={() => setCouponModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md max-h-[80vh] overflow-y-auto p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-base font-bold text-brand-dark">选择优惠券</h3>
+              <button
+                onClick={() => setCouponModalOpen(false)}
+                className="text-brand-muted text-sm"
+              >
+                关闭
+              </button>
+            </div>
+
+            {couponLoading ? (
+              <div className="py-8 flex justify-center">
+                <LoadingSpinner />
+              </div>
+            ) : myCoupons.length === 0 ? (
+              <div className="text-center py-8 text-brand-muted text-sm">
+                暂无可用优惠券
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {myCoupons.map((uc) => {
+                  if (!uc.coupon) return null;
+                  const active = selectedCoupon?.id === uc.id;
+                  return (
+                    <button
+                      key={uc.id}
+                      type="button"
+                      onClick={() => handleSelectCoupon(uc)}
+                      className={`w-full text-left rounded-2xl border p-3 transition-colors ${
+                        active
+                          ? 'border-brand-primary bg-brand-peach/30'
+                          : 'border-brand-border bg-brand-bg hover:border-brand-primary/50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-bold text-brand-dark">
+                          {uc.coupon.name}
+                        </span>
+                        <span className="text-[11px] text-brand-muted">
+                          {TYPE_LABEL[uc.coupon.type]}
+                        </span>
+                      </div>
+                      <p className="text-[12px] text-brand-muted mt-1">
+                        {describeCouponLabel(uc.coupon)}
+                      </p>
+                      <p className="text-[11px] text-brand-muted">
+                        有效期至 {new Date(uc.coupon.endAt).toLocaleDateString()}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Bottom submit bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-50 safe-bottom">

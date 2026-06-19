@@ -30,5 +30,6 @@ export interface CartItemWithProduct extends CartItem {
     unit: string;
     stock: number;
     status: ProductStatus;
+    categoryId: number;
   };
 }

@@ -18,6 +18,8 @@ const Register = lazy(() => import('@/pages/Register'));
 const AdminProducts = lazy(() => import('@/pages/AdminProducts'));
 const AdminBanners = lazy(() => import('@/pages/AdminBanners'));
 const AdminRefunds = lazy(() => import('@/pages/AdminRefunds'));
+const AdminCoupons = lazy(() => import('@/pages/AdminCoupons'));
+const MyCoupons = lazy(() => import('@/pages/MyCoupons'));
 
 function SuspenseWrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -88,6 +90,10 @@ export const router = createBrowserRouter([
     element: <SuspenseWrapper><ProtectedRoute><Favorites /></ProtectedRoute></SuspenseWrapper>,
   },
   {
+    path: '/coupons/mine',
+    element: <SuspenseWrapper><ProtectedRoute><MyCoupons /></ProtectedRoute></SuspenseWrapper>,
+  },
+  {
     path: '/login',
     element: <SuspenseWrapper><Login /></SuspenseWrapper>,
   },
@@ -106,5 +112,9 @@ export const router = createBrowserRouter([
   {
     path: '/admin/refunds',
     element: <SuspenseWrapper><AdminRoute><AdminRefunds /></AdminRoute></SuspenseWrapper>,
+  },
+  {
+    path: '/admin/coupons',
+    element: <SuspenseWrapper><AdminRoute><AdminCoupons /></AdminRoute></SuspenseWrapper>,
   },
 ]);
