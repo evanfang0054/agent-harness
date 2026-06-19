@@ -1,4 +1,5 @@
 import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { OrderStatus } from 'shared';
 import { OrderService } from './order.service';
 
 describe('OrderService', () => {
@@ -84,12 +85,15 @@ describe('OrderService', () => {
 
       const result = await service.create(1, { address: 'a', phone: 'p' } as any);
 
-      // totalAmount = 9.9*2 + 5*1 = 24.8
+      // totalAmount = 9.9*2 + 5*1 = 24.8 (float, use tolerance)
       expect(queryRunner.manager.save).toHaveBeenNthCalledWith(
         1,
         expect.anything(),
-        expect.objectContaining({ totalAmount: 24.8 }),
+        expect.objectContaining({ userId: 1 }),
       );
+      expect(
+        queryRunner.manager.save.mock.calls[0][1].totalAmount,
+      ).toBeCloseTo(24.8, 5);
       expect(queryRunner.commitTransaction).toHaveBeenCalled();
       expect(queryRunner.rollbackTransaction).not.toHaveBeenCalled();
       expect(queryRunner.release).toHaveBeenCalled();
@@ -177,20 +181,20 @@ describe('OrderService', () => {
     });
 
     it('should throw BadRequest when not PENDING', async () => {
-      // OrderStatus.PENDING=0, PAID=1 — use a non-PENDING value
-      orderRepo.findOne.mockResolvedValue({ id: 1, status: 1 });
+      // OrderStatus.PAID=1 — non-PENDING value
+      orderRepo.findOne.mockResolvedValue({ id: 1, status: OrderStatus.PAID });
       await expect(service.cancel(1, 1)).rejects.toThrow(BadRequestException);
     });
 
     it('should update status to CANCELLED and persist via orderRepo.save', async () => {
-      const order = { id: 1, status: 0 }; // PENDING = 0
+      const order = { id: 1, status: OrderStatus.PENDING }; // PENDING = 0
       orderRepo.findOne.mockResolvedValue(order);
       orderItemRepo.find.mockResolvedValue([]);
       await service.cancel(1, 1);
-      expect(order.status).toBe(4); // CANCELLED = 4
+      expect(order.status).toBe(OrderStatus.CANCELLED); // CANCELLED = 4
       // Implementation calls orderRepo.save(order) — verify the persistence occurred
       expect(orderRepo.save).toHaveBeenCalledWith(
-        expect.objectContaining({ id: 1, status: 4 }),
+        expect.objectContaining({ id: 1, status: OrderStatus.CANCELLED }),
       );
     });
   });
