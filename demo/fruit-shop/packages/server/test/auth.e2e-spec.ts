@@ -144,6 +144,55 @@ describe('Auth (e2e)', () => {
     });
   });
 
+  describe('Logout 黑名单 + token 类型校验', () => {
+    let accessToken: string;
+    let refreshToken: string;
+    let userTokens: { accessToken: string; refreshToken: string };
+
+    beforeAll(async () => {
+      userTokens = await helper.registerAndLogin('13800000010', 'test123456');
+      accessToken = userTokens.accessToken;
+      refreshToken = userTokens.refreshToken;
+    });
+
+    it('should reject access after logout (Redis blacklist)', async () => {
+      // 先登出
+      await request(helper.httpServer)
+        .post('/api/auth/logout')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+
+      // 再用同一 token 访问需鉴权接口 → 401
+      return request(helper.httpServer)
+        .get('/api/user/profile')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.code).toBe(401);
+        });
+    });
+
+    it('should reject refresh with access token (wrong type)', () => {
+      return request(helper.httpServer)
+        .post('/api/auth/refresh')
+        .send({ refreshToken: accessToken }) // 误用 accessToken
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.code).toBe(401);
+        });
+    });
+
+    it('should reject invalid/expired refresh token', () => {
+      return request(helper.httpServer)
+        .post('/api/auth/refresh')
+        .send({ refreshToken: 'aaa.bbb.ccc' }) // 非法 JWT
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.code).toBe(401);
+        });
+    });
+  });
+
   describe('Rate limiting', () => {
     it('should rate-limit login after 10 requests per minute', async () => {
       // 注：ThrottlerModule 使用进程级 in-memory store，限流按 IP 计数。
