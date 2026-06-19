@@ -27,7 +27,7 @@ export class RefundEntity {
   @Column({ type: 'smallint', default: RefundStatus.PENDING })
   status: RefundStatus;
 
-  @Column({ name: 'admin_note', length: 500, nullable: true })
+  @Column({ name: 'admin_note', type: 'varchar', length: 500, nullable: true })
   adminNote: string | null;
 
   @CreateDateColumn()

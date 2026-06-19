@@ -5,11 +5,20 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-import { OrderEntity, OrderItemEntity, CartEntity } from '../../entities';
+import {
+  OrderEntity,
+  OrderItemEntity,
+  CartEntity,
+  ShippingEntity,
+  RefundEntity,
+} from '../../entities';
 import { CartService } from '../cart/cart.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { QueryOrderDto } from './dto/query-order.dto';
-import { OrderStatus, ErrorCode, ErrorMessage } from 'shared';
+import { ShipDto } from './dto/ship.dto';
+import { RefundRequestDto } from './dto/refund-request.dto';
+import { RefundReviewDto } from './dto/refund-review.dto';
+import { OrderStatus, ErrorCode, ErrorMessage, RefundStatus } from 'shared';
 import { PinoLogger } from 'nestjs-pino';
 
 @Injectable()
@@ -21,6 +30,10 @@ export class OrderService {
     private readonly orderItemRepo: Repository<OrderItemEntity>,
     @InjectRepository(CartEntity)
     private readonly cartRepo: Repository<CartEntity>,
+    @InjectRepository(ShippingEntity)
+    private readonly shippingRepo: Repository<ShippingEntity>,
+    @InjectRepository(RefundEntity)
+    private readonly refundRepo: Repository<RefundEntity>,
     private readonly cartService: CartService,
     private readonly dataSource: DataSource,
     private readonly logger: PinoLogger,
@@ -241,5 +254,166 @@ export class OrderService {
     }
 
     return this.findOne(userId, id);
+  }
+
+  async pay(userId: number, id: number) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const rows: { id: number; status: number }[] =
+        await queryRunner.manager.query(
+          'SELECT id, status FROM orders WHERE id = ? AND user_id = ? FOR UPDATE',
+          [id, userId],
+        );
+      if (rows.length === 0) {
+        throw new NotFoundException(ErrorMessage[ErrorCode.ORDER_NOT_FOUND]);
+      }
+      if (rows[0].status !== OrderStatus.PENDING) {
+        throw new BadRequestException(ErrorMessage[ErrorCode.ORDER_STATUS_ERROR]);
+      }
+      await queryRunner.manager.query(
+        'UPDATE orders SET status = ?, paid_at = NOW() WHERE id = ?',
+        [OrderStatus.PAID, id],
+      );
+      await queryRunner.commitTransaction();
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
+    return this.findOne(userId, id);
+  }
+
+  async ship(id: number, dto: ShipDto) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const rows: { id: number; status: number }[] =
+        await queryRunner.manager.query(
+          'SELECT id, status FROM orders WHERE id = ? FOR UPDATE',
+          [id],
+        );
+      if (rows.length === 0) {
+        throw new NotFoundException(ErrorMessage[ErrorCode.ORDER_NOT_FOUND]);
+      }
+      if (rows[0].status !== OrderStatus.PAID) {
+        throw new BadRequestException(ErrorMessage[ErrorCode.ORDER_STATUS_ERROR]);
+      }
+      const shipping = queryRunner.manager.create(ShippingEntity, {
+        orderId: id,
+        company: dto.company,
+        trackingNo: dto.trackingNo,
+        shippedAt: new Date(),
+        status: 0,
+      });
+      await queryRunner.manager.save(ShippingEntity, shipping);
+      await queryRunner.manager.query(
+        'UPDATE orders SET status = ?, shipped_at = NOW() WHERE id = ?',
+        [OrderStatus.SHIPPED, id],
+      );
+      await queryRunner.commitTransaction();
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
+    return this.findOneInternal(id);
+  }
+
+  async confirm(userId: number, id: number) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const rows: { id: number; status: number }[] =
+        await queryRunner.manager.query(
+          'SELECT id, status FROM orders WHERE id = ? AND user_id = ? FOR UPDATE',
+          [id, userId],
+        );
+      if (rows.length === 0) {
+        throw new NotFoundException(ErrorMessage[ErrorCode.ORDER_NOT_FOUND]);
+      }
+      if (rows[0].status !== OrderStatus.SHIPPED) {
+        throw new BadRequestException(ErrorMessage[ErrorCode.ORDER_STATUS_ERROR]);
+      }
+      await queryRunner.manager.query(
+        'UPDATE orders SET status = ? WHERE id = ?',
+        [OrderStatus.COMPLETED, id],
+      );
+      await queryRunner.commitTransaction();
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
+    return this.findOne(userId, id);
+  }
+
+  async requestRefund(userId: number, id: number, dto: RefundRequestDto) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const rows: { id: number; status: number }[] =
+        await queryRunner.manager.query(
+          'SELECT id, status FROM orders WHERE id = ? AND user_id = ? FOR UPDATE',
+          [id, userId],
+        );
+      if (rows.length === 0) {
+        throw new NotFoundException(ErrorMessage[ErrorCode.ORDER_NOT_FOUND]);
+      }
+      const currentStatus = rows[0].status;
+      if (
+        currentStatus !== OrderStatus.PAID &&
+        currentStatus !== OrderStatus.SHIPPED
+      ) {
+        throw new BadRequestException(ErrorMessage[ErrorCode.REFUND_NOT_ALLOWED]);
+      }
+      const refund = queryRunner.manager.create(RefundEntity, {
+        orderId: id,
+        userId,
+        reason: dto.reason,
+        prevStatus: currentStatus,
+        status: RefundStatus.PENDING,
+      });
+      await queryRunner.manager.save(RefundEntity, refund);
+      await queryRunner.manager.query(
+        'UPDATE orders SET status = ? WHERE id = ?',
+        [OrderStatus.REFUNDING, id],
+      );
+      await queryRunner.commitTransaction();
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
+    return this.findOne(userId, id);
+  }
+
+  async findShipping(id: number) {
+    const order = await this.orderRepo.findOne({ where: { id } });
+    if (!order) {
+      throw new NotFoundException(ErrorMessage[ErrorCode.ORDER_NOT_FOUND]);
+    }
+    const shipping = await this.shippingRepo.findOne({
+      where: { orderId: id },
+    });
+    return shipping;
+  }
+
+  // 内部使用：不校验 userId（Admin 路径）
+  private async findOneInternal(id: number) {
+    const order = await this.orderRepo.findOne({ where: { id } });
+    if (!order) {
+      throw new NotFoundException(ErrorMessage[ErrorCode.ORDER_NOT_FOUND]);
+    }
+    const items = await this.orderItemRepo.find({ where: { orderId: id } });
+    return { ...order, items };
   }
 }

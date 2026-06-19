@@ -41,7 +41,7 @@ export class OrderEntity {
   @Column({ length: 500, nullable: true })
   remark: string;
 
-  @Column({ name: 'coupon_id', nullable: true })
+  @Column({ name: 'coupon_id', type: 'int', nullable: true })
   couponId: number | null;
 
   @Column({ name: 'discount_amount', type: 'decimal', precision: 10, scale: 2, default: 0 })

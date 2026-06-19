@@ -7,6 +7,8 @@ describe('OrderService', () => {
   let orderRepo: any;
   let orderItemRepo: any;
   let cartRepo: any;
+  let shippingRepo: any;
+  let refundRepo: any;
   let cartService: any;
   let dataSource: any;
   let queryRunner: any;
@@ -45,12 +47,16 @@ describe('OrderService', () => {
     orderRepo = { createQueryBuilder: jest.fn(), findOne: jest.fn(), save: jest.fn() };
     orderItemRepo = { find: jest.fn() };
     cartRepo = { find: jest.fn() };
+    shippingRepo = { findOne: jest.fn() };
+    refundRepo = {};
     cartService = {};
     logger = { setContext: jest.fn(), info: jest.fn() };
     service = new OrderService(
       orderRepo,
       orderItemRepo,
       cartRepo,
+      shippingRepo,
+      refundRepo,
       cartService,
       dataSource,
       logger,
