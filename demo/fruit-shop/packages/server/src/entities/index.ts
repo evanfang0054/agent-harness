@@ -9,3 +9,4 @@ export { ShippingEntity } from './shipping.entity';
 export { RefundEntity } from './refund.entity';
 export { AddressEntity } from './address.entity';
 export { ReviewEntity } from './review.entity';
+export { FavoriteEntity } from './favorite.entity';
