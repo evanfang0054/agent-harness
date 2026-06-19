@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createBrowserRouter, Navigate, useLocation } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useAuthStore } from '@/store/auth.store';
@@ -28,10 +28,11 @@ function SuspenseWrapper({ children }: { children: React.ReactNode }) {
   );
 }
 
-// 登录保护：未登录跳转到 /login
+// 登录保护：未登录跳转到 /login，携带来源路径以便登录后回跳
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.token);
-  if (!token) return <Navigate to="/login" replace />;
+  const location = useLocation();
+  if (!token) return <Navigate to="/login" replace state={{ from: location }} />;
   return <>{children}</>;
 }
 
