@@ -11,11 +11,13 @@ RUN pnpm --filter shared build && pnpm --filter server build
 
 FROM node:20-alpine
 WORKDIR /app
+RUN mkdir -p packages/server/uploads
 COPY --from=builder /app/packages/server/dist ./packages/server/dist
 COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
 COPY --from=builder /app/packages/shared/package.json ./packages/shared/package.json
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/packages/server/node_modules ./packages/server/node_modules
 COPY --from=builder /app/packages/shared/node_modules ./packages/shared/node_modules
+VOLUME /app/packages/server/uploads
 EXPOSE 3000
 CMD ["node", "packages/server/dist/main.js"]

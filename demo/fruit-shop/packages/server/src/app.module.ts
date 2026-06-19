@@ -16,6 +16,7 @@ import { AddressModule } from './modules/address/address.module';
 import { ReviewModule } from './modules/review/review.module';
 import { FavoriteModule } from './modules/favorite/favorite.module';
 import { CouponModule } from './modules/coupon/coupon.module';
+import { UploadModule } from './modules/upload/upload.module';
 import { RedisProviderModule } from './common/redis-provider.module';
 import { LoggingModule } from './common/logging/logging.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
@@ -54,6 +55,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     ReviewModule,
     FavoriteModule,
     CouponModule,
+    UploadModule,
   ],
   controllers: [],
   providers: [

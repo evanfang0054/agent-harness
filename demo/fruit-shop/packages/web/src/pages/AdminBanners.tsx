@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { bannerApi } from '@/api/banner';
 import type { Banner, CreateBannerDTO } from 'shared';
 import { useToast } from '@/components/Toast';
+import { UploadButton } from '@/components/UploadButton';
 
 interface BannerFormData {
   title: string;
@@ -188,12 +189,13 @@ export default function AdminBanners() {
                 placeholder="副标题"
                 className={inputCls}
               />
-              <input
-                value={form.image}
-                onChange={(e) => setForm({ ...form, image: e.target.value })}
-                placeholder="背景图 URL（可选）"
-                className={inputCls}
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">背景图</label>
+                <UploadButton
+                  value={form.image}
+                  onChange={(url) => setForm({ ...form, image: url })}
+                />
+              </div>
               <input
                 value={form.ctaText}
                 onChange={(e) => setForm({ ...form, ctaText: e.target.value })}

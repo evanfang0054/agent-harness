@@ -1,6 +1,8 @@
 import 'reflect-metadata';
+import { join } from 'path';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { Logger } from 'nestjs-pino';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
@@ -8,7 +10,9 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bufferLogs: true,
+  });
 
   // 使用 pino 作为全局 logger（覆盖 NestJS 内置 Logger）
   app.useLogger(app.get(Logger));
@@ -51,6 +55,11 @@ async function bootstrap() {
 
   // 全局异常过滤器 — 统一返回 { code, message }
   app.useGlobalFilters(app.get(HttpExceptionFilter));
+
+  // 静态资源：/uploads/ 前缀指向 dist 同级的 uploads 目录
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/uploads/',
+  });
 
   const port = process.env.PORT || 3000;
   await app.listen(port);

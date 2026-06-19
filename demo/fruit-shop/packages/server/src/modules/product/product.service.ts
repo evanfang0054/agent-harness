@@ -1,6 +1,7 @@
 import {
   Injectable,
   NotFoundException,
+  BadRequestException,
   Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -13,6 +14,8 @@ import {
 } from './dto/query-product.dto';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { CreateCategoryDto } from './dto/create-category.dto';
+import { UpdateCategoryDto } from './dto/update-category.dto';
 import { ErrorCode, ErrorMessage, ProductStatus } from 'shared';
 
 @Injectable()
@@ -283,6 +286,56 @@ export class ProductService {
 
     await this.redis.set(cacheKey, JSON.stringify(categories), 'EX', 300);
     return categories;
+  }
+
+  async createCategory(dto: CreateCategoryDto) {
+    const category = this.categoryRepo.create(dto);
+    const saved = await this.categoryRepo.save(category);
+    await this.clearCategoryCache();
+    return saved;
+  }
+
+  async updateCategory(id: number, dto: UpdateCategoryDto) {
+    const category = await this.categoryRepo.findOne({ where: { id } });
+    if (!category) {
+      throw new NotFoundException({
+        code: ErrorCode.CATEGORY_NOT_FOUND,
+        message: ErrorMessage[ErrorCode.CATEGORY_NOT_FOUND],
+      });
+    }
+    Object.assign(category, dto);
+    const saved = await this.categoryRepo.save(category);
+    await this.clearCategoryCache();
+    return saved;
+  }
+
+  async removeCategory(id: number) {
+    const category = await this.categoryRepo.findOne({ where: { id } });
+    if (!category) {
+      throw new NotFoundException({
+        code: ErrorCode.CATEGORY_NOT_FOUND,
+        message: ErrorMessage[ErrorCode.CATEGORY_NOT_FOUND],
+      });
+    }
+    const count = await this.productRepo.count({
+      where: { categoryId: id, status: ProductStatus.ON },
+    });
+    if (count > 0) {
+      throw new BadRequestException({
+        code: ErrorCode.CATEGORY_HAS_PRODUCTS,
+        message: ErrorMessage[ErrorCode.CATEGORY_HAS_PRODUCTS],
+      });
+    }
+    await this.categoryRepo.remove(category);
+    await this.clearCategoryCache();
+    return null;
+  }
+
+  private async clearCategoryCache() {
+    const keys = await this.redis.keys('categories:*');
+    if (keys.length > 0) {
+      await this.redis.del(...keys);
+    }
   }
 
   private async clearProductCache() {

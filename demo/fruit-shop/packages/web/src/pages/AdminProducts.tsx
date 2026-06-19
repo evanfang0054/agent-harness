@@ -7,6 +7,7 @@ import { ProductStatus } from 'shared';
 import type { Product, PaginatedResponse } from 'shared';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { Toast } from '@/components/Toast';
+import { UploadButton } from '@/components/UploadButton';
 
 const STATUS_LABELS: Record<ProductStatus, string> = {
   [ProductStatus.OFF]: '已下架',
@@ -476,13 +477,10 @@ export default function AdminProducts() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">图片URL</label>
-                <input
-                  type="text"
+                <label className="block text-sm font-medium text-gray-700 mb-1">图片</label>
+                <UploadButton
                   value={form.image}
-                  onChange={(e) => setForm({ ...form, image: e.target.value })}
-                  placeholder="图片URL"
-                  className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
+                  onChange={(url) => setForm({ ...form, image: url })}
                 />
               </div>
 

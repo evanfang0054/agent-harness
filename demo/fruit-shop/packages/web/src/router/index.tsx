@@ -19,6 +19,7 @@ const AdminProducts = lazy(() => import('@/pages/AdminProducts'));
 const AdminBanners = lazy(() => import('@/pages/AdminBanners'));
 const AdminRefunds = lazy(() => import('@/pages/AdminRefunds'));
 const AdminCoupons = lazy(() => import('@/pages/AdminCoupons'));
+const AdminCategories = lazy(() => import('@/pages/AdminCategories'));
 const MyCoupons = lazy(() => import('@/pages/MyCoupons'));
 
 function SuspenseWrapper({ children }: { children: React.ReactNode }) {
@@ -116,5 +117,9 @@ export const router = createBrowserRouter([
   {
     path: '/admin/coupons',
     element: <SuspenseWrapper><AdminRoute><AdminCoupons /></AdminRoute></SuspenseWrapper>,
+  },
+  {
+    path: '/admin/categories',
+    element: <SuspenseWrapper><AdminRoute><AdminCategories /></AdminRoute></SuspenseWrapper>,
   },
 ]);
