@@ -18,9 +18,11 @@ export default function Cart() {
     totalPrice,
     selectedItems,
     isSelectedAll,
+    clearCart,
   } = useCartStore();
 
   const [loadingItemId, setLoadingItemId] = useState<number | null>(null);
+  const [clearTarget, setClearTarget] = useState(false);
 
   useEffect(() => {
     fetchCart();
@@ -47,6 +49,17 @@ export default function Cart() {
       Toast.show('移除失败', 'error');
     } finally {
       setLoadingItemId(null);
+    }
+  };
+
+  const confirmClear = async () => {
+    try {
+      await clearCart();
+      Toast.show('购物车已清空', 'success');
+    } catch {
+      Toast.show('清空失败', 'error');
+    } finally {
+      setClearTarget(false);
     }
   };
 
@@ -104,7 +117,17 @@ export default function Cart() {
       <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-sm border-b border-gray-100">
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
           <h1 className="text-lg font-semibold text-gray-900">购物车</h1>
-          <span className="text-sm text-gray-500">{items.length}件商品</span>
+          <div className="flex items-center gap-3 ml-auto">
+            <span className="text-sm text-gray-500">{items.length}件商品</span>
+            {items.length > 0 && (
+              <button
+                onClick={() => setClearTarget(true)}
+                className="text-brand-coral text-sm font-bold"
+              >
+                清空
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -248,6 +271,31 @@ export default function Cart() {
           </div>
         </div>
       </div>
+
+      {/* Clear confirmation modal */}
+      {clearTarget && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-xs">
+            <p className="text-center text-brand-dark font-bold mb-4">
+              确定清空购物车？此操作不可撤销
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={confirmClear}
+                className="flex-1 py-2.5 rounded-2xl bg-brand-coral text-white font-bold"
+              >
+                确定清空
+              </button>
+              <button
+                onClick={() => setClearTarget(false)}
+                className="flex-1 py-2.5 rounded-2xl border border-brand-border font-bold"
+              >
+                取消
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
