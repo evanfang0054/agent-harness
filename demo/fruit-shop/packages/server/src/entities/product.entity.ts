@@ -7,7 +7,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { ProductStatus } from 'shared';
+import { ProductStatus, ProductSpec } from 'shared';
 import { CategoryEntity } from './category.entity';
 
 @Entity('products')
@@ -59,6 +59,15 @@ export class ProductEntity {
     default: ProductStatus.ON,
   })
   status: ProductStatus;
+
+  @Column({ type: 'simple-json', nullable: true })
+  specs: ProductSpec[] | null;
+
+  @Column({ name: 'is_recommended', type: 'boolean', default: false })
+  isRecommended: boolean;
+
+  @Column({ name: 'featured_sort_order', type: 'int', default: 0 })
+  featuredSortOrder: number;
 
   @ManyToOne(() => CategoryEntity, { eager: false })
   @JoinColumn({ name: 'category_id' })
