@@ -19,15 +19,18 @@ using_superpowers_content=$(cat "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.m
 
 # Read project learnings if they exist
 learnings_content=""
-if [ -f ".superpowers/learnings.jsonl" ]; then
-    learnings_count=$(wc -l < .superpowers/learnings.jsonl | tr -d ' ')
+# Resolve project root the same way log/search-learnings.sh do (v2):
+# prefer CLAUDE_PROJECT_DIR, fall back to git rev-parse for manual/CI runs.
+LEARNINGS_DIR="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}"
+if [ -f "$LEARNINGS_DIR/.superpowers/learnings.jsonl" ]; then
+    learnings_count=$(wc -l < "$LEARNINGS_DIR/.superpowers/learnings.jsonl" | tr -d ' ')
     if [ "$learnings_count" -gt 0 ]; then
         # Get formatted summary using search script
         if [ -x "${PLUGIN_ROOT}/scripts/search-learnings.sh" ]; then
             formatted_learnings=$("${PLUGIN_ROOT}/scripts/search-learnings.sh" --summary 2>/dev/null || true)
         else
             # Fallback to raw JSON
-            formatted_learnings=$(tail -10 .superpowers/learnings.jsonl 2>/dev/null || true)
+            formatted_learnings=$(tail -10 "$LEARNINGS_DIR/.superpowers/learnings.jsonl" 2>/dev/null || true)
         fi
         if [ -n "$formatted_learnings" ]; then
             learnings_content="\n\n## Project Learnings\n\n${formatted_learnings}\n\nReview these before making changes. Use 'session-learnings' skill to add new learnings."
