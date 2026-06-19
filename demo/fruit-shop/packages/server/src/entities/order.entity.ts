@@ -41,6 +41,18 @@ export class OrderEntity {
   @Column({ length: 500, nullable: true })
   remark: string;
 
+  @Column({ name: 'coupon_id', nullable: true })
+  couponId: number | null;
+
+  @Column({ name: 'discount_amount', type: 'decimal', precision: 10, scale: 2, default: 0 })
+  discountAmount: number;
+
+  @Column({ name: 'paid_at', type: 'timestamp', nullable: true })
+  paidAt: Date | null;
+
+  @Column({ name: 'shipped_at', type: 'timestamp', nullable: true })
+  shippedAt: Date | null;
+
   @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'user_id' })
   user: UserEntity;
