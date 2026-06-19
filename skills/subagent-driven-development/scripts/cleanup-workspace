@@ -10,7 +10,7 @@
 # Usage: cleanup-workspace
 set -euo pipefail
 
-dir=$(git rev-parse --show-toplevel 2>/dev/null)/.superpowers/sdd
+dir="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}/.superpowers/sdd"
 
 if [ ! -d "$dir" ]; then
   exit 0
