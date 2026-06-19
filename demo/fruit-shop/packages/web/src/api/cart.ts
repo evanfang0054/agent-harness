@@ -17,7 +17,7 @@ export const cartApi = {
   },
 
   update(id: number, data: UpdateCartDTO) {
-    return apiClient.patch<ApiResponse<CartItem>>(`/cart/${id}`, data);
+    return apiClient.put<ApiResponse<CartItem>>(`/cart/${id}`, data);
   },
 
   remove(id: number) {

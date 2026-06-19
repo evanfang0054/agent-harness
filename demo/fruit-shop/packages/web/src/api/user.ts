@@ -3,10 +3,10 @@ import type { ApiResponse, User } from 'shared';
 
 export const userApi = {
   getProfile() {
-    return apiClient.get<ApiResponse<User>>('/users/profile');
+    return apiClient.get<ApiResponse<User>>('/user/profile');
   },
 
   updateProfile(data: Partial<Pick<User, 'nickname' | 'avatar'>>) {
-    return apiClient.patch<ApiResponse<User>>('/users/profile', data);
+    return apiClient.put<ApiResponse<User>>('/user/profile', data);
   },
 };

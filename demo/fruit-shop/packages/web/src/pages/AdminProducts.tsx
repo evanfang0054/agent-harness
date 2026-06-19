@@ -163,7 +163,7 @@ export default function AdminProducts() {
       };
 
       if (editingProduct) {
-        await apiClient.patch(`/products/${editingProduct.id}`, payload);
+        await apiClient.put(`/products/${editingProduct.id}`, payload);
         Toast.show('更新成功', 'success');
       } else {
         await apiClient.post('/products', payload);
