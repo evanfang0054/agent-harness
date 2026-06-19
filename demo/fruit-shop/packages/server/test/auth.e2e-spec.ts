@@ -150,7 +150,7 @@ describe('Auth (e2e)', () => {
     let userTokens: { accessToken: string; refreshToken: string };
 
     beforeAll(async () => {
-      userTokens = await helper.registerAndLogin('13800000010', 'test123456');
+      userTokens = await helper.registerAndLogin('13800000090', 'test123456');
       accessToken = userTokens.accessToken;
       refreshToken = userTokens.refreshToken;
     });
