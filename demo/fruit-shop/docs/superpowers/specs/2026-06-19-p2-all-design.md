@@ -570,9 +570,265 @@ async removeCategory(id) {
 
 **全量回归**：每 3-4 个子项后跑 `shared build + server test/e2e + web build`。
 
-## 14. 后续步骤
+## 14. Gate Driven Development
 
-1. 用户评审本设计文档
+### ROOT
+
+P2 全业务域设计：一次性落地 11 个新业务域（订单状态流转 + 物流 + 退款 / 地址簿 + 评价 + 收藏 / 优惠券 / 多维筛选 + 联想 / 图片上传 + 分类 Admin CRUD）。核心风险集中在订单状态机非法流转、优惠券并发核销、退款拒绝状态恢复、评价与收藏的并发唯一约束、多维筛选缓存键漂移、上传安全校验。测试覆盖按风险显著性递归展开。
+
+### Level Items
+
+#### L4-1
+
+PARENT_ID：ROOT
+视角下的需求：订单从 PENDING 经 PAID、SHIPPED 到 COMPLETED 的全链路状态流转在真实用户路径下可达，每个状态对应的前端按钮与后端接口协同正确。
+Gate Items：
+
+- Gate：`e2e gate`
+  Covers：订单状态流转端到端路径
+  Assertions：
+  1. 用户下单成功 → status=PENDING → 点「去支付」→ `PUT /orders/:id/pay` 200 → status=PAID → paidAt 非空
+  2. Admin 发货 `POST /admin/orders/:id/ship` body `{company, trackingNo}` → status=SHIPPED → ShippingEntity 记录存在 → shippedAt 非空
+  3. 用户点「确认收货」`PUT /orders/:id/confirm` → status=COMPLETED
+  4. COMPLETED 订单详情页显示「去评价」入口（链接到 P2-2 评价模块）
+
+#### L4-2
+
+PARENT_ID：ROOT
+视角下的需求：退款申请→Admin 审批（通过/拒绝）的完整闭环在真实路径下行为正确，通过则库存回补+券解绑，拒绝则订单恢复 prevStatus。
+Gate Items：
+
+- Gate：`e2e gate`
+  Covers：退款审批闭环
+  Assertions：
+  1. PAID 订单用户申请退款 `POST /orders/:id/refund` body `{reason}` → status=REFUNDING → RefundEntity(status=0, prevStatus=PAID) 创建
+  2. Admin 通过 `POST /admin/refunds/:id/approve` → status=REFUNDED → 对应商品 stock 回补 → 若订单有用券，UserCoupon.usedAt 清空
+  3. Admin 拒绝 `POST /admin/refunds/:id/reject` body `{adminNote}` → status 恢复为 RefundEntity.prevStatus → RefundEntity.status=2 + adminNote 写入
+
+#### L4-3
+
+PARENT_ID：ROOT
+视角下的需求：用户在 Checkout 选择优惠券 → preview 返回 discountAmount → 提交订单 totalAmount 正确扣减 → 取消订单或退款通过时券解绑可再次使用。
+Gate Items：
+
+- Gate：`e2e gate`
+  Covers：优惠券下单抵扣全链路
+  Assertions：
+  1. Checkout 调 `POST /coupons/preview` body `{couponId, items}` → 返回 `{discountAmount, totalAfterDiscount}` 与类型规则（满减/折扣/无门槛）一致
+  2. `POST /orders` body 含 couponId → 成功后 OrderEntity.totalAmount = subtotal - discountAmount（≥0）→ UserCoupon.usedAt 非空 + orderId 写入
+  3. `PUT /orders/:id/cancel` 成功后 → UserCoupon.usedAt 清空 + orderId 清空（券可再用）
+  4. 退款通过后 → 同上券解绑
+
+#### L4-4
+
+PARENT_ID：ROOT
+视角下的需求：用户完成订单后能批量评价商品，评价在商品详情页对外可见（含用户昵称/头像），同一订单同一商品不可重复评价。
+Gate Items：
+
+- Gate：`e2e gate`
+  Covers：评价闭环
+  Assertions：
+  1. COMPLETED 订单调 `POST /orders/:id/reviews` body `{reviews:[{productId,rating,content}]}` → 成功 → ReviewEntity 创建
+  2. 再次评价同一订单相同 productId → 抛 REVIEW_EXISTS（40701）
+  3. 商品详情页 `GET /products/:id/reviews` 返回列表含评价者昵称/头像 + 分页元信息
+
+#### L4-5
+
+PARENT_ID：ROOT
+视角下的需求：Admin 在商品/Banner 表单中通过上传组件选择图片 → 调 `/upload/image` → 返回 url 写入字段 → 预览可见。
+Gate Items：
+
+- Gate：`e2e gate`
+  Covers：图片上传端到端
+  Assertions：
+  1. AdminProducts 表单选择 ≤2MB 图片 → 上传成功 → image 字段写入 `/uploads/xxx.jpg` → 预览显示
+  2. AdminBanners 表单同上
+
+#### L3-1
+
+PARENT_ID：L4-1
+视角下的需求：订单状态机的非法流转在接口契约层被拒绝，覆盖 pay/ship/confirm/refund 4 个入口与 7 个状态的合法/非法矩阵。
+Gate Items：
+
+- Gate：`contract gate`
+  Covers：订单状态流转接口契约
+  Assertions：
+  1. `PUT /orders/:id/pay` 对非 PENDING 状态返回 ORDER_STATUS_ERROR（40402）
+  2. `POST /admin/orders/:id/ship` 对非 PAID 状态返回 40402
+  3. `PUT /orders/:id/confirm` 对非 SHIPPED 状态返回 40402
+  4. `POST /orders/:id/refund` 对非 PAID 且非 SHIPPED 状态返回 40402
+  5. `POST /admin/refunds/:id/approve` 对 refund.status≠0 返回 40402
+  6. `POST /admin/refunds/:id/reject` 对 refund.status≠0 返回 40402
+
+#### L3-2
+
+PARENT_ID：L4-3
+视角下的需求：优惠券并发核销场景下不出现重复使用，事务内行锁保证同一 UserCoupon 不会被两个并发订单同时核销。
+Gate Items：
+
+- Gate：`integration gate`
+  Covers：优惠券并发核销
+  Assertions：
+  1. 并发两个 `POST /orders` 携带同一 couponId → 至多一个成功，另一个抛 COUPON_USED（41003）
+  2. 单订单核销后 UserCoupon.usedAt 非空、orderId 非空
+
+#### L3-3
+
+PARENT_ID：ROOT
+视角下的需求：商品多维筛选（minPrice/maxPrice/origin/sortBy）的 Redis cacheKey 必须包含全部筛选维度，避免不同筛选命中同一缓存。
+Gate Items：
+
+- Gate：`contract gate`
+  Covers：多维筛选缓存契约
+  Assertions：
+  1. 同一 page/limit 下不同 minPrice 命中不同 cacheKey
+  2. 同一条件下不同 sortBy（price_asc/price_desc/sales_desc/created_desc）命中不同 cacheKey
+  3. 商品 create/update/remove 触发 `products:*` 通配清理，覆盖新维度缓存
+
+#### L3-4
+
+PARENT_ID：ROOT
+视角下的需求：地址簿「设为默认」在并发请求下保证每用户至多一条 isDefault=true。
+Gate Items：
+
+- Gate：`integration gate`
+  Covers：地址默认值并发唯一性
+  Assertions：
+  1. 并发两个 `PUT /addresses/:id/default`（不同 addressId）→ 最终仅一条 isDefault=true
+  2. 设默认事务内先 UPDATE 全置 false 再设目标为 true
+
+#### L3-5
+
+PARENT_ID：L4-4
+视角下的需求：评价并发提交场景下 `(orderId, productId)` 唯一约束防重复，DB 层 Unique 约束生效。
+Gate Items：
+
+- Gate：`schema gate`
+  Covers：评价唯一约束
+  Assertions：
+  1. ReviewEntity 表存在 Unique(orderId, productId)
+  2. 并发两个相同 (orderId, productId) 的 INSERT → 第二个抛 duplicate key 错误
+
+#### L2-1
+
+PARENT_ID：L3-1
+视角下的需求：OrderService 的 pay/ship/confirm/refund/approveRefund/rejectRefund 方法对当前状态分支的判定符合状态机定义（合法流转放行、非法抛 ORDER_STATUS_ERROR）。
+Gate Items：
+
+- Gate：`unit gate`
+  Covers：状态机分支判定
+  Assertions：
+  1. pay 仅放行 PENDING，其他状态抛错
+  2. ship 仅放行 PAID
+  3. confirm 仅放行 SHIPPED
+  4. refund 仅放行 PAID 或 SHIPPED
+  5. approveRefund 仅放行 refund.status=0
+  6. rejectRefund 仅放行 refund.status=0
+  7. cancel 仍仅放行 PENDING（REFUNDING 不可 cancel）
+
+#### L2-2
+
+PARENT_ID：L4-3
+视角下的需求：优惠券折扣计算规则按 type 分支正确（0=满减、1=折扣、2=无门槛），含 minAmount 门槛校验与 categoryId 适用范围。
+Gate Items：
+
+- Gate：`unit gate`
+  Covers：优惠券计算分支
+  Assertions：
+  1. type=0 + subtotal≥minAmount → discount = discountAmount
+  2. type=0 + subtotal<minAmount → 抛 COUPON_MIN_NOT_MET（41005）
+  3. type=1 + subtotal≥minAmount → discount = subtotal * (1 - discountRate)
+  4. type=2 → discount = discountAmount（无门槛）
+  5. categoryId 非空时仅该分类商品小计参与门槛校验
+
+#### L2-3
+
+PARENT_ID：L4-2
+视角下的需求：退款拒绝时 OrderEntity.status 恢复为 RefundEntity.prevStatus（PAID 或 SHIPPED），不误恢复为其他状态。
+Gate Items：
+
+- Gate：`unit gate`
+  Covers：退款拒绝状态恢复
+  Assertions：
+  1. refund.prevStatus=PAID → reject 后 order.status=PAID
+  2. refund.prevStatus=SHIPPED → reject 后 order.status=SHIPPED
+  3. reject 不改动库存（与 approve 的回补区分）
+
+#### L2-4
+
+PARENT_ID：ROOT
+视角下的需求：分类删除时校验是否有关联在售商品，有则拒绝并返回业务码 41201。
+Gate Items：
+
+- Gate：`unit gate`
+  Covers：分类删除校验
+  Assertions：
+  1. 关联商品数 >0 → 抛 CATEGORY_HAS_PRODUCTS（41201），不执行 delete
+  2. 关联商品数 =0 → 成功 delete + 清 `categories:all` 缓存
+
+#### L2-5
+
+PARENT_ID：L4-5
+视角下的需求：上传接口的 MIME 与 size 校验按分支正确拒绝非法文件。
+Gate Items：
+
+- Gate：`unit gate`
+  Covers：上传校验分支
+  Assertions：
+  1. file.size > 2MB → 抛 UPLOAD_FILE_TOO_LARGE（41101）
+  2. file.mimetype 不以 `image/` 开头 → 抛 UPLOAD_INVALID_TYPE（41102）
+  3. file 为空 → 抛 UPLOAD_FAILED（41103）
+  4. 合法文件 → 返回 `/uploads/<filename>`
+
+#### L2-6
+
+PARENT_ID：L3-3
+视角下的需求：销量排序的 OrderItem 聚合 SQL 正确计算每商品销量，未售商品销量为 0 排在后面。
+Gate Items：
+
+- Gate：`unit gate`
+  Covers：销量聚合 SQL
+  Assertions：
+  1. 商品 A 有 2 单（各 3 件、5 件）、商品 B 无订单 → A 销量=8、B 销量=0
+  2. sortBy=sales_desc → A 在 B 之前
+  3. COALESCE(sales, 0) 处理无订单商品
+
+#### L1-1
+
+PARENT_ID：ROOT
+视角下的需求：shared 包新增的 Order 枚举值、7 个新类型文件、6 段业务码必须成功编译进 dist，否则 server 拉到旧 dist 导致运行时错误。
+Gate Items：
+
+- Gate：`build gate`
+  Covers：shared 编译完整性
+  Assertions：
+  1. `pnpm --filter shared build` 成功无 tsc 错误
+  2. dist/constants.js 含新增业务码（40601-41299 段）
+  3. dist/types/order.js 含 REFUNDING=5/REFUNDED=6
+
+#### L1-2
+
+PARENT_ID：L3-1
+视角下的需求：OrderStatus 枚举追加 REFUNDING/REFUNDED 后，所有 switch/if 分支对枚举的判定必须穷举（避免漏处理新状态）。
+Gate Items：
+
+- Gate：`type-check gate`
+  Covers：枚举穷举
+  Assertions：
+  1. OrderService 中对 OrderStatus 的判定分支 tsc 通过（无 fallthrough 隐患）
+  2. 前端 STATUS_LABELS / STATUS_TABS 含全部 7 个状态（type 层校验）
+
+### Self-Review 自检结果
+
+1. **可追溯**：每个 Level Item 均可追溯到 spec 第 5-9 节具体子项 + 第 10 节业务码段 + 第 11 节验收场景
+2. **不复述父项**：L2/L3 子项均提供了独立证明视角（分支矩阵/并发/SQL/缓存键），不复述 L4
+3. **跨层不重复 oracle**：L4 e2e 仅证路径可达，错误码矩阵与分支判定下沉到 L3 契约 + L2 单元
+4. **L4 不穷举**：L4 仅保留代表路径，无错误码/字段矩阵穷举
+5. **无凭空发明**：所有状态/字段/业务码均来自 spec 第 5-10 节，未引入新行为
+
+## 15. 后续步骤
+
+1. 用户评审本设计文档（含 GDD 段）
 2. 进入 `sprint-contract` 协商 Definition of Done
-3. 进入 `writing-plans` 产出实施计划（按 5 组分阶段，每阶段含 checkpoint）
+3. 进入 `writing-plans` 产出实施计划（按 5 组分阶段，每阶段含 checkpoint，task 与 GDD assertions 一一对应）
 4. Subagent-Driven Development 执行实施
