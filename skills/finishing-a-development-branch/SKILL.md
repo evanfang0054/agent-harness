@@ -84,6 +84,12 @@ git merge <feature-branch>
 git branch -d <feature-branch>
 ```
 
+Then: Run SDD workspace cleanup:
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/skills/subagent-driven-development/scripts/cleanup-workspace"
+```
+
 Then: Done
 
 #### Option 2: Push and Create PR
@@ -103,13 +109,23 @@ EOF
 )"
 ```
 
+Then: Run SDD workspace cleanup:
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/skills/subagent-driven-development/scripts/cleanup-workspace"
+```
+
 Then: Done
 
 #### Option 3: Keep As-Is
 
 Report: "Keeping branch <name>."
 
-**Don't cleanup.**
+Then: Run SDD workspace cleanup:
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/skills/subagent-driven-development/scripts/cleanup-workspace"
+```
 
 #### Option 4: Discard
 
@@ -130,16 +146,22 @@ git checkout <base-branch>
 git branch -D <feature-branch>
 ```
 
+Then: Run SDD workspace cleanup:
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/skills/subagent-driven-development/scripts/cleanup-workspace"
+```
+
 Then: Done
 
 ## Quick Reference
 
-| Option | Merge | Push | Cleanup Branch |
-|--------|-------|------|----------------|
-| 1. Merge locally | ✓ | - | ✓ |
-| 2. Create PR | - | ✓ | - |
-| 3. Keep as-is | - | - | - |
-| 4. Discard | - | - | ✓ (force) |
+| Option | Merge | Push | Cleanup Branch | Cleanup SDD Workspace |
+|--------|-------|------|----------------|----------------------|
+| 1. Merge locally | ✓ | - | ✓ | ✓ |
+| 2. Create PR | - | ✓ | - | ✓ |
+| 3. Keep as-is | - | - | - | ✓ |
+| 4. Discard | - | - | ✓ (force) | ✓ |
 
 ## Common Mistakes
 
@@ -151,13 +173,17 @@ Then: Done
 - **Problem:** "What should I do next?" → ambiguous
 - **Fix:** Present exactly 4 structured options
 
-**Automatic cleanup**
+**Automatic branch cleanup**
 - **Problem:** Remove work when might need it (Option 2, 3)
 - **Fix:** Only cleanup for Options 1 and 4
 
 **No confirmation for discard**
 - **Problem:** Accidentally delete work
 - **Fix:** Require typed "discard" confirmation
+
+**Forgetting SDD workspace cleanup**
+- **Problem:** `.superpowers/sdd/` accumulates dozens of brief/report/diff files across sessions
+- **Fix:** Always run `cleanup-workspace` after every option, including Keep As-Is
 
 ## Red Flags
 
@@ -171,12 +197,16 @@ Then: Done
 - Verify tests before offering options
 - Present exactly 4 options
 - Get typed confirmation for Option 4
+- Run SDD workspace cleanup after executing any option
 
 ## Integration
 
 **Called by:**
 - **subagent-driven-development** (Step 7) - After all tasks complete
 - **executing-plans** (Step 5) - After all batches complete
+
+**Calls:**
+- **subagent-driven-development** cleanup script (`scripts/cleanup-workspace`) - Removes SDD workspace artifacts after branch completion
 
 **Pairs with:**
 - **session-learnings** - Record insights discovered during this branch
