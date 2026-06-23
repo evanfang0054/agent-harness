@@ -27,6 +27,8 @@
 - 测试工具函数在 `tests/claude-code/test-helpers.sh`：`run_claude`、`assert_contains`、`assert_not_contains`、`assert_count`、`assert_order`
 
 ### 其他测试套件
+- `tests/plugin-infrastructure/run-all.sh` — 纯脚本套件，秒级完成，覆盖 hooks/scripts/manifest/commands/agents
+- `tests/codex-plugin-sync/test-sync-to-codex-plugin.sh` — Codex plugin manifest 一致性测试
 - `tests/explicit-skill-requests/run-all.sh` — 多轮显式 skill 调用测试（依赖 `claude -p` headless 模式实际调用 Claude API）
 - `tests/skill-triggering/run-all.sh` — 隐式 skill 触发测试（依赖 `claude -p` headless 模式实际调用 Claude API）
 - `tests/learnings-scripts/test-learnings.sh` — learnings shell 脚本测试
