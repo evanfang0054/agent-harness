@@ -1,0 +1,1 @@
+Invoke the superpowers:brainstorming skill via the Skill tool (its tool identifier is superpowers:brainstorming). I want to design a plugin system for my CLI tool. Start by calling the brainstorming skill, then walk me through exploring intent and design.

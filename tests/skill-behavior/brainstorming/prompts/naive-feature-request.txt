@@ -1,0 +1,1 @@
+Use the superpowers:brainstorming skill via the Skill tool to help me design a real-time collaboration feature for my markdown editor app. Invoke the brainstorming skill first (its tool identifier is superpowers:brainstorming), then walk me through exploring intent and requirements before writing any code.
