@@ -3,6 +3,18 @@
 # Tests skills by invoking Claude Code CLI and verifying behavior
 set -euo pipefail
 
+# macOS 兼容：coreutils 默认无 `timeout` 命令
+if ! command -v timeout &> /dev/null; then
+    if command -v gtimeout &> /dev/null; then
+        timeout() { gtimeout "$@"; }
+    else
+        timeout() {
+            local dur="$1"; shift
+            perl -e 'alarm shift @ARGV; exec @ARGV' "$dur" "$@"
+        }
+    fi
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
@@ -25,7 +37,7 @@ fi
 # Parse command line arguments
 VERBOSE=false
 SPECIFIC_TEST=""
-TIMEOUT=300  # Default 5 minute timeout per test
+TIMEOUT=900  # Default 15 minute timeout per test (headless Claude calls are slow)
 RUN_INTEGRATION=false
 
 while [[ $# -gt 0 ]]; do
@@ -52,7 +64,7 @@ while [[ $# -gt 0 ]]; do
             echo "Options:"
             echo "  --verbose, -v        Show verbose output"
             echo "  --test, -t NAME      Run only the specified test"
-            echo "  --timeout SECONDS    Set timeout per test (default: 300)"
+            echo "  --timeout SECONDS    Set timeout per test (default: 900)"
             echo "  --integration, -i    Run integration tests (slow, 10-30 min)"
             echo "  --help, -h           Show this help"
             echo ""

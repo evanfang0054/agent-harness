@@ -9,6 +9,18 @@
 
 set -e
 
+# macOS 兼容：coreutils 默认无 `timeout` 命令
+if ! command -v timeout &> /dev/null; then
+    if command -v gtimeout &> /dev/null; then
+        timeout() { gtimeout "$@"; }
+    else
+        timeout() {
+            local dur="$1"; shift
+            perl -e 'alarm shift @ARGV; exec @ARGV' "$dur" "$@"
+        }
+    fi
+fi
+
 SKILL_NAME="$1"
 PROMPT_FILE="$2"
 MAX_TURNS="${3:-3}"
@@ -73,6 +85,7 @@ timeout 300 claude -p "$PROMPT" \
     --dangerously-skip-permissions \
     --max-turns "$MAX_TURNS" \
     --output-format stream-json \
+    --verbose \
     > "$LOG_FILE" 2>&1 || true
 
 echo ""
