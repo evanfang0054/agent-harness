@@ -1,0 +1,1 @@
+Invoke the superpowers:dispatching-parallel-agents skill via the Skill tool (its tool identifier is superpowers:dispatching-parallel-agents) for this task. I have 3 independent tasks with no shared state that can run in parallel: (1) refactor module A, (2) update docs for module B, and (3) add tests for module C. Dispatch them as parallel subagents running concurrently.
