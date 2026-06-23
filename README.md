@@ -54,15 +54,31 @@ Superpowers 可通过 [Claude 官方插件市场](https://claude.com/plugins/sup
 
 或在插件市场中搜索 "superpowers"。
 
-### Codex
+### Codex App
 
-告诉 Codex：
+在 Codex App 侧边栏点击 **Plugins**，在 **Coding** 区找到 `Superpowers`，点击 `+` 安装。
 
-```
-Fetch and follow instructions from https://raw.githubusercontent.com/evanfang0054/superpowers/refs/heads/main/.codex/INSTALL.md
-```
+### Codex CLI
+
+打开插件搜索界面 `/plugins`，搜索 `superpowers`，选择 `Install Plugin`。
 
 **详细文档：** [docs/README.codex.md](docs/README.codex.md)
+
+### Pi
+
+从 GitHub 仓库安装：
+
+```bash
+pi install git:github.com/evanfang0054/superpowers
+```
+
+本地开发模式：
+
+```bash
+pi -e /path/to/superpowers
+```
+
+**详细文档：** [docs/README.pi.md](docs/README.pi.md)
 
 ### OpenCode
 
