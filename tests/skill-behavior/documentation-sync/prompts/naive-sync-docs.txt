@@ -1,0 +1,1 @@
+Invoke the superpowers:documentation-sync skill via the Skill tool (its tool identifier is superpowers:documentation-sync). I just committed code changes to add a new feature. Before creating a PR, sync all project documentation — update README, ARCHITECTURE, CHANGELOG to match what shipped.
