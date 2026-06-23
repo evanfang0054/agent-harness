@@ -1,0 +1,1 @@
+Invoke the superpowers:post-deploy-monitoring skill via the Skill tool (its tool identifier is superpowers:post-deploy-monitoring). I just deployed my app to production. Monitor the deploy — check production for console errors, performance regressions, and page failures, as a canary check.
