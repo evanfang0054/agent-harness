@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "$SCRIPT_DIR/_helpers.sh"
+
+echo "=== Test: Hooks Config ==="
+
+# Claude Code 格式: hooks.json 用 PascalCase（SessionStart, Stop）
+# Cursor 格式: hooks-cursor.json 用 camelCase（sessionStart），且可能没有 Stop
+# 两个文件的 session-start/stop 事件用不同 key 名，这是平台差异而非缺陷。
+
+# --- hooks.json (Claude Code) ---
+CLAUDE_HOOKS="$REPO_ROOT/hooks/hooks.json"
+assert_file_exists "$CLAUDE_HOOKS" "hooks.json exists"
+if jq empty "$CLAUDE_HOOKS" 2>/dev/null; then pass "hooks.json is valid JSON"; else fail "hooks.json is valid JSON"; fi
+if jq -e '.hooks.SessionStart' "$CLAUDE_HOOKS" >/dev/null 2>&1; then pass "hooks.json has SessionStart"; else fail "hooks.json has SessionStart"; fi
+if jq -e '.hooks.Stop' "$CLAUDE_HOOKS" >/dev/null 2>&1; then pass "hooks.json has Stop"; else fail "hooks.json has Stop"; fi
+
+# --- hooks-cursor.json (Cursor) ---
+CURSOR_HOOKS="$REPO_ROOT/hooks/hooks-cursor.json"
+assert_file_exists "$CURSOR_HOOKS" "hooks-cursor.json exists"
+if jq empty "$CURSOR_HOOKS" 2>/dev/null; then pass "hooks-cursor.json is valid JSON"; else fail "hooks-cursor.json is valid JSON"; fi
+# Cursor 用 camelCase sessionStart
+if jq -e '.hooks.sessionStart' "$CURSOR_HOOKS" >/dev/null 2>&1; then
+    pass "hooks-cursor.json has sessionStart"
+else
+    fail "hooks-cursor.json has sessionStart"
+fi
+
+# 引用的脚本存在且有可执行位（两个 hooks 文件都引用这些）
+assert_executable "$REPO_ROOT/hooks/session-start" "session-start is executable"
+assert_executable "$REPO_ROOT/hooks/stop-hook.sh" "stop-hook.sh is executable"
+assert_file_exists "$REPO_ROOT/hooks/run-hook.cmd" "run-hook.cmd exists"
+
+print_summary "Hooks Config"
