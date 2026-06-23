@@ -1,0 +1,1 @@
+Use the superpowers:plan-eng-review skill via the Skill tool. I have a plan to add authentication to a Node.js API — review its architecture, check edge cases, test coverage, and data flow. Invoke the plan-eng-review skill (tool identifier superpowers:plan-eng-review) first.
