@@ -1,0 +1,1 @@
+Use the superpowers:office-hours skill via the Skill tool for this decision. I have an idea for a CLI tool that auto-generates release notes from git commits — I want a go/no-go decision. Invoke the office-hours skill first (its tool identifier is superpowers:office-hours), then walk me through the YC office hours forcing questions.
