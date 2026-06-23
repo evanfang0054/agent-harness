@@ -1,0 +1,1 @@
+Invoke the superpowers:systematic-debugging skill via the Skill tool (its tool identifier is superpowers:systematic-debugging). I'm encountering a bug: my Node.js API returns 500 on login intermittently. Help me find the root cause systematically before proposing any fix.
