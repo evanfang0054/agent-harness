@@ -1,0 +1,1 @@
+Invoke the superpowers:receiving-code-review skill via the Skill tool (its tool identifier is superpowers:receiving-code-review). I just received code review feedback on my PR. The reviewer suggested some changes that seem technically questionable. I should verify rigorously rather than blindly implement, requiring technical rigor — not performative agreement.
