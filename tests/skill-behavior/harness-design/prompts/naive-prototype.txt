@@ -1,0 +1,1 @@
+请通过 Skill 工具调用 superpowers:harness-design 技能（工具标识符为 superpowers:harness-design）。帮我做一个高保真的 HTML 原型 Demo，用来展示一个待办事项 App 的交互界面。要有真实的视觉效果，双击就能打开的那种。做原型、设计 Demo、HTML 演示。
