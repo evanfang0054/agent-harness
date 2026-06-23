@@ -1,8 +1,25 @@
 {
   "name": "superpowers",
   "version": "5.0.21-beta.5",
+  "description": "Superpowers skills and runtime bootstrap for coding agents",
   "type": "module",
   "scripts": {
     "release": "./scripts/bump-version.sh"
+  },
+  "keywords": [
+    "pi-package",
+    "skills",
+    "tdd",
+    "debugging",
+    "collaboration",
+    "workflow"
+  ],
+  "pi": {
+    "extensions": [
+      "./.pi/extensions/superpowers.ts"
+    ],
+    "skills": [
+      "./skills"
+    ]
   }
 }
