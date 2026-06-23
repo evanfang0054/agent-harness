@@ -1,0 +1,1 @@
+Invoke the superpowers:loop-detection skill via the Skill tool (its tool identifier is superpowers:loop-detection). I suspect I'm stuck — I've been editing the same file repeatedly without converging on a solution. Help me detect if I'm in a doom loop and how to break out.
