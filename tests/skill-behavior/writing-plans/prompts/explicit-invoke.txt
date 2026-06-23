@@ -1,0 +1,1 @@
+Invoke the superpowers:writing-plans skill via the Skill tool (its tool identifier is superpowers:writing-plans). Create a plan for adding pagination to my REST API. Start by calling the writing-plans skill, then decompose the work into tasks.
