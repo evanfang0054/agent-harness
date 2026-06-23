@@ -33,6 +33,7 @@
 - `tests/skill-triggering/run-all.sh` — 隐式 skill 触发测试（依赖 `claude -p` headless 模式实际调用 Claude API）
 - `tests/learnings-scripts/test-learnings.sh` — learnings shell 脚本测试
 - `tests/subagent-driven-dev/run-test.sh` — SDD 端到端测试，使用示例项目（依赖 `claude -p` headless 模式实际调用 Claude API）
+- `tests/skill-behavior/` — 全部 skill 的 headless 行为测试（依赖 `claude -p` + Claude API 配额，全量运行约 15-40 分钟；单 skill 可独立运行 `cd tests/skill-behavior/<skill> && ./run-test.sh`）
 - `tests/pi/` — Pi 平台扩展测试，运行：`npx tsx --test tests/pi/test-pi-extension.mjs`
 
 > 注：`explicit-skill-requests` / `skill-triggering` / `subagent-driven-dev` 套件需要消耗 Claude API 配额并在 headless 模式下真实触发 skill 行为，结果取决于模型当前行为，非纯脚本断言。
