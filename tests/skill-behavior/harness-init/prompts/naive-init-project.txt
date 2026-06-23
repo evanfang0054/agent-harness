@@ -1,0 +1,1 @@
+Invoke the superpowers:harness-init skill via the Skill tool (its tool identifier is superpowers:harness-init). I'm starting a new React + TypeScript project. Initialize superpowers in this project and configure it for my tech stack.
