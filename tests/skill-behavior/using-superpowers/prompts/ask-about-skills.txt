@@ -1,0 +1,1 @@
+Use the superpowers skills system to help me understand what's available. Start by invoking the appropriate skill via the Skill tool so I can see how skills work, then summarize the available skills.
