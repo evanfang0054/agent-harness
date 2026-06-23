@@ -1,126 +1,58 @@
-# Superpowers for Codex
+# Codex 安装与使用
 
-Guide for using Superpowers with OpenAI Codex via native skill discovery.
+Superpowers 支持 Codex App 和 Codex CLI 两种 harness，共用同一套 plugin manifest 和 SessionStart hook。
 
-## Quick Install
+## Codex App
 
-Tell Codex:
+Superpowers 可通过 Codex 官方插件市场获取。
 
-```
-Fetch and follow instructions from https://raw.githubusercontent.com/evanfang0054/superpowers/refs/heads/main/.codex/INSTALL.md
-```
+1. 在 Codex App 侧边栏点击 **Plugins**
+2. 在 **Coding** 区找到 `Superpowers`
+3. 点击 `Superpowers` 旁边的 `+`，按提示完成安装
 
-## Manual Installation
+## Codex CLI
 
-### Prerequisites
+1. 打开插件搜索界面：
 
-- OpenAI Codex CLI
-- Git
-
-### Steps
-
-1. Clone the repo:
-   ```bash
-   git clone https://github.com/evanfang0054/superpowers.git ~/.codex/superpowers
+   ```
+   /plugins
    ```
 
-2. Create the skills symlink:
-   ```bash
-   mkdir -p ~/.agents/skills
-   ln -s ~/.codex/superpowers/skills ~/.agents/skills/superpowers
+2. 搜索 Superpowers：
+
+   ```
+   superpowers
    ```
 
-3. Restart Codex.
+3. 选择 `Install Plugin`
 
-4. **For subagent skills** (optional): Skills like `dispatching-parallel-agents` and `subagent-driven-development` require Codex's multi-agent feature. Add to your Codex config:
-   ```toml
-   [features]
-   multi_agent = true
-   ```
+## 工作原理
 
-### Windows
+Codex 在 session 启动时执行 `.codex-plugin/plugin.json` 声明的 `hooks/hooks-codex.json`，触发 `hooks/session-start-codex` 脚本。该脚本读取 `skills/using-superpowers/SKILL.md` 全文，以 `<EXTREMELY_IMPORTANT>` 标记注入到 SessionStart 的 `additionalContext` 字段，让模型在首轮对话前就获得 skills 系统指引。
 
-Use a junction instead of a symlink (works without Developer Mode):
+skills 本身通过 `skills/` 目录被 Codex 直接发现，无需额外注册。
 
-```powershell
-New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.agents\skills"
-cmd /c mklink /J "$env:USERPROFILE\.agents\skills\superpowers" "$env:USERPROFILE\.codex\superpowers\skills"
-```
+## 故障排查
 
-## How It Works
+### hook 没触发
 
-Codex has native skill discovery — it scans `~/.agents/skills/` at startup, parses SKILL.md frontmatter, and loads skills on demand. Superpowers skills are made visible through a single symlink:
-
-```
-~/.agents/skills/superpowers/ → ~/.codex/superpowers/skills/
-```
-
-The `using-superpowers` skill is discovered automatically and enforces skill usage discipline — no additional configuration needed.
-
-## Usage
-
-Skills are discovered automatically. Codex activates them when:
-- You mention a skill by name (e.g., "use brainstorming")
-- The task matches a skill's description
-- The `using-superpowers` skill directs Codex to use one
-
-### Personal Skills
-
-Create your own skills in `~/.agents/skills/`:
+检查 `hooks/hooks-codex.json` 是否被 `.codex-plugin/plugin.json` 的 `hooks` 字段正确引用：
 
 ```bash
-mkdir -p ~/.agents/skills/my-skill
+jq -r .hooks .codex-plugin/plugin.json
+# 应输出 ./hooks/hooks-codex.json
 ```
 
-Create `~/.agents/skills/my-skill/SKILL.md`:
-
-```markdown
----
-name: my-skill
-description: Use when [condition] - [what it does]
----
-
-# My Skill
-
-[Your skill content here]
-```
-
-The `description` field is how Codex decides when to activate a skill automatically — write it as a clear trigger condition.
-
-## Updating
+检查 hook 脚本路径是否存在：
 
 ```bash
-cd ~/.codex/superpowers && git pull
+ls hooks/session-start-codex hooks/run-hook.cmd
 ```
 
-Skills update instantly through the symlink.
+### Windows 下 hook 不执行
 
-## Uninstalling
+Windows 下 Codex 通过 `hooks/run-hook.cmd`（polyglot 批处理/脚本）查找并调用 Git Bash 执行 hook。请确认系统已安装 Git for Windows 或 MSYS2，`bash` 可在 PATH 中找到。
 
-```bash
-rm ~/.agents/skills/superpowers
-```
+### skills 没自动触发
 
-**Windows (PowerShell):**
-```powershell
-Remove-Item "$env:USERPROFILE\.agents\skills\superpowers"
-```
-
-Optionally delete the clone: `rm -rf ~/.codex/superpowers` (Windows: `Remove-Item -Recurse -Force "$env:USERPROFILE\.codex\superpowers"`).
-
-## Troubleshooting
-
-### Skills not showing up
-
-1. Verify the symlink: `ls -la ~/.agents/skills/superpowers`
-2. Check skills exist: `ls ~/.codex/superpowers/skills`
-3. Restart Codex — skills are discovered at startup
-
-### Windows junction issues
-
-Junctions normally work without special permissions. If creation fails, try running PowerShell as administrator.
-
-## Getting Help
-
-- Report issues: https://github.com/evanfang0054/superpowers/issues
-- Main documentation: https://github.com/evanfang0054/superpowers
+SessionStart hook 注入的 `using-superpowers` skill 负责告知模型「当任务适用时主动加载相应 skill」。如果模型未触发，尝试在首条消息中明确表达任务意图（例如「帮我规划这个功能」而非「加个按钮」），或显式调用 `/skill:brainstorming`。
