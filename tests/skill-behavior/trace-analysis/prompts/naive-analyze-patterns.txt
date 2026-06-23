@@ -1,0 +1,1 @@
+Invoke the superpowers:trace-analysis skill via the Skill tool (its tool identifier is superpowers:trace-analysis). I want to understand recurring failure patterns across my recent sessions, based on the historical learnings data in .superpowers/learnings.jsonl.
