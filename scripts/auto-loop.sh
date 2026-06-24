@@ -274,7 +274,9 @@ while IFS= read -r line; do
     [ -f "$LOG_FILE" ] || : > "$LOG_FILE" 2>/dev/null || true
     process_line "$line"
 done < <(
-    claude -p "$PROMPT" \
+    # 导出 AUTO_LOOP_ACTIVE=1 让 guard-auto-loop.sh PreToolUse hook 拦截
+    # Claude 删除 .claude/auto-loop/ 或调用 auto-loop.sh 本身的尝试
+    AUTO_LOOP_ACTIVE=1 claude -p "$PROMPT" \
         --plugin-dir "$REPO_ROOT" \
         --permission-mode bypassPermissions \
         --output-format stream-json \

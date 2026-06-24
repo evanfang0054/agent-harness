@@ -26,6 +26,7 @@ TESTS=(
     "test-bump-version.sh"
     "test-scripts-smoke.sh"
     "test-guard-staging.sh"
+    "test-guard-auto-loop.sh"
     "test-audit-subagent.sh"
     "test-auto-loop-state.sh"
     "test-auto-loop-worktree.sh"

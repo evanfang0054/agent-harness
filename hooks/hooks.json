@@ -28,6 +28,10 @@
           {
             "type": "command",
             "command": "bash \"${CLAUDE_PROJECT_DIR}/scripts/guard-staging.sh\""
+          },
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PROJECT_DIR}/scripts/guard-auto-loop.sh\""
           }
         ]
       }
