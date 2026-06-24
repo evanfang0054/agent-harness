@@ -29,6 +29,7 @@ TESTS=(
     "test-audit-subagent.sh"
     "test-auto-loop-state.sh"
     "test-auto-loop-worktree.sh"
+    "test-auto-loop-observe.sh"
 )
 
 for test in "${TESTS[@]}"; do
