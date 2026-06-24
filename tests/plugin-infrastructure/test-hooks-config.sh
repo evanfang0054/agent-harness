@@ -26,6 +26,26 @@ else
     fail "hooks-cursor.json has sessionStart"
 fi
 
+# --- PreToolUse + SubagentStop (new in session-log-optimization) ---
+if jq -e '.hooks.PreToolUse' "$CLAUDE_HOOKS" >/dev/null 2>&1; then
+    pass "hooks.json has PreToolUse"
+else
+    fail "hooks.json has PreToolUse"
+fi
+if jq -e '.hooks.PreToolUse[] | select(.matcher == "Bash")' "$CLAUDE_HOOKS" >/dev/null 2>&1; then
+    pass "PreToolUse has Bash matcher"
+else
+    fail "PreToolUse has Bash matcher"
+fi
+if jq -e '.hooks.SubagentStop' "$CLAUDE_HOOKS" >/dev/null 2>&1; then
+    pass "hooks.json has SubagentStop"
+else
+    fail "hooks.json has SubagentStop"
+fi
+# New scripts must exist and be executable
+assert_executable "$REPO_ROOT/scripts/guard-staging.sh" "guard-staging.sh is executable"
+assert_executable "$REPO_ROOT/scripts/audit-subagent.sh" "audit-subagent.sh is executable"
+
 # 引用的脚本存在且有可执行位（两个 hooks 文件都引用这些）
 assert_executable "$REPO_ROOT/hooks/session-start" "session-start is executable"
 assert_executable "$REPO_ROOT/hooks/stop-hook.sh" "stop-hook.sh is executable"

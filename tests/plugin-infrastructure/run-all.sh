@@ -25,6 +25,8 @@ TESTS=(
     "test-agents-frontmatter.sh"
     "test-bump-version.sh"
     "test-scripts-smoke.sh"
+    "test-guard-staging.sh"
+    "test-audit-subagent.sh"
 )
 
 for test in "${TESTS[@]}"; do
