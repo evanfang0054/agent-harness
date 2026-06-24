@@ -26,11 +26,17 @@ set -euo pipefail
 
 WARN_THRESHOLD="${LOOP_WARN_THRESHOLD:-5}"
 HARD_THRESHOLD="${LOOP_HARD_THRESHOLD:-8}"
-SESSION_ID="${1:-${CLAUDE_SESSION_ID:-default}}"
-# Override: if user passes session_id as env var instead of arg, respect it
-if [ "${1:-}" = "--track" ] || [ "${1:-}" = "--reset" ] || [ "${1:-}" = "analyze" ] || [ -z "${1:-}" ]; then
-    SESSION_ID="${CLAUDE_SESSION_ID:-default}"
-fi
+# Resolve session id: prefer explicit positional arg, fall back to env var, then "default".
+# When the first arg is a flag (--track/--reset/analyze) or empty, ignore it for session resolution
+# and use CLAUDE_SESSION_ID. Avoids "$1=--track" leaking into TRACKER_DIR path.
+case "${1:-}" in
+    --track|--reset|analyze|"")
+        SESSION_ID="${CLAUDE_SESSION_ID:-default}"
+        ;;
+    *)
+        SESSION_ID="$1"
+        ;;
+esac
 TRACKER_DIR="/tmp/superpowers-edit-tracker/${SESSION_ID}"
 TRACKER_FILE="${TRACKER_DIR}/edits.json"
 
