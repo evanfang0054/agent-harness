@@ -154,6 +154,10 @@ else
     BRANCH="feat/auto-improvement-$(date +%Y-%m-%d)"
     state_init "$RUN_ID" "$BRANCH" "$REQUEST" "$STATE_DIR"
 
+    # fallback：用户级 ~/.gitignore_global 通常含 `.claude`，会覆盖本仓库 .gitignore 的放行规则，
+    # 因此用 -f 强制将 state.json 纳入 git 跟踪（runs/ 下的日志同理在 commit 时 -f 添加）
+    git -C "$REPO_ROOT" add -f "$STATE_FILE"
+
     # ---------- 创建 worktree 隔离工作区 ----------
     WORKTREE_PATH=$(worktree_create "$REPO_ROOT" "$RUN_ID" "$BRANCH")
     state_set "$STATE_DIR" '.worktree_path' "\"$WORKTREE_PATH\""
@@ -184,6 +188,17 @@ if $RESUME; then
     fi
 fi
 
+# ---------- dry-run 提示 ----------
+if [ "${DRY_RUN:-false}" = "true" ]; then
+    PROMPT_DRY_RUN_NOTE="
+
+注意：这是 --dry-run 模式。只执行到步骤 4（提 issue）后停止，不执行 SDD 修复。
+完成步骤 4 后：
+1. jq 更新 state.json 的 current_step = 'dry_run_done'
+2. 输出 AUTO_LOOP_COMPLETE（脚本侧检测后会跳过 worktree 清理，因为 dry-run 不改代码）
+"
+fi
+
 # ---------- 组装 prompt（用 jq 安全注入，避免 sed 特殊字符问题） ----------
 RUN_ID=$(state_get "$STATE_DIR" '.run_id')
 BRANCH=$(state_get "$STATE_DIR" '.branch')
@@ -194,6 +209,8 @@ SCOPE_VAL="$SCOPE_DESC"
 PROMPT=$(jq -nR --arg req "$REQUEST_VAL" --arg scope "$SCOPE_VAL" --arg branch "$BRANCH" --arg state "$STATE_FILE" '
     input | gsub("{{REQUEST}}"; $req) | gsub("{{SCOPE}}"; $scope) | gsub("{{BRANCH}}"; $branch) | gsub("{{STATE_FILE}}"; $state)
 ' < "$REPO_ROOT/skills/auto-loop/orchestrator-prompt.md")
+
+PROMPT="${PROMPT}${PROMPT_DRY_RUN_NOTE:-}"
 
 # ---------- 运行 claude -p（用进程替换避免子 shell 隔离） ----------
 LOG_FILE="$STATE_DIR/runs/$RUN_ID/stream.log"
