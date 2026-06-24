@@ -23,8 +23,9 @@
 | 文件 | 职责 | 行数估计 |
 |------|------|---------|
 | `scripts/auto-loop.sh` | 入口薄壳：参数解析、checkpoint、调 claude -p、三层输出、信号处理 | ~250 |
-| `scripts/lib/state.sh` | state.json 读写函数（`state_init`/`state_get`/`state_set`/`state_clear`） | ~80 |
+| `scripts/lib/state.sh` | state.json 读写函数（`state_init`/`state_get`/`state_set`/`state_clear`），含 worktree_path 字段 | ~90 |
 | `scripts/lib/observe.sh` | stream-json 事件流解析 + 三层可观测性输出（状态行/事件流/日志） | ~120 |
+| `scripts/lib/worktree.sh` | git worktree 生命周期（创建/cd/清理/remove） | ~60 |
 | `skills/auto-loop/orchestrator-prompt.md` | 注入给 `claude -p` 的主指令（8 步链路、介入协议、最保守原则） | ~150 |
 | `tests/plugin-infrastructure/test-auto-loop-state.sh` | state.sh 单元测试 | ~80 |
 | `tests/plugin-infrastructure/test-auto-loop-observe.sh` | observe.sh 单元测试（喂模拟 stream-json） | ~100 |
@@ -119,6 +120,8 @@ state_init() {
     "analysis_json": "$state_dir/runs/$run_id/analysis.json",
     "issues_json": "$state_dir/runs/$run_id/issues.json"
   },
+  "worktree_path": "$state_dir/../worktrees/auto-loop-$run_id",
+  "original_pwd": "$PWD",
   "intervention": null
 }
 EOF
@@ -155,6 +158,141 @@ Expected: 5 个 `[PASS]`，`STATUS: PASSED`
 ```bash
 git add scripts/lib/state.sh tests/plugin-infrastructure/test-auto-loop-state.sh tests/plugin-infrastructure/run-all.sh
 git commit -m "feat(auto-loop): add state.sh checkpoint library with tests"
+```
+
+---
+
+## Task 1b: worktree.sh — Git Worktree 隔离生命周期
+
+**Files:**
+- Create: `scripts/lib/worktree.sh`
+- Test: `tests/plugin-infrastructure/test-auto-loop-worktree.sh`
+
+**依赖**: Task 1（state.sh 提供 worktree_path 字段）
+
+- [ ] **Step 1: 写失败测试 `test-auto-loop-worktree.sh`**
+
+```bash
+#!/usr/bin/env bash
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "$SCRIPT_DIR/_helpers.sh"
+source "$REPO_ROOT/scripts/lib/state.sh"
+source "$REPO_ROOT/scripts/lib/worktree.sh"
+
+echo "=== Test: auto-loop worktree.sh ==="
+
+# 用临时 git 仓库测试，避免污染主仓库
+TEST_REPO="$(mktemp -d)"
+git init -q "$TEST_REPO"
+git -C "$TEST_REPO" commit -q --allow-empty -m "init"
+TEST_STATE_DIR="$TEST_REPO/.claude/auto-loop"
+
+# Case 1: worktree_create 创建 worktree 并绑定分支
+state_init "test-wt-001" "feat/auto-test-wt" "测试" "$TEST_STATE_DIR"
+WORKTREE=$(worktree_create "$TEST_REPO" "test-wt-001" "feat/auto-test-wt")
+if [ -d "$WORKTREE" ]; then pass "worktree_create makes dir"; else fail "worktree_create makes dir"; fi
+if git -C "$TEST_REPO" worktree list | grep -q "feat/auto-test-wt"; then pass "worktree registered in git"; else fail "worktree registered in git"; fi
+
+# Case 2: worktree 里能做独立 commit
+echo "test" > "$WORKTREE/test.txt"
+git -C "$WORKTREE" add test.txt
+git -C "$WORKTREE" commit -q -m "test commit"
+if git -C "$WORKTREE" log --oneline | grep -q "test commit"; then pass "worktree accepts commits"; else fail "worktree accepts commits"; fi
+
+# Case 3: 主仓库工作区不受影响（test.txt 不在主仓库工作树里）
+if [ ! -f "$TEST_REPO/test.txt" ]; then pass "main worktree clean"; else fail "main worktree clean (contaminated!)"; fi
+
+# Case 4: worktree_remove 清理 worktree
+worktree_remove "$TEST_REPO" "$WORKTREE"
+if [ ! -d "$WORKTREE" ]; then pass "worktree_remove deletes dir"; else fail "worktree_remove deletes dir"; fi
+if ! git -C "$TEST_REPO" worktree list | grep -q "test-wt-001"; then pass "worktree unregistered"; else fail "worktree unregistered"; fi
+
+# Case 5: worktree_remove 幂等（已删不崩溃）
+worktree_remove "$TEST_REPO" "$WORKTREE" 2>/dev/null && pass "worktree_remove idempotent" || pass "worktree_remove idempotent"
+
+# Case 6: worktree_exists 判断存在性
+WORKTREE2=$(worktree_create "$TEST_REPO" "test-wt-002" "feat/auto-test-wt2")
+if worktree_exists "$WORKTREE2"; then pass "worktree_exists true"; else fail "worktree_exists true"; fi
+worktree_remove "$TEST_REPO" "$WORKTREE2"
+if ! worktree_exists "$WORKTREE2"; then pass "worktree_exists false after remove"; else fail "worktree_exists false after remove"; fi
+
+# 清理
+rm -rf "$TEST_REPO"
+print_summary "auto-loop worktree.sh"
+```
+
+- [ ] **Step 2: 运行测试验证失败**
+
+Run: `bash tests/plugin-infrastructure/test-auto-loop-worktree.sh`
+Expected: FAIL，`scripts/lib/worktree.sh: No such file or directory`
+
+- [ ] **Step 3: 实现 `scripts/lib/worktree.sh`**
+
+```bash
+#!/usr/bin/env bash
+# worktree.sh — Git worktree 生命周期管理 for auto-loop
+# Usage: source scripts/lib/worktree.sh
+#
+# 所有函数都不 cd（caller 负责路径管理），保持纯函数式
+
+# worktree_create <repo_root> <run_id> <branch_name>
+# 输出 worktree 绝对路径到 stdout
+worktree_create() {
+    local repo_root="$1" run_id="$2" branch="$3"
+    local wt_root="$repo_root/.claude/worktrees"
+    local wt_path="$wt_root/auto-loop-$run_id"
+    mkdir -p "$wt_root"
+    git -C "$repo_root" worktree add -q -b "$branch" "$wt_path" 2>/dev/null || {
+        # worktree 已存在则复用
+        if [ -d "$wt_path" ]; then
+            echo "$wt_path"
+            return 0
+        fi
+        echo "错误: worktree 创建失败" >&2
+        return 1
+    }
+    echo "$wt_path"
+}
+
+# worktree_remove <repo_root> <wt_path>
+worktree_remove() {
+    local repo_root="$1" wt_path="$2"
+    # 幂等：不存在直接返回
+    [ -d "$wt_path" ] || return 0
+    git -C "$repo_root" worktree remove --force "$wt_path" 2>/dev/null || rm -rf "$wt_path"
+}
+
+# worktree_exists <wt_path>
+worktree_exists() {
+    [ -d "$1" ] && git -C "$1" rev-parse --is-inside-work-tree >/dev/null 2>&1
+}
+
+# worktree_cleanup_all <repo_root> — 清理所有 auto-loop worktree（用于 --cleanup）
+worktree_cleanup_all() {
+    local repo_root="$1"
+    local wt_root="$repo_root/.claude/worktrees"
+    if [ -d "$wt_root" ]; then
+        for wt in "$wt_root"/auto-loop-*; do
+            [ -d "$wt" ] || continue
+            git -C "$repo_root" worktree remove --force "$wt" 2>/dev/null || rm -rf "$wt"
+        done
+        rmdir "$wt_root" 2>/dev/null || true
+    fi
+}
+```
+
+- [ ] **Step 4: 运行测试验证通过**
+
+Run: `bash tests/plugin-infrastructure/test-auto-loop-worktree.sh`
+Expected: 6 个 `[PASS]`，`STATUS: PASSED`
+
+- [ ] **Step 5: 注册到 run-all.sh 并 commit**
+
+在 `TESTS=()` 数组中，`test-auto-loop-state.sh` 之后添加 `"test-auto-loop-worktree.sh"`。
+
+```bash
+git add scripts/lib/worktree.sh tests/plugin-infrastructure/test-auto-loop-worktree.sh tests/plugin-infrastructure/run-all.sh
+git commit -m "feat(auto-loop): add worktree.sh for isolated git worktree lifecycle"
 ```
 
 ---
@@ -450,12 +588,11 @@ if [ "$EXIT" = "0" ]; then pass "--cleanup tolerates missing state"; else fail "
 OUTPUT=$(bash "$SCRIPT" --resume 2>&1) && EXIT=0 || EXIT=$?
 if echo "$OUTPUT" | grep -qi "无可恢复\|no.*state\|nothing.*resume"; then pass "--resume detects no state"; else fail "--resume detects no state"; fi
 
-# Case 5: 工作区脏时拒绝运行（制造脏工作区）
-cd "$REPO_ROOT" || exit 1
-echo "dirty" > /tmp/test-dirty-marker.tmp
-# 注：此 case 在实际运行时需 mock git status，这里只验证脚本有该检查
-# 检查脚本源码中包含 dirty check
+# Case 5: 工作区脏时拒绝运行（检查脚本源码包含 dirty check）
 if grep -q "git.*status\|dirty\|clean" "$SCRIPT"; then pass "script has dirty-check logic"; else fail "script has dirty-check logic"; fi
+
+# Case 6: 脚本包含 worktree 隔离逻辑
+if grep -q "worktree_create\|worktree_remove\|lib/worktree" "$SCRIPT"; then pass "script integrates worktree"; else fail "script integrates worktree"; fi
 
 print_summary "auto-loop.sh CLI"
 ```
@@ -487,6 +624,7 @@ STATE_FILE="$STATE_DIR/state.json"
 
 source "$SCRIPT_DIR/lib/state.sh"
 source "$SCRIPT_DIR/lib/observe.sh"
+source "$SCRIPT_DIR/lib/worktree.sh"
 
 # ---------- 参数解析 ----------
 PROJECT=""
@@ -494,6 +632,7 @@ ALL_PROJECTS=false
 RESUME=false
 CLEANUP=false
 REQUEST=""
+ORIGINAL_PWD="$PWD"
 
 usage() {
     cat << 'EOF'
@@ -529,8 +668,9 @@ done
 
 # ---------- 清理模式 ----------
 if $CLEANUP; then
+    worktree_cleanup_all "$REPO_ROOT" 2>/dev/null || true
     rm -rf "$STATE_DIR"
-    echo "已清理 $STATE_DIR"
+    echo "已清理 $STATE_DIR 和所有 worktree"
     exit 0
 fi
 
@@ -606,9 +746,35 @@ else
     RUN_ID="run-$(date +%Y-%m-%d-%H%M%S)"
     BRANCH="feat/auto-improvement-$(date +%Y-%m-%d)"
     state_init "$RUN_ID" "$BRANCH" "$REQUEST" "$STATE_DIR"
+
+    # ---------- 创建 worktree 隔离工作区 ----------
+    WORKTREE_PATH=$(worktree_create "$REPO_ROOT" "$RUN_ID" "$BRANCH")
+    state_set "$STATE_DIR" '.worktree_path' "\"$WORKTREE_PATH\""
+    state_set "$STATE_DIR" '.original_pwd' "\"$ORIGINAL_PWD\""
+    emit_event "📂" "[1/8]" "worktree 已创建: $WORKTREE_PATH"
+
+    # cd 进 worktree，所有后续操作在此进行
+    cd "$WORKTREE_PATH"
+
     echo "✅ 已初始化运行: $RUN_ID"
     echo "   分支: $BRANCH"
+    echo "   worktree: $WORKTREE_PATH"
     echo "   范围: $SCOPE_DESC"
+fi
+
+# ---------- 恢复模式下 cd 到已有 worktree ----------
+if $RESUME; then
+    WORKTREE_PATH=$(state_get "$STATE_DIR" '.worktree_path')
+    if [ -n "$WORKTREE_PATH" ] && [ "$WORKTREE_PATH" != "null" ] && worktree_exists "$WORKTREE_PATH"; then
+        cd "$WORKTREE_PATH"
+        emit_event "📂" "" "恢复到 worktree: $WORKTREE_PATH"
+    else
+        echo "警告: worktree 不存在 ($WORKTREE_PATH)，重新创建"
+        BRANCH=$(state_get "$STATE_DIR" '.branch')
+        WORKTREE_PATH=$(worktree_create "$REPO_ROOT" "$(state_get "$STATE_DIR" '.run_id')" "$BRANCH")
+        state_set "$STATE_DIR" '.worktree_path' "\"$WORKTREE_PATH\""
+        cd "$WORKTREE_PATH"
+    fi
 fi
 
 # ---------- 组装 prompt ----------
@@ -665,9 +831,18 @@ if [ "$EXIT_CODE" -eq 0 ]; then
         echo ""
         echo "⚠️  需要介入: $(echo "$INTERVENTION" | jq -r '.reason')"
         echo "恢复: $0 --resume"
+        # 介入时不删 worktree，保留现场
+    else
+        # 正常完成 → 清理 worktree
+        emit_event "🧹" "" "清理 worktree..."
+        worktree_remove "$REPO_ROOT" "$WORKTREE_PATH"
+        cd "$ORIGINAL_PWD"
+        emit_event "✨" "" "worktree 已清理，当前工作区已恢复"
     fi
 else
     emit_event "❌" "" "Claude 退出码 $EXIT_CODE，state 已保存。恢复: $0 --resume"
+    # 失败时保留 worktree 便于排查，cd 回原目录
+    cd "$ORIGINAL_PWD"
     exit "$EXIT_CODE"
 fi
 ```
@@ -711,6 +886,7 @@ git commit -m "feat(auto-loop): add auto-loop.sh entry script with CLI parsing a
 !.claude/README.md
 !.claude/settings.local.json.example
 !.claude/auto-loop/
+!.claude/worktrees/
 ```
 
 - [ ] **Step 2: 在 auto-loop.sh 补全 dry-run 逻辑**
@@ -747,6 +923,9 @@ Expected: `NOT IGNORED`（被放行）
 Run: `git check-ignore .claude/auto-loop/runs/test/sessions.md || echo "NOT IGNORED"`
 Expected: `NOT IGNORED`
 
+Run: `git check-ignore .claude/worktrees/auto-loop-test || echo "NOT IGNORED"`
+Expected: `NOT IGNORED`（worktree 目录也被放行）
+
 - [ ] **Step 5: Commit**
 
 ```bash
@@ -764,7 +943,7 @@ git commit -m "feat(auto-loop): gitignore exception for state + dry-run mode"
 - [ ] **Step 1: 运行完整 plugin-infrastructure 套件**
 
 Run: `cd tests/plugin-infrastructure && ./run-all.sh`
-Expected: 所有 14 个 suite PASSED（原 11 + 新增 3 个 auto-loop 测试），0 FAILED
+Expected: 所有 15 个 suite PASSED（原 11 + 新增 4 个 auto-loop 测试：state/worktree/observe/cli），0 FAILED
 
 - [ ] **Step 2: 手动验证 --help 输出**
 
@@ -783,7 +962,7 @@ Expected: `OK`（目录被清理）
 
 - [ ] **Step 5: 验证脚本语法**
 
-Run: `bash -n scripts/auto-loop.sh && bash -n scripts/lib/state.sh && bash -n scripts/lib/observe.sh && echo "SYNTAX OK"`
+Run: `bash -n scripts/auto-loop.sh && bash -n scripts/lib/state.sh && bash -n scripts/lib/observe.sh && bash -n scripts/lib/worktree.sh && echo "SYNTAX OK"`
 Expected: `SYNTAX OK`
 
 - [ ] **Step 6: 最终 commit（如有遗漏）**
@@ -801,18 +980,19 @@ git commit -m "test(auto-loop): integration smoke validation"
 **Spec coverage**（逐条对照 spec）：
 - ✅ 目标 1 全自动闭环 → Task 3+4（prompt + 脚本）
 - ✅ 目标 2 可观测 → Task 2（observe.sh 三层输出）
-- ✅ 目标 3 可恢复 → Task 1（state.sh checkpoint）+ Task 4（--resume）
+- ✅ 目标 3 可恢复 → Task 1+1b（state.sh + worktree.sh checkpoint）+ Task 4（--resume）
 - ✅ 目标 4 可介入 → Task 3（orchestrator-prompt 介入协议）
 - ✅ 目标 5 扫描范围 → Task 4（--project/--all-projects 参数）
-- ✅ 8 步链路 → Task 3（prompt 中定义）
-- ✅ 异常场景处理 → Task 1+2+4（API retry、心跳、SIGINT、checkpoint）
+- ✅ 8 步链路（含 worktree 创建/清理） → Task 3（prompt）+ Task 1b（worktree.sh）+ Task 4（脚本集成）
+- ✅ Worktree 隔离 → Task 1b（worktree.sh 生命周期）+ Task 4（脚本 cd/worktree_remove 集成）+ Task 5（.gitignore 放行）
+- ✅ 异常场景处理 → Task 1+2+4（API retry、心跳、SIGINT、checkpoint、worktree 保留）
 - ✅ 最保守决策 → Task 3（prompt 注入原则）
 - ✅ CLI 接口 → Task 4
 - ✅ 错误处理 → Task 4（前置检查）
-- ✅ 测试策略 → Task 1/2/4（单元）+ Task 6（集成冒烟）
+- ✅ 测试策略 → Task 1/1b/2/4（单元）+ Task 6（集成冒烟）
 
 **Placeholder scan**: ✅ 无 TBD/TODO，每个步骤都有完整代码
 
-**Type consistency**: ✅ state.sh 的 `state_init`/`state_get`/`state_set`/`state_clear` 签名在所有测试和主脚本中一致；observe.sh 的 `emit_event`/`emit_status`/`parse_stream_event`/`log_raw` 一致
+**Type consistency**: ✅ state.sh 的 `state_init`/`state_get`/`state_set`/`state_clear` 签名一致；worktree.sh 的 `worktree_create`/`worktree_remove`/`worktree_exists`/`worktree_cleanup_all` 在测试和主脚本中一致；observe.sh 的 `emit_event`/`emit_status`/`parse_stream_event`/`log_raw` 一致
 
-**Scope check**: ✅ 单个脚本+辅助库，适合单个 plan
+**Scope check**: ✅ 单个脚本+辅助库（state/observe/worktree），适合单个 plan

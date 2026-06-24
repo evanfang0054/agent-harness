@@ -88,8 +88,8 @@ Superpowers 项目通过 session-learnings 记录经验教训，但"从会话发
 ### 8 步链路
 
 ```
-[1] 创建分支    feat/auto-improvement-<date>
-     ↓
+[1] 创建 worktree + 分支   git worktree add .claude/worktrees/auto-loop-<run_id> -b feat/auto-improvement-<date>
+     ↓                      脚本 cd 进 worktree
 [2] 导出会话    claude-code-log --detail low --format md --compact
      ↓          支持 --project <path> 或 --all-projects
 [3] 分析会话    识别问题 → 分类（代码 bug / 流程问题 / skill 改进）
@@ -102,8 +102,37 @@ Superpowers 项目通过 session-learnings 记录经验教训，但"从会话发
      ↓
 [7] push        git push -u origin <branch>
      ↓
-[8] 创建 PR     gh pr create，body 关联 closes #N
+[8] 创建 PR + 清理   gh pr create，body 关联 closes #N
+                      → git worktree remove → cd 回原目录
 ```
+
+## Worktree 隔离机制
+
+**所有代码修复在独立 git worktree 进行，不碰当前工作区。**
+
+### 生命周期
+
+| 阶段 | 操作 |
+|------|------|
+| 启动 | `git worktree add .claude/worktrees/auto-loop-<run_id> -b feat/auto-improvement-<date>` |
+| 运行中 | 脚本 `cd` 进 worktree，所有 git/文件操作和 `claude -p` 都在 worktree 内 |
+| 中断恢复 | worktree 保留，`--resume` 时 cd 到 worktree 继续 |
+| 完成 | push 分支 → 创建 PR → `git worktree remove` 清理 → cd 回原目录 |
+| 失败/放弃 | state.json 记录 worktree 路径，用户可手动 `git worktree remove` |
+
+### 路径策略
+
+- **worktree 位置**: `.claude/worktrees/auto-loop-<run_id>/`（项目内，`.gitignore` 放行）
+- **脚本启动时**: 记录原 `$PWD` → 创建 worktree → `cd worktree`
+- **脚本退出前**: `cd 回原 $PWD` → 如果运行完成则 `git worktree remove`
+- **Claude 的 PWD**: 继承 worktree 路径，所有改动天然隔离
+
+### 为什么用 worktree 而不是当前工作区
+
+1. **零污染** — 当前工作区始终干净，你的在途工作不会被脚本碰到
+2. **可放弃** — 中途放弃直接 `git worktree remove`，原工作区无影响
+3. **可并行** — 理论上可同时跑多个 run（不同 worktree），虽然 spec 说串行单 PR
+4. **分支隔离** — worktree 绑定独立分支，不会和当前分支冲突
 
 ## 文件结构
 
@@ -115,15 +144,18 @@ superpowers/
 │   └── auto-loop/
 │       └── orchestrator-prompt.md            # 注入给 claude -p 的主指令
 └── .claude/
-    └── auto-loop/
-        ├── state.json                        # 当前 checkpoint
-        └── runs/
-            └── <run_id>/
-                ├── sessions.md               # 导出的会话
-                ├── analysis.json             # 分析结果
-                ├── issues.json               # issue 清单
-                ├── plan.md                   # SDD plan
-                └── stream.log                # 原始 stream-json 审计日志
+    ├── auto-loop/
+    │   ├── state.json                        # 当前 checkpoint（含 worktree_path）
+    │   └── runs/
+    │       └── <run_id>/
+    │           ├── sessions.md               # 导出的会话
+    │           ├── analysis.json             # 分析结果
+    │           ├── issues.json               # issue 清单
+    │           ├── plan.md                   # SDD plan
+    │           └── stream.log                # 原始 stream-json 审计日志
+    └── worktrees/
+        └── auto-loop-<run_id>/               # git worktree（隔离工作区）
+            └── ...                           # 修复在此进行
 ```
 
 **orchestrator-prompt.md 单独成文件**的理由：prompt 是可版本化、可迭代的"代码"。调优 prompt 不用改脚本。
