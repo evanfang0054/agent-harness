@@ -154,9 +154,8 @@ else
     BRANCH="feat/auto-improvement-$(date +%Y-%m-%d)"
     state_init "$RUN_ID" "$BRANCH" "$REQUEST" "$STATE_DIR"
 
-    # fallback：用户级 ~/.gitignore_global 通常含 `.claude`，会覆盖本仓库 .gitignore 的放行规则，
-    # 因此用 -f 强制将 state.json 纳入 git 跟踪（runs/ 下的日志同理在 commit 时 -f 添加）
-    git -C "$REPO_ROOT" add -f "$STATE_FILE"
+    # 注意：state.json 是本地运行态文件（--resume 时读本地文件即可），不纳入 git 跟踪，
+    # 否则会混进 PR diff。详见 orchestrator-prompt.md 的 State.json 操作协议。
 
     # ---------- 创建 worktree 隔离工作区 ----------
     WORKTREE_PATH=$(worktree_create "$REPO_ROOT" "$RUN_ID" "$BRANCH")
@@ -230,6 +229,8 @@ trap cleanup_on_signal INT TERM
 emit_event "🚀" "" "启动 Claude 主大脑 (run_id=$RUN_ID)"
 
 # 心跳后台进程：每 30s 检查一次
+# TODO(follow-up): emit_status 尚未在此调用——加入后可每 30s 刷新状态行，
+# 当前仅 check_heartbeat 做最小存活检测，避免引入未测试的状态行刷新逻辑。
 (
     while true; do
         sleep 30
@@ -239,6 +240,8 @@ emit_event "🚀" "" "启动 Claude 主大脑 (run_id=$RUN_ID)"
 HEARTBEAT_PID=$!
 
 LAST_SIGNAL=""
+# 进程替换下 $? 拿不到 claude 退出码，用临时文件捕获
+EXIT_CODE_FILE=$(mktemp)
 while IFS= read -r line; do
     echo "$line" >> "$LOG_FILE"
     process_line "$line"
@@ -247,9 +250,9 @@ done < <(claude -p "$PROMPT" \
     --permission-mode bypassPermissions \
     --output-format stream-json \
     --verbose \
-    2> >(tee "$LOG_FILE" >&2))
-
-EXIT_CODE=$?
+    2> >(tee "$LOG_FILE" >&2); echo $? > "$EXIT_CODE_FILE")
+EXIT_CODE=$(cat "$EXIT_CODE_FILE" 2>/dev/null || echo 0)
+rm -f "$EXIT_CODE_FILE"
 kill "$HEARTBEAT_PID" 2>/dev/null || true
 
 # 判断结束状态：优先看 LAST_SIGNAL，其次看 state.intervention

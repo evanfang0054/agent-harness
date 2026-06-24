@@ -17,28 +17,33 @@
 
 **更新 current_step:**
 ```bash
-jq '.current_step = "exporting"' {{STATE_FILE}} > tmp && mv tmp {{STATE_FILE}}
+jq '.current_step = "exporting"' {{STATE_FILE}} > /tmp/al-tmp-$$ && mv /tmp/al-tmp-$$ {{STATE_FILE}}
 ```
 
 **追加已创建的 issue:**
 ```bash
-jq '.progress.issues_created += ["#1"] | .current_step = "creating_issues"' {{STATE_FILE}} > tmp && mv tmp {{STATE_FILE}}
+jq '.progress.issues_created += ["#1"] | .current_step = "creating_issues"' {{STATE_FILE}} > /tmp/al-tmp-$$ && mv /tmp/al-tmp-$$ {{STATE_FILE}}
 ```
 
 **记录已修复的 issue（含 commit hash）:**
 ```bash
-jq '.progress.fixes_completed += [{"issue": "#1", "commit": "abc123"}] | .current_step = "fixing_issue_2"' {{STATE_FILE}} > tmp && mv tmp {{STATE_FILE}}
+jq '.progress.fixes_completed += [{"issue": "#1", "commit": "abc123"}] | .current_step = "fixing_issue_2"' {{STATE_FILE}} > /tmp/al-tmp-$$ && mv /tmp/al-tmp-$$ {{STATE_FILE}}
 ```
 
 **写介入请求（遇到 4 种触发点时）:**
 ```bash
-jq '.intervention = {"reason": "具体原因", "options": ["选项1"], "current_issue": "#N"}' {{STATE_FILE}} > tmp && mv tmp {{STATE_FILE}}
+jq '.intervention = {"reason": "具体原因", "options": ["选项1"], "current_issue": "#N"}' {{STATE_FILE}} > /tmp/al-tmp-$$ && mv /tmp/al-tmp-$$ {{STATE_FILE}}
 ```
 
 **重要规则:**
 - 每次 jq 更新后，立即用 `cat {{STATE_FILE}} | jq .` 验证 JSON 有效
 - 如果 jq 失败（JSON 损坏），停止并输出 `AUTO_LOOP_STATE_ERROR`
 - 不要用文本编辑器直接改 state.json，必须用 jq
+- **state.json 是本地运行态文件，不要 `git add` 它**——它只是本地运行态（`--resume` 时读本地文件即可），不跨机器同步。把它纳入 git 跟踪会污染 PR diff。
+- jq 临时文件统一用 `/tmp/al-tmp-$$`（`$$` 是 shell PID，避免多实例碰撞），例如：
+  ```bash
+  jq '.current_step = "exporting"' {{STATE_FILE}} > /tmp/al-tmp-$$ && mv /tmp/al-tmp-$$ {{STATE_FILE}}
+  ```
 
 ## 8 步链路
 
