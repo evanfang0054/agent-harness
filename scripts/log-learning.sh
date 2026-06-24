@@ -68,6 +68,9 @@ mkdir -p "$LEARNINGS_DIR/.superpowers"
 TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
 # Build JSON using python3 (more portable than jq)
+# 注意：heredoc 用单引号 'PYTHON' 防止 shell 展开变量到 Python 源码，
+# 避免含 """ 或反斜杠的 INSIGHT 触发 Python 源码注入 / SyntaxError。
+# 所有用户数据通过环境变量传入。
 FILES_ARGS=""
 if [ $# -gt 0 ]; then
     FILES_ARGS=$(printf '%s\n' "$@" | python3 -c "import sys, json; print(json.dumps([line.strip() for line in sys.stdin if line.strip()]))")
@@ -75,16 +78,18 @@ else
     FILES_ARGS="[]"
 fi
 
-python3 << PYTHON >> "$LEARNINGS_DIR/.superpowers/learnings.jsonl"
-import json
+TS="$TS" TYPE="$TYPE" KEY="$KEY" INSIGHT="$INSIGHT" \
+    CONFIDENCE="$CONFIDENCE" SOURCE="$SOURCE" FILES_ARGS="$FILES_ARGS" \
+    python3 <<'PYTHON' >> "$LEARNINGS_DIR/.superpowers/learnings.jsonl"
+import json, os
 entry = {
-    "ts": "$TS",
-    "type": "$TYPE",
-    "key": "$KEY",
-    "insight": """$INSIGHT""",
-    "confidence": $CONFIDENCE,
-    "source": "$SOURCE",
-    "files": $FILES_ARGS
+    "ts": os.environ["TS"],
+    "type": os.environ["TYPE"],
+    "key": os.environ["KEY"],
+    "insight": os.environ["INSIGHT"],
+    "confidence": int(os.environ["CONFIDENCE"]),
+    "source": os.environ["SOURCE"],
+    "files": json.loads(os.environ["FILES_ARGS"]),
 }
 print(json.dumps(entry, ensure_ascii=False))
 PYTHON
