@@ -39,6 +39,23 @@ if [ $? -eq 0 ]; then pass "git add -f protected path allowed"; else fail "git a
 run_guard '{"tool_input":{"command":"git add README.md"}}'
 if [ $? -eq 0 ]; then pass "git add normal file passes"; else fail "git add normal file passes (got $?)"; fi
 
+# Case 6b: git add .env (dotfile) → exit 0 (NOT broad-catch)
+# Regression: broad-catch glob `*"git add ."*` substring-matched `git add .env`.
+run_guard '{"tool_input":{"command":"git add .env"}}'
+if [ $? -eq 0 ]; then pass "git add .env allowed (dotfile, not broad-catch)"; else fail "git add .env allowed (got $?)"; fi
+
+# Case 6c: git add .gitignore → exit 0 (NOT broad-catch)
+run_guard '{"tool_input":{"command":"git add .gitignore"}}'
+if [ $? -eq 0 ]; then pass "git add .gitignore allowed (dotfile)"; else fail "git add .gitignore allowed (got $?)"; fi
+
+# Case 6d: git add ./relative/path → exit 0 (NOT broad-catch)
+run_guard '{"tool_input":{"command":"git add ./src/foo.py"}}'
+if [ $? -eq 0 ]; then pass "git add ./src/foo.py allowed (relative path)"; else fail "git add ./src/foo.py allowed (got $?)"; fi
+
+# Case 6e: bare `git add .` still blocked (regression guard for the fix)
+run_guard '{"tool_input":{"command":"git add ."}}'
+if [ $? -eq 2 ]; then pass "git add . still blocked after fix"; else fail "git add . still blocked after fix (got $?)"; fi
+
 # Case 7: stderr contains reason when blocked
 run_guard '{"tool_input":{"command":"git add ."}}' >/dev/null 2>&1
 if grep -q "learnings\|superpowers\|protected\|staging" /tmp/guard-stderr.txt; then

@@ -38,16 +38,20 @@ for p in "${PROTECTED_PATHS[@]}"; do
 done
 
 # Broad-catch forms that stage everything (git add ., git add -A, git add --all)
-case "$COMMAND" in
-    *"git add ."*|*"git add -A"*|*"git add --all"*)
-        cat >&2 <<'EOF'
+# Use regex with token boundaries — `*"git add ."*` is a substring match that
+# false-positives on `git add .env`, `git add ./foo`, `git add .gitignore`.
+# Regex requires `git add .` / `-A` / `--all` to be a whole token followed by
+# whitespace or end-of-string.
+if [[ "$COMMAND" =~ (^|[[:space:]])git[[:space:]]+add[[:space:]]+\.([[:space:]]|$) ]] \
+   || [[ "$COMMAND" =~ (^|[[:space:]])git[[:space:]]+add[[:space:]]+-A([[:space:]]|$) ]] \
+   || [[ "$COMMAND" =~ (^|[[:space:]])git[[:space:]]+add[[:space:]]+--all([[:space:]]|$) ]]; then
+    cat >&2 <<'EOF'
 [guard-staging] Blocked: 'git add .' / 'git add -A' stages all files including
 runtime artifacts. List files explicitly, or use 'git add -f' to force.
 Protected paths:
 EOF
-        printf '  - %s\n' "${PROTECTED_PATHS[@]}" >&2
-        exit 2
-        ;;
-esac
+    printf '  - %s\n' "${PROTECTED_PATHS[@]}" >&2
+    exit 2
+fi
 
 exit 0
