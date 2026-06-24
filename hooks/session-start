@@ -38,6 +38,10 @@ if [ -f "$LEARNINGS_DIR/.superpowers/learnings.jsonl" ]; then
     fi
 fi
 
+# Headless skill invocation tip — unconditional, applies to every session.
+# Critical for test/CI authors; low-noise for interactive users (session-start is already verbose).
+headless_tip="\n\n## Skill Invocation Best Practice\nWhen programmatically invoking skills (tests, CI, -p mode), use imperative form:\n  ✅ 'Invoke the Skill tool with brainstorming'\n  ❌ '/brainstorming'\n"
+
 # Escape string for JSON embedding using bash parameter substitution.
 # Each ${s//old/new} is a single C-level pass - orders of magnitude
 # faster than the character-by-character loop this replaces.
@@ -54,7 +58,7 @@ escape_for_json() {
 using_superpowers_escaped=$(escape_for_json "$using_superpowers_content")
 warning_escaped=$(escape_for_json "$warning_message")
 learnings_escaped=$(escape_for_json "$learnings_content")
-session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n\n${warning_escaped}${learnings_escaped}\n</EXTREMELY_IMPORTANT>"
+session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n\n${warning_escaped}${learnings_escaped}${headless_tip}\n</EXTREMELY_IMPORTANT>"
 
 # Output context injection as JSON.
 # Cursor hooks expect additional_context (snake_case).
