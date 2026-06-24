@@ -56,6 +56,8 @@ jq '.intervention = {"reason": "具体原因", "options": ["选项1"], "current_
   ```bash
   jq '.current_step = "exporting"' {{STATE_FILE}} > /tmp/al-tmp-$$ && mv /tmp/al-tmp-$$ {{STATE_FILE}}
   ```
+- **绝对禁止调用 `scripts/auto-loop.sh` 本身**（包括 `--cleanup` / `--resume` / 任何子命令）——你运行在 auto-loop 进程内，调它会清理掉你自己运行所需的 state.json 和 runs/ 目录，导致主循环崩溃。同理禁止 `rm -rf .claude/auto-loop` 或任何对 `.claude/auto-loop/` 的删除操作。
+- **禁止调用 `git worktree remove` 或 `git worktree prune`**——你在自己的 worktree 内运行，移除它会破坏你的工作目录。worktree 的生命周期由外层 auto-loop.sh 脚本管理。
 
 ## 8 步链路
 

@@ -258,8 +258,12 @@ LOG_FILE_FOR_CLAUDE="$LOG_FILE"
 
 # 主循环：进程替换让 while 在主 shell（LAST_SIGNAL 可见），
 # claude 的 stderr 直接重定向到 LOG_FILE（不用 tee，避免退出码干扰）
+# 注意：LOG_FILE 在运行中可能被 Claude 删除（它有时会误执行 --cleanup），
+# 用 `>> "$LOG_FILE" 2>/dev/null || true` 防止脚本因文件缺失而崩溃
 while IFS= read -r line; do
-    echo "$line" >> "$LOG_FILE"
+    echo "$line" >> "$LOG_FILE" 2>/dev/null || true
+    # 如果 LOG_FILE 被删，重新创建
+    [ -f "$LOG_FILE" ] || : > "$LOG_FILE" 2>/dev/null || true
     process_line "$line"
 done < <(
     claude -p "$PROMPT" \
