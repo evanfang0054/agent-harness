@@ -205,9 +205,19 @@ REQUEST_VAL=$(state_get "$STATE_DIR" '.request')
 SCOPE_VAL="$SCOPE_DESC"
 
 # 读模板，用 jq -R --arg 安全替换占位符
-PROMPT=$(jq -nR --arg req "$REQUEST_VAL" --arg scope "$SCOPE_VAL" --arg branch "$BRANCH" --arg state "$STATE_FILE" '
-    input | gsub("{{REQUEST}}"; $req) | gsub("{{SCOPE}}"; $scope) | gsub("{{BRANCH}}"; $branch) | gsub("{{STATE_FILE}}"; $state)
-' < "$REPO_ROOT/skills/auto-loop/orchestrator-prompt.md")
+PROMPT=$(jq -nR \
+    --arg req "$REQUEST_VAL" \
+    --arg scope "$SCOPE_VAL" \
+    --arg branch "$BRANCH" \
+    --arg state "$STATE_FILE" \
+    --arg repo "$REPO_ROOT" \
+    'input
+     | gsub("{{REQUEST}}"; $req)
+     | gsub("{{SCOPE}}"; $scope)
+     | gsub("{{BRANCH}}"; $branch)
+     | gsub("{{STATE_FILE}}"; $state)
+     | gsub("{{REPO_ROOT}}"; $repo)' \
+    < "$REPO_ROOT/skills/auto-loop/orchestrator-prompt.md")
 
 PROMPT="${PROMPT}${PROMPT_DRY_RUN_NOTE:-}"
 
@@ -240,17 +250,27 @@ emit_event "🚀" "" "启动 Claude 主大脑 (run_id=$RUN_ID)"
 HEARTBEAT_PID=$!
 
 LAST_SIGNAL=""
-# 进程替换下 $? 拿不到 claude 退出码，用临时文件捕获
+# 进程替换下 $? 拿不到 claude 退出码。
+# 关键：在 <() 内把 claude 的退出码直接写入文件，再写结束标记。
+# 之前用 `; echo $? > file` 会捕获 tee 的退出码（进程替换的副作用），是 bug。
 EXIT_CODE_FILE=$(mktemp)
+LOG_FILE_FOR_CLAUDE="$LOG_FILE"
+
+# 主循环：进程替换让 while 在主 shell（LAST_SIGNAL 可见），
+# claude 的 stderr 直接重定向到 LOG_FILE（不用 tee，避免退出码干扰）
 while IFS= read -r line; do
     echo "$line" >> "$LOG_FILE"
     process_line "$line"
-done < <(claude -p "$PROMPT" \
-    --plugin-dir "$REPO_ROOT" \
-    --permission-mode bypassPermissions \
-    --output-format stream-json \
-    --verbose \
-    2> >(tee "$LOG_FILE" >&2); echo $? > "$EXIT_CODE_FILE")
+done < <(
+    claude -p "$PROMPT" \
+        --plugin-dir "$REPO_ROOT" \
+        --permission-mode bypassPermissions \
+        --output-format stream-json \
+        --verbose \
+        2>>"$LOG_FILE_FOR_CLAUDE"
+    # 紧跟在 claude 后（分号前无其他命令），$? 是 claude 的真实退出码
+    echo $? > "$EXIT_CODE_FILE"
+)
 EXIT_CODE=$(cat "$EXIT_CODE_FILE" 2>/dev/null || echo 0)
 rm -f "$EXIT_CODE_FILE"
 kill "$HEARTBEAT_PID" 2>/dev/null || true

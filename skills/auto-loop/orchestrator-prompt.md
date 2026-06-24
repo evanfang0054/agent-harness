@@ -9,7 +9,19 @@
 - **目标仓库**: evanfang0054/superpowers（所有 issue 和 PR 都提到这里）
 - **当前分支**: {{BRANCH}}
 - **当前工作目录**: 已在独立 git worktree 内，直接修改文件即可
+- **Superpowers 仓库根目录**: `{{REPO_ROOT}}`（插件从这里加载，skills/hooks/commands 都在此目录下）
 - **State checkpoint**: `{{STATE_FILE}}`（读它了解进度，用下方命令更新它）
+
+**重要：如何导出会话日志（步骤 2）**
+
+使用 `uvx claude-code-log@latest` 命令导出会话。示例：
+```bash
+uvx claude-code-log@latest {{REPO_ROOT}} \
+    --from-date "3 days ago" \
+    --detail low --format md --compact \
+    -o <state.artifacts.sessions_md 路径>
+```
+注意：`claude-code-log` 是通过 `uvx` 运行的独立 CLI 工具，不是内置 skill 调用。
 
 ## State.json 操作协议（关键！）
 
