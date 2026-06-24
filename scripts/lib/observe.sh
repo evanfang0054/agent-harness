@@ -32,10 +32,16 @@ emit_heartbeat() {
 
 # process_line <json_line> — 处理单行 stream-json 事件
 # 在主 shell 执行，直接修改全局 LAST_EVENT_TIME / LAST_SIGNAL
+# 同时把心跳时间戳落盘，让后台心跳子 shell 能读到最新值（子 shell 无法共享父 shell 的变量）
 process_line() {
     local line="$1"
     [ -z "$line" ] && return
     LAST_EVENT_TIME=$(date +%s)
+    # 心跳子 shell 隔离问题：后台子 shell fork 后无法看到父 shell 对 LAST_EVENT_TIME 的更新。
+    # 用一个共享文件做单向通信：process_line 写，子 shell 读。原子性足以支撑 30s 轮询。
+    if [ -n "${HEARTBEAT_TIMESTAMP_FILE:-}" ] && [ -d "$(dirname "${HEARTBEAT_TIMESTAMP_FILE:-}")" ]; then
+        echo "$LAST_EVENT_TIME" > "${HEARTBEAT_TIMESTAMP_FILE}" 2>/dev/null || true
+    fi
 
     # 先检测信号关键字（result 事件的 result 字段里可能含完成/介入信号）
     local result_text
@@ -109,11 +115,16 @@ log_raw() {
 }
 
 # check_heartbeat <step> — 检查是否超阈值，超了打印心跳
+# 优先从 HEARTBEAT_TIMESTAMP_FILE（由主 shell 的 process_line 实时更新）读取，
+# 否则回退到本进程内的 LAST_EVENT_TIME（适用于前台同步调用场景）
 check_heartbeat() {
     local step="$1"
-    local now elapsed
+    local now elapsed last_ts="${LAST_EVENT_TIME}"
+    if [ -n "${HEARTBEAT_TIMESTAMP_FILE:-}" ] && [ -f "${HEARTBEAT_TIMESTAMP_FILE}" ]; then
+        last_ts=$(cat "${HEARTBEAT_TIMESTAMP_FILE}" 2>/dev/null || echo "${LAST_EVENT_TIME}")
+    fi
     now=$(date +%s)
-    elapsed=$((now - LAST_EVENT_TIME))
+    elapsed=$((now - last_ts))
     if [ "$elapsed" -ge "$HEARTBEAT_THRESHOLD" ]; then
         emit_heartbeat "$step" "$elapsed"
     fi

@@ -229,6 +229,10 @@ mkdir -p "$(dirname "$LOG_FILE")"
 cleanup_on_signal() {
     echo ""
     emit_event "🛑" "" "收到中断信号，正在保存 checkpoint..."
+    # 清理心跳子进程，避免成为孤儿（#22 修复的副效应：信号路径必须显式 kill）
+    if [ -n "${HEARTBEAT_PID:-}" ]; then
+        kill "$HEARTBEAT_PID" 2>/dev/null || true
+    fi
     echo "运行已暂停。恢复: $0 --resume"
     cd "$ORIGINAL_PWD" 2>/dev/null || true
     exit 130
@@ -241,6 +245,10 @@ emit_event "🚀" "" "启动 Claude 主大脑 (run_id=$RUN_ID)"
 # 心跳后台进程：每 30s 检查一次
 # TODO(follow-up): emit_status 尚未在此调用——加入后可每 30s 刷新状态行，
 # 当前仅 check_heartbeat 做最小存活检测，避免引入未测试的状态行刷新逻辑。
+# 注意：子 shell 无法共享父 shell 的 LAST_EVENT_TIME 变量，process_line 会把
+# 最新时间戳写入 HEARTBEAT_TIMESTAMP_FILE，子 shell 通过该文件读取（#22 修复）。
+HEARTBEAT_TIMESTAMP_FILE="$STATE_DIR/.heartbeat.timestamp"
+echo "$(date +%s)" > "$HEARTBEAT_TIMESTAMP_FILE"
 (
     while true; do
         sleep 30
