@@ -110,6 +110,8 @@ if $RESUME; then
         exit 0
     fi
     check_prerequisites
+    # 恢复运行也检查工作区，避免脏改动混入 auto-loop 提交（#12）
+    check_clean_workspace
     INTERVENTION=$(state_get "$STATE_DIR" '.intervention')
     if [ "$INTERVENTION" != "null" ]; then
         # 显示介入请求
