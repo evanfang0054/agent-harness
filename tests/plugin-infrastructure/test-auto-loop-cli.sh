@@ -33,4 +33,11 @@ if grep -q "git.*status\|dirty\|clean" "$SCRIPT"; then pass "script has dirty-ch
 # Case 6: 脚本包含 worktree 隔离逻辑
 if grep -q "worktree_create\|worktree_remove\|lib/worktree" "$SCRIPT"; then pass "script integrates worktree"; else fail "script integrates worktree"; fi
 
+# Case 7: orchestrator-prompt 包含 0-issue 退出指令
+PROMPT_FILE="$REPO_ROOT/skills/auto-loop/orchestrator-prompt.md"
+if grep -q "0 个问题\|0 issues\|无问题" "$PROMPT_FILE"; then pass "prompt handles 0-issue case"; else fail "prompt handles 0-issue case"; fi
+
+# Case 8: orchestrator-prompt 包含 push 失败信号
+if grep -q "AUTO_LOOP_PUSH_FAILED" "$PROMPT_FILE"; then pass "prompt defines push-failed signal"; else fail "prompt defines push-failed signal"; fi
+
 print_summary "auto-loop.sh CLI"
