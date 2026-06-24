@@ -24,6 +24,7 @@ PROJECT=""
 ALL_PROJECTS=false
 RESUME=false
 CLEANUP=false
+DRY_RUN=false
 REQUEST=""
 ORIGINAL_PWD="$PWD"
 
@@ -124,6 +125,8 @@ if $RESUME; then
         exit 0
     fi
     echo "检测到未完成运行，从 $(state_get "$STATE_DIR" '.current_step') 继续..."
+    # 恢复 scope 描述，避免下游 prompt 组装时空串
+    SCOPE_DESC="(从上次运行恢复)"
     # 继续 fall-through 到主流程
 else
     # ---------- 全新运行 ----------
@@ -219,18 +222,17 @@ emit_event "🚀" "" "启动 Claude 主大脑 (run_id=$RUN_ID)"
 HEARTBEAT_PID=$!
 
 LAST_SIGNAL=""
-claude -p "$PROMPT" \
+while IFS= read -r line; do
+    echo "$line" >> "$LOG_FILE"
+    process_line "$line"
+done < <(claude -p "$PROMPT" \
     --plugin-dir "$REPO_ROOT" \
     --permission-mode bypassPermissions \
     --output-format stream-json \
     --verbose \
-    2> >(tee "$LOG_FILE" >&2) \
-    | while IFS= read -r line; do
-        echo "$line" >> "$LOG_FILE"
-        process_line "$line"
-    done
+    2> >(tee "$LOG_FILE" >&2))
 
-EXIT_CODE=${PIPESTATUS[0]}
+EXIT_CODE=$?
 kill "$HEARTBEAT_PID" 2>/dev/null || true
 
 # 判断结束状态：优先看 LAST_SIGNAL，其次看 state.intervention
