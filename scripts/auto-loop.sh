@@ -204,15 +204,15 @@ BRANCH=$(state_get "$STATE_DIR" '.branch')
 REQUEST_VAL=$(state_get "$STATE_DIR" '.request')
 SCOPE_VAL="$SCOPE_DESC"
 
-# 读模板，用 jq -R --arg 安全替换占位符
-PROMPT=$(jq -nR \
+# 读模板，用 jq --raw-input slurp 把整个文件作为一个字符串读取
+# （jq -R 默认逐行读，input 只取第一行；--slurp 把所有行合成一个 JSON 字符串）
+PROMPT=$(jq --raw-input --slurp \
     --arg req "$REQUEST_VAL" \
     --arg scope "$SCOPE_VAL" \
     --arg branch "$BRANCH" \
     --arg state "$STATE_FILE" \
     --arg repo "$REPO_ROOT" \
-    'input
-     | gsub("{{REQUEST}}"; $req)
+    'gsub("{{REQUEST}}"; $req)
      | gsub("{{SCOPE}}"; $scope)
      | gsub("{{BRANCH}}"; $branch)
      | gsub("{{STATE_FILE}}"; $state)
