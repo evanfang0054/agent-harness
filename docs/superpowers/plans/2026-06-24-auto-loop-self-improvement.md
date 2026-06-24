@@ -80,6 +80,20 @@ if [ "$RESULT" = "test-run-001" ]; then pass "state_get reads field"; else fail 
 state_clear "$STATE_DIR"
 if [ ! -f "$STATE_DIR/state.json" ]; then pass "state_clear removes file"; else fail "state_clear removes file"; fi
 
+# Case 6: state_init 安全处理含特殊字符的 request（引号、管道符）
+state_init "test-special" "feat/x" '含"双引号"和|管道符的请求' "$STATE_DIR"
+RESULT=$(state_get "$STATE_DIR" '.request')
+if echo "$RESULT" | grep -q "双引号"; then pass "state_init escapes special chars"; else fail "state_init escapes special chars"; fi
+# 验证 JSON 仍然有效
+if jq empty "$STATE_DIR/state.json" 2>/dev/null; then pass "state.json valid with special chars"; else fail "state.json valid with special chars"; fi
+
+# Case 7: state_set_str 安全写入字符串（含特殊字符）
+state_init "test-str" "feat/y" "normal" "$STATE_DIR"
+state_set_str "$STATE_DIR" '.current_step' '含"引号"的值'
+RESULT=$(state_get "$STATE_DIR" '.current_step')
+if echo "$RESULT" | grep -q "引号"; then pass "state_set_str escapes special chars"; else fail "state_set_str escapes"; fi
+
+state_clear "$STATE_DIR"
 print_summary "auto-loop state.sh"
 ```
 
@@ -96,35 +110,47 @@ Expected: FAIL，`scripts/lib/state.sh: No such file or directory`
 # Usage: source scripts/lib/state.sh
 
 # state_init <run_id> <branch> <request> <state_dir>
+# 用 jq -R --arg 安全注入，防止 request 含特殊字符破坏 JSON
 state_init() {
     local run_id="$1" branch="$2" request="$3" state_dir="$4"
     mkdir -p "$state_dir/runs/$run_id"
-    cat > "$state_dir/state.json" <<EOF
-{
-  "run_id": "$run_id",
-  "started_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-  "branch": "$branch",
-  "request": "$request",
-  "current_step": "init",
-  "progress": {
-    "branch_created": false,
-    "sessions_exported": false,
-    "analysis_completed": false,
-    "issues_created": [],
-    "fixes_completed": [],
-    "current_fix": null,
-    "pr_created": false
-  },
-  "artifacts": {
-    "sessions_md": "$state_dir/runs/$run_id/sessions.md",
-    "analysis_json": "$state_dir/runs/$run_id/analysis.json",
-    "issues_json": "$state_dir/runs/$run_id/issues.json"
-  },
-  "worktree_path": "$state_dir/../worktrees/auto-loop-$run_id",
-  "original_pwd": "$PWD",
-  "intervention": null
-}
-EOF
+    local wt_path="$state_dir/../worktrees/auto-loop-$run_id"
+    local started_at; started_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+    local orig_pwd="$PWD"
+    jq -n \
+        --arg run_id "$run_id" \
+        --arg branch "$branch" \
+        --arg request "$request" \
+        --arg started_at "$started_at" \
+        --arg sessions_md "$state_dir/runs/$run_id/sessions.md" \
+        --arg analysis_json "$state_dir/runs/$run_id/analysis.json" \
+        --arg issues_json "$state_dir/runs/$run_id/issues.json" \
+        --arg wt_path "$wt_path" \
+        --arg orig_pwd "$orig_pwd" \
+        '{
+            run_id: $run_id,
+            started_at: $started_at,
+            branch: $branch,
+            request: $request,
+            current_step: "init",
+            progress: {
+                branch_created: false,
+                sessions_exported: false,
+                analysis_completed: false,
+                issues_created: [],
+                fixes_completed: [],
+                current_fix: null,
+                pr_created: false
+            },
+            artifacts: {
+                sessions_md: $sessions_md,
+                analysis_json: $analysis_json,
+                issues_json: $issues_json
+            },
+            worktree_path: $wt_path,
+            original_pwd: $orig_pwd,
+            intervention: null
+        }' > "$state_dir/state.json"
 }
 
 # state_get <state_dir> <jq_path>
@@ -134,10 +160,19 @@ state_get() {
 }
 
 # state_set <state_dir> <jq_path> <value_json>
+# value_json 必须是合法 JSON 值表达式（如 '["#1"]'、'"feat/x"'、'true'）
 state_set() {
     local state_dir="$1" path="$2" value="$3"
     local tmp="$state_dir/state.json.tmp"
     jq "$path = $value" "$state_dir/state.json" > "$tmp" && mv "$tmp" "$state_dir/state.json"
+}
+
+# state_set_str <state_dir> <jq_path> <raw_string>
+# 安全版：自动用 jq -R 转义字符串，调用者传普通字符串即可
+state_set_str() {
+    local state_dir="$1" path="$2" raw="$3"
+    local tmp="$state_dir/state.json.tmp"
+    jq --arg v "$raw" "$path = \$v" "$state_dir/state.json" > "$tmp" && mv "$tmp" "$state_dir/state.json"
 }
 
 # state_clear <state_dir>
@@ -149,7 +184,7 @@ state_clear() {
 - [ ] **Step 4: 运行测试验证通过**
 
 Run: `bash tests/plugin-infrastructure/test-auto-loop-state.sh`
-Expected: 5 个 `[PASS]`，`STATUS: PASSED`
+Expected: 7 个 `[PASS]`，`STATUS: PASSED`
 
 - [ ] **Step 5: 注册到 run-all.sh 并 commit**
 
@@ -237,20 +272,33 @@ Expected: FAIL，`scripts/lib/worktree.sh: No such file or directory`
 
 # worktree_create <repo_root> <run_id> <branch_name>
 # 输出 worktree 绝对路径到 stdout
+# 处理分支重名：若分支已存在则复用，若 worktree 已存在则复用
 worktree_create() {
     local repo_root="$1" run_id="$2" branch="$3"
     local wt_root="$repo_root/.claude/worktrees"
     local wt_path="$wt_root/auto-loop-$run_id"
     mkdir -p "$wt_root"
-    git -C "$repo_root" worktree add -q -b "$branch" "$wt_path" 2>/dev/null || {
-        # worktree 已存在则复用
-        if [ -d "$wt_path" ]; then
-            echo "$wt_path"
-            return 0
-        fi
-        echo "错误: worktree 创建失败" >&2
-        return 1
-    }
+
+    # worktree 已存在则直接复用
+    if [ -d "$wt_path" ] && git -C "$wt_path" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        echo "$wt_path"
+        return 0
+    fi
+
+    # 检查分支是否已存在
+    if git -C "$repo_root" show-ref --verify --quiet "refs/heads/$branch" 2>/dev/null; then
+        # 分支已存在，worktree add 不带 -b
+        git -C "$repo_root" worktree add -q "$wt_path" "$branch" 2>/dev/null || {
+            echo "错误: worktree 创建失败（分支 $branch 已存在但 worktree add 失败）" >&2
+            return 1
+        }
+    else
+        # 新分支
+        git -C "$repo_root" worktree add -q -b "$branch" "$wt_path" 2>/dev/null || {
+            echo "错误: worktree 创建失败" >&2
+            return 1
+        }
+    fi
     echo "$wt_path"
 }
 
@@ -326,27 +374,47 @@ if echo "$OUTPUT" | grep -q "分支已创建"; then pass "emit_event has message
 OUTPUT=$(emit_status "[3/8]" "Issue #1 SDD执行中" "思考 2s" "3.2K tok" 2>&1)
 if echo "$OUTPUT" | grep -q $'\r'; then pass "emit_status uses carriage return"; else fail "emit_status uses carriage return"; fi
 
-# Case 3: parse_stream_event 处理 tool_use 事件
+# Case 3: process_line 处理 tool_use 事件
 MOCK_TOOL_EVENT='{"type":"stream_event","event":{"type":"tool_use","name":"Bash","input":{"command":"git checkout -b feat/x"}}}'
-RESULT=$(echo "$MOCK_TOOL_EVENT" | parse_stream_event 2>&1)
-if echo "$RESULT" | grep -q "🔧"; then pass "parse tool_use emits wrench icon"; else fail "parse tool_use emits wrench icon"; fi
+RESULT=$(process_line "$MOCK_TOOL_EVENT" 2>&1)
+if echo "$RESULT" | grep -q "🔧"; then pass "process tool_use emits wrench icon"; else fail "process tool_use emits wrench icon"; fi
 
-# Case 4: parse_stream_event 处理 api_retry 事件
+# Case 4: process_line 处理 api_retry 事件
 MOCK_RETRY='{"type":"system","subtype":"api_retry","attempt":1,"max_retries":5,"retry_delay_ms":2000,"error_status":429,"error":"rate_limit"}'
-RESULT=$(echo "$MOCK_RETRY" | parse_stream_event 2>&1)
-if echo "$RESULT" | grep -q "⏳"; then pass "parse api_retry emits hourglass"; else fail "parse api_retry emits hourglass"; fi
-if echo "$RESULT" | grep -q "rate_limit\|429"; then pass "parse api_retry shows error"; else fail "parse api_retry shows error"; fi
+RESULT=$(process_line "$MOCK_RETRY" 2>&1)
+if echo "$RESULT" | grep -q "⏳"; then pass "process api_retry emits hourglass"; else fail "process api_retry emits hourglass"; fi
 
-# Case 5: parse_stream_event 处理 text_delta（静默丢弃，不打印 token 噪音）
+# Case 5: process_line 处理 text_delta（静默丢弃）
 MOCK_TEXT='{"type":"stream_event","event":{"delta":{"type":"text_delta","text":"some token"}}}'
-RESULT=$(echo "$MOCK_TEXT" | parse_stream_event 2>&1)
-if [ -z "$RESULT" ]; then pass "text_delta suppressed by default"; else fail "text_delta suppressed by default (got: $RESULT)"; fi
+RESULT=$(process_line "$MOCK_TEXT" 2>&1)
+if [ -z "$RESULT" ]; then pass "text_delta suppressed by default"; else fail "text_delta suppressed (got: $RESULT)"; fi
 
-# Case 6: log_raw 写入日志文件
+# Case 6: process_line 检测 AUTO_LOOP_COMPLETE 信号
+LAST_SIGNAL=""
+process_line '{"type":"result","result":"All done.\nAUTO_LOOP_COMPLETE"}' >/dev/null 2>&1
+if [ "$LAST_SIGNAL" = "COMPLETE" ]; then pass "detects AUTO_LOOP_COMPLETE"; else fail "detects AUTO_LOOP_COMPLETE (got: $LAST_SIGNAL)"; fi
+
+# Case 7: process_line 检测 AUTO_LOOP_INTERVENTION_NEEDED 信号
+LAST_SIGNAL=""
+process_line '{"type":"result","result":"Stopped.\nAUTO_LOOP_INTERVENTION_NEEDED"}' >/dev/null 2>&1
+if [ "$LAST_SIGNAL" = "INTERVENTION" ]; then pass "detects INTERVENTION_NEEDED"; else fail "detects INTERVENTION_NEEDED (got: $LAST_SIGNAL)"; fi
+
+# Case 8: LAST_EVENT_TIME 在 process_line 后更新（主 shell 可见）
+LAST_EVENT_TIME=0
+process_line "$MOCK_TOOL_EVENT" >/dev/null 2>&1
+if [ "$LAST_EVENT_TIME" -gt 0 ]; then pass "LAST_EVENT_TIME updated in main shell"; else fail "LAST_EVENT_TIME updated in main shell"; fi
+
+# Case 9: check_heartbeat 超阈值时输出
+LAST_EVENT_TIME=0  # 模拟很久以前
+HEARTBEAT_THRESHOLD=0  # 立即触发
+RESULT=$(check_heartbeat "[5/8]" 2>&1)
+if echo "$RESULT" | grep -q "等待"; then pass "check_heartbeat emits when threshold exceeded"; else fail "check_heartbeat emits"; fi
+
+# Case 10: log_raw 写入日志文件
 echo "$MOCK_TOOL_EVENT" | log_raw "$LOG_FILE"
 assert_file_exists "$LOG_FILE" "log_raw creates file"
 COUNT=$(grep -c "tool_use" "$LOG_FILE" 2>/dev/null || echo 0)
-if [ "$COUNT" = "1" ]; then pass "log_raw appends event"; else fail "log_raw appends event (count=$COUNT)"; fi
+if [ "$COUNT" = "1" ]; then pass "log_raw appends event"; else fail "log_raw appends (count=$COUNT)"; fi
 
 rm -f "$LOG_FILE"
 print_summary "auto-loop observe.sh"
@@ -361,12 +429,16 @@ Expected: FAIL，`scripts/lib/observe.sh: No such file or directory`
 
 ```bash
 #!/usr/bin/env bash
-# observe.sh — stream-json 解析 + 三层可观测性输出
+# observe.sh — stream-json 解析 + 三层可观测性输出 + 信号检测
 # Usage: source scripts/lib/observe.sh
+#
+# 关键设计：process_line 在主 shell 执行（不用管道），LAST_EVENT_TIME 对调用者可见。
+# 调用者用 while read 循环逐行喂给 process_line，而非管道。
 
-# 全局状态
+# 全局状态（主 shell 维护）
 LAST_EVENT_TIME=$(date +%s)
-HEARTBEAT_THRESHOLD=60  # 秒
+LAST_SIGNAL=""  # COMPLETE | INTERVENTION | PUSH_FAILED | STATE_ERROR | ""
+HEARTBEAT_THRESHOLD=60
 
 # emit_event <icon> <step> <message>
 emit_event() {
@@ -388,50 +460,76 @@ emit_heartbeat() {
     echo "⏳ $step 等待 Claude 响应中... (已等待 ${elapsed}s)" >&2
 }
 
-# parse_stream_event — 从 stdin 读一行 JSON，解析并输出事件
-# 用法: echo "$JSON" | parse_stream_event
-parse_stream_event() {
-    local line
-    while IFS= read -r line; do
-        [ -z "$line" ] && continue
-        local type subtype
-        type=$(echo "$line" | jq -r '.type // empty' 2>/dev/null)
-        subtype=$(echo "$line" | jq -r '.subtype // empty' 2>/dev/null)
+# process_line <json_line> — 处理单行 stream-json 事件
+# 在主 shell 执行，直接修改全局 LAST_EVENT_TIME / LAST_SIGNAL
+process_line() {
+    local line="$1"
+    [ -z "$line" ] && return
+    LAST_EVENT_TIME=$(date +%s)
 
-        case "$type" in
-            stream_event)
-                local event_type
-                event_type=$(echo "$line" | jq -r '.event.type // empty' 2>/dev/null)
-                case "$event_type" in
-                    tool_use)
-                        local tool_name
-                        tool_name=$(echo "$line" | jq -r '.event.name // "unknown"' 2>/dev/null)
-                        emit_event "🔧" "" "工具调用: $tool_name"
-                        ;;
-                    tool_result)
-                        emit_event "✅" "" "工具返回"
-                        ;;
-                esac
-                # text_delta 默认静默
-                ;;
-            system)
-                case "$subtype" in
-                    api_retry)
-                        local attempt max delay error
-                        attempt=$(echo "$line" | jq -r '.attempt // "?"' 2>/dev/null)
-                        max=$(echo "$line" | jq -r '.max_retries // "?"' 2>/dev/null)
-                        delay=$(echo "$line" | jq -r '.retry_delay_ms // "?"' 2>/dev/null)
-                        error=$(echo "$line" | jq -r '.error // "unknown"' 2>/dev/null)
-                        emit_event "⏳" "" "API 重试 $attempt/$max，ETA ${delay}ms，原因: $error"
-                        ;;
-                esac
-                ;;
-            result)
-                emit_event "🏁" "" "Claude 完成"
-                ;;
-        esac
-        LAST_EVENT_TIME=$(date +%s)
-    done
+    # 先检测信号关键字（result 事件的 result 字段里可能含完成/介入信号）
+    local result_text
+    result_text=$(echo "$line" | jq -r '.result // empty' 2>/dev/null)
+    if [ -n "$result_text" ]; then
+        if echo "$result_text" | grep -q "AUTO_LOOP_COMPLETE"; then
+            LAST_SIGNAL="COMPLETE"
+            emit_event "🏁" "" "Claude 完成（AUTO_LOOP_COMPLETE）"
+            return
+        fi
+        if echo "$result_text" | grep -q "AUTO_LOOP_INTERVENTION_NEEDED"; then
+            LAST_SIGNAL="INTERVENTION"
+            emit_event "⚠️" "" "Claude 请求介入（AUTO_LOOP_INTERVENTION_NEEDED）"
+            return
+        fi
+        if echo "$result_text" | grep -q "AUTO_LOOP_PUSH_FAILED"; then
+            LAST_SIGNAL="PUSH_FAILED"
+            emit_event "❌" "" "Claude push 失败"
+            return
+        fi
+        if echo "$result_text" | grep -q "AUTO_LOOP_STATE_ERROR"; then
+            LAST_SIGNAL="STATE_ERROR"
+            emit_event "❌" "" "state.json 错误"
+            return
+        fi
+    fi
+
+    local type subtype
+    type=$(echo "$line" | jq -r '.type // empty' 2>/dev/null)
+    subtype=$(echo "$line" | jq -r '.subtype // empty' 2>/dev/null)
+
+    case "$type" in
+        stream_event)
+            local event_type
+            event_type=$(echo "$line" | jq -r '.event.type // empty' 2>/dev/null)
+            case "$event_type" in
+                tool_use)
+                    local tool_name
+                    tool_name=$(echo "$line" | jq -r '.event.name // "unknown"' 2>/dev/null)
+                    emit_event "🔧" "" "工具调用: $tool_name"
+                    ;;
+                tool_result)
+                    emit_event "✅" "" "工具返回"
+                    ;;
+            esac
+            # text_delta 默认静默（防刷屏）
+            ;;
+        system)
+            case "$subtype" in
+                api_retry)
+                    local attempt max delay error
+                    attempt=$(echo "$line" | jq -r '.attempt // "?"' 2>/dev/null)
+                    max=$(echo "$line" | jq -r '.max_retries // "?"' 2>/dev/null)
+                    delay=$(echo "$line" | jq -r '.retry_delay_ms // "?"' 2>/dev/null)
+                    error=$(echo "$line" | jq -r '.error // "unknown"' 2>/dev/null)
+                    emit_event "⏳" "" "API 重试 $attempt/$max，ETA ${delay}ms，原因: $error"
+                    ;;
+            esac
+            ;;
+        result)
+            # 未匹配信号的 result
+            emit_event "🏁" "" "Claude 完成"
+            ;;
+    esac
 }
 
 # log_raw <log_file> — 从 stdin 读，原样追加到日志
@@ -455,7 +553,7 @@ check_heartbeat() {
 - [ ] **Step 4: 运行测试验证通过**
 
 Run: `bash tests/plugin-infrastructure/test-auto-loop-observe.sh`
-Expected: 6 个 `[PASS]`，`STATUS: PASSED`
+Expected: 10 个 `[PASS]`，`STATUS: PASSED`
 
 - [ ] **Step 5: 注册到 run-all.sh 并 commit**
 
@@ -463,7 +561,7 @@ Expected: 6 个 `[PASS]`，`STATUS: PASSED`
 
 ```bash
 git add scripts/lib/observe.sh tests/plugin-infrastructure/test-auto-loop-observe.sh tests/plugin-infrastructure/run-all.sh
-git commit -m "feat(auto-loop): add observe.sh stream-json parser with 3-layer observability"
+git commit -m "feat(auto-loop): add observe.sh with signal detection and heartbeat in main shell"
 ```
 
 ---
@@ -486,20 +584,55 @@ git commit -m "feat(auto-loop): add observe.sh stream-json parser with 3-layer o
 - **扫描范围**: {{SCOPE}}
 - **目标仓库**: evanfang0054/superpowers（所有 issue 和 PR 都提到这里）
 - **当前分支**: {{BRANCH}}
-- **State checkpoint**: 见 `{{STATE_FILE}}`（若存在，从 current_step 断点继续）
+- **当前工作目录**: 已在独立 git worktree 内，直接修改文件即可
+- **State checkpoint**: `{{STATE_FILE}}`（读它了解进度，用下方命令更新它）
+
+## State.json 操作协议（关键！）
+
+你必须在每步完成后更新 state.json。state.json 路径: `{{STATE_FILE}}`
+
+**更新 current_step:**
+```bash
+jq '.current_step = "exporting"' {{STATE_FILE}} > tmp && mv tmp {{STATE_FILE}}
+```
+
+**追加已创建的 issue:**
+```bash
+jq '.progress.issues_created += ["#1"] | .current_step = "creating_issues"' {{STATE_FILE}} > tmp && mv tmp {{STATE_FILE}}
+```
+
+**记录已修复的 issue（含 commit hash）:**
+```bash
+jq '.progress.fixes_completed += [{"issue": "#1", "commit": "abc123"}] | .current_step = "fixing_issue_2"' {{STATE_FILE}} > tmp && mv tmp {{STATE_FILE}}
+```
+
+**写介入请求（遇到 4 种触发点时）:**
+```bash
+jq '.intervention = {"reason": "具体原因", "options": ["选项1"], "current_issue": "#N"}' {{STATE_FILE}} > tmp && mv tmp {{STATE_FILE}}
+```
+
+**重要规则:**
+- 每次 jq 更新后，立即用 `cat {{STATE_FILE}} | jq .` 验证 JSON 有效
+- 如果 jq 失败（JSON 损坏），停止并输出 `AUTO_LOOP_STATE_ERROR`
+- 不要用文本编辑器直接改 state.json，必须用 jq
 
 ## 8 步链路
 
-1. **创建分支** `feat/auto-improvement-$(date +%Y-%m-%d)`（若 state 已记录则跳过）
+1. **创建分支** `feat/auto-improvement-$(date +%Y-%m-%d)`（若 state.progress.branch_created=true 则跳过）
+   - 完成后: `jq '.progress.branch_created = true | .current_step = "exporting"'`
 2. **导出会话**: 调用 claude-code-log skill，`--detail low --format md --compact`，导出到 state.artifacts.sessions_md
+   - 完成后: `jq '.progress.sessions_exported = true | .current_step = "analyzing"'`
 3. **分析会话**: 识别问题模式（代码 bug / 流程问题 / skill 改进），输出 analysis.json
+   - 完成后: `jq '.progress.analysis_completed = true | .current_step = "creating_issues"'`
+   - **如果发现 0 个问题**: 直接跳到步骤 7（无需修复），在 PR 描述里说明"分析未发现问题"
 4. **提 issues**: 对每个问题 `gh issue create`，先 `gh issue list` 去重；全部提到 evanfang0054/superpowers
+   - 每个 issue 成功后: `jq '.progress.issues_created += ["#N"]'`
 5. **逐个 SDD 修复**: 对每个 issue 走 brainstorming → writing-plans → subagent-driven-development
+   - 每完成一个: `jq '.progress.fixes_completed += [{"issue":"#N","commit":"abc"}]'`
 6. **验证**: 调用 verification-before-completion
-7. **push**: `git push -u origin <branch>`
+7. **push**: `git push -u origin <branch>`（若 push 失败，输出 `AUTO_LOOP_PUSH_FAILED` 并退出）
 8. **创建 PR**: `gh pr create`，body 关联 `closes #N`
-
-每完成一步，更新 state.json 的 `current_step` 和 `progress`。
+   - 完成后: `jq '.progress.pr_created = true | .current_step = "done"'`
 
 ## 最保守决策原则
 
@@ -511,8 +644,12 @@ git commit -m "feat(auto-loop): add observe.sh stream-json parser with 3-layer o
 
 ## 介入协议（4 种触发点 → 写 intervention 退出）
 
-遇到以下情况时，**立即停止工作，写入 state.json 的 intervention 字段，然后输出 `AUTO_LOOP_INTERVENTION_NEEDED` 退出**：
+遇到以下情况时：
+1. **先写 state.json**: `jq '.intervention = {...}'`
+2. **再输出关键字**: 独立一行输出 `AUTO_LOOP_INTERVENTION_NEEDED`
+3. **然后退出**: 停止工作
 
+**4 种触发点:**
 1. **不可逆风险**: 所有方案都涉及 force push / 删分支 / 删文件
 2. **矛盾**: 两个 issue 互相冲突，修一个会坏另一个
 3. **低置信度**: issue 可能是误报（置信度 < 70%）
@@ -527,13 +664,16 @@ intervention 字段格式：
 }
 ```
 
+## 完成信号
+
+所有步骤完成后：
+1. 确保 state.json 的 `.current_step = "done"` 且 `.progress.pr_created = true`
+2. 输出 PR URL
+3. 独立一行输出 `AUTO_LOOP_COMPLETE`
+
 ## 可用 Skills
 
 通过 `--plugin-dir superpowers` 加载：claude-code-log / brainstorming / writing-plans / subagent-driven-development / verification-before-completion / finishing-a-development-branch
-
-## 完成信号
-
-所有步骤完成后，输出 PR URL，然后输出 `AUTO_LOOP_COMPLETE`。
 ```
 
 - [ ] **Step 2: 验证文件创建**
@@ -696,6 +836,17 @@ check_git_remote() {
         echo "错误: 未配置 git remote origin" >&2
         exit 1
     fi
+    # 验证 origin 指向用户 fork（evanfang0054/superpowers），而非 upstream
+    local origin_url
+    origin_url=$(git -C "$REPO_ROOT" remote get-url origin 2>/dev/null)
+    if ! echo "$origin_url" | grep -q "evanfang0054/superpowers"; then
+        echo "警告: origin ($origin_url) 不是 evanfang0054/superpowers" >&2
+        echo "PR 将推到此 remote。如需推到 fork，请先配置:" >&2
+        echo "  git remote set-url origin <your-fork-url>" >&2
+        echo "继续运行? (y/N)" >&2
+        read -r CONFIRM
+        [ "$CONFIRM" = "y" ] || exit 1
+    fi
 }
 
 # ---------- 恢复模式 ----------
@@ -777,26 +928,18 @@ if $RESUME; then
     fi
 fi
 
-# ---------- 组装 prompt ----------
-SCOPE_ARG=""
-if $ALL_PROJECTS; then
-    SCOPE_ARG="--all-projects"
-elif [ -n "$PROJECT" ]; then
-    SCOPE_ARG="--project $PROJECT"
-fi
-
+# ---------- 组装 prompt（用 jq 安全注入，避免 sed 特殊字符问题） ----------
 RUN_ID=$(state_get "$STATE_DIR" '.run_id')
 BRANCH=$(state_get "$STATE_DIR" '.branch')
 REQUEST_VAL=$(state_get "$STATE_DIR" '.request')
+SCOPE_VAL="$SCOPE_DESC"
 
-PROMPT=$(sed \
-    -e "s|{{REQUEST}}|$REQUEST_VAL|g" \
-    -e "s|{{SCOPE}}|$SCOPE_DESC|g" \
-    -e "s|{{BRANCH}}|$BRANCH|g" \
-    -e "s|{{STATE_FILE}}|$STATE_FILE|g" \
-    "$REPO_ROOT/skills/auto-loop/orchestrator-prompt.md")
+# 读模板，用 jq -R --arg 安全替换占位符
+PROMPT=$(jq -nR --arg req "$REQUEST_VAL" --arg scope "$SCOPE_VAL" --arg branch "$BRANCH" --arg state "$STATE_FILE" '
+    input | gsub("{{REQUEST}}"; $req) | gsub("{{SCOPE}}"; $scope) | gsub("{{BRANCH}}"; $branch) | gsub("{{STATE_FILE}}"; $state)
+' < "$REPO_ROOT/skills/auto-loop/orchestrator-prompt.md")
 
-# ---------- 运行 claude -p ----------
+# ---------- 运行 claude -p（用进程替换避免子 shell 隔离） ----------
 LOG_FILE="$STATE_DIR/runs/$RUN_ID/stream.log"
 mkdir -p "$(dirname "$LOG_FILE")"
 
@@ -804,44 +947,66 @@ mkdir -p "$(dirname "$LOG_FILE")"
 cleanup_on_signal() {
     echo ""
     emit_event "🛑" "" "收到中断信号，正在保存 checkpoint..."
-    # state.json 已由 Claude 在运行中持续更新，这里无需额外操作
     echo "运行已暂停。恢复: $0 --resume"
+    cd "$ORIGINAL_PWD" 2>/dev/null || true
     exit 130
 }
 trap cleanup_on_signal INT TERM
 
-# 主调用
+# 主调用：tee 写日志 + while read 逐行喂 process_line（主 shell，心跳可见）
 emit_event "🚀" "" "启动 Claude 主大脑 (run_id=$RUN_ID)"
 
+# 心跳后台进程：每 30s 检查一次
+(
+    while true; do
+        sleep 30
+        check_heartbeat "[$(state_get "$STATE_DIR" '.current_step' 2>/dev/null || echo '?')]"
+    done
+) &
+HEARTBEAT_PID=$!
+
+LAST_SIGNAL=""
 claude -p "$PROMPT" \
     --plugin-dir "$REPO_ROOT" \
     --permission-mode bypassPermissions \
     --output-format stream-json \
     --verbose \
-    --include-partial-messages \
-    2>&1 | tee "$LOG_FILE" | parse_stream_event
+    2> >(tee "$LOG_FILE" >&2) \
+    | while IFS= read -r line; do
+        echo "$line" >> "$LOG_FILE"
+        process_line "$line"
+    done
 
 EXIT_CODE=${PIPESTATUS[0]}
+kill "$HEARTBEAT_PID" 2>/dev/null || true
 
-if [ "$EXIT_CODE" -eq 0 ]; then
-    emit_event "🏁" "" "Auto-Loop 完成"
-    # 检查是否 intervention
-    INTERVENTION=$(state_get "$STATE_DIR" '.intervention' 2>/dev/null || echo "null")
-    if [ "$INTERVENTION" != "null" ] && [ -n "$INTERVENTION" ]; then
-        echo ""
-        echo "⚠️  需要介入: $(echo "$INTERVENTION" | jq -r '.reason')"
-        echo "恢复: $0 --resume"
-        # 介入时不删 worktree，保留现场
-    else
-        # 正常完成 → 清理 worktree
-        emit_event "🧹" "" "清理 worktree..."
-        worktree_remove "$REPO_ROOT" "$WORKTREE_PATH"
-        cd "$ORIGINAL_PWD"
-        emit_event "✨" "" "worktree 已清理，当前工作区已恢复"
-    fi
+# 判断结束状态：优先看 LAST_SIGNAL，其次看 state.intervention
+INTERVENTION=$(state_get "$STATE_DIR" '.intervention' 2>/dev/null || echo "null")
+
+if [ "$LAST_SIGNAL" = "COMPLETE" ]; then
+    emit_event "🏁" "" "Auto-Loop 完成（Claude 输出 COMPLETE）"
+    # 正常完成 → 清理 worktree
+    emit_event "🧹" "" "清理 worktree..."
+    worktree_remove "$REPO_ROOT" "$WORKTREE_PATH"
+    cd "$ORIGINAL_PWD"
+    emit_event "✨" "" "worktree 已清理，当前工作区已恢复"
+elif [ "$LAST_SIGNAL" = "INTERVENTION" ] || { [ "$INTERVENTION" != "null" ] && [ -n "$INTERVENTION" ]; }; then
+    echo ""
+    echo "⚠️  需要介入: $(echo "$INTERVENTION" | jq -r '.reason // "见 state.json"')"
+    echo "恢复: $0 --resume"
+    # 介入时保留 worktree
+    cd "$ORIGINAL_PWD"
+elif [ "$LAST_SIGNAL" = "PUSH_FAILED" ]; then
+    emit_event "❌" "" "push 失败，worktree 保留。修复后 --resume"
+    cd "$ORIGINAL_PWD"
+    exit 1
+elif [ "$LAST_SIGNAL" = "STATE_ERROR" ]; then
+    emit_event "❌" "" "state.json 损坏，手动检查 $STATE_FILE"
+    cd "$ORIGINAL_PWD"
+    exit 1
 else
-    emit_event "❌" "" "Claude 退出码 $EXIT_CODE，state 已保存。恢复: $0 --resume"
-    # 失败时保留 worktree 便于排查，cd 回原目录
+    emit_event "❌" "" "Claude 退出码 $EXIT_CODE，未输出完成信号。state 已保存。恢复: $0 --resume"
+    # 失败时保留 worktree 便于排查
     cd "$ORIGINAL_PWD"
     exit "$EXIT_CODE"
 fi
@@ -869,9 +1034,11 @@ git commit -m "feat(auto-loop): add auto-loop.sh entry script with CLI parsing a
 - Modify: `.gitignore`
 - Modify: `scripts/auto-loop.sh`
 
-- [ ] **Step 1: 修改 .gitignore 放行 state.json**
+- [ ] **Step 1: 修改 .gitignore 放行策略**
 
-在 `.gitignore` 的 `.claude/*` 块后添加例外：
+**问题背景**：当前 `.gitignore` 第 31 行 `.claude/*` 会忽略 `.claude/` 下所有内容，且 git 规则是「目录被通配忽略后，`!` 无法重新包含其下文件」。因此 `!.claude/auto-loop/` 不生效。
+
+**解决方案**：改用精确路径逐级放行，不依赖目录级 `!`。
 
 当前 `.gitignore` 第 31-33 行：
 ```
@@ -880,14 +1047,19 @@ git commit -m "feat(auto-loop): add auto-loop.sh entry script with CLI parsing a
 !.claude/settings.local.json.example
 ```
 
-改为：
+改为（替换 `.claude/*` 为更精确的规则）：
 ```
+# 忽略 .claude/ 下除明确放行外的所有内容
 .claude/*
 !.claude/README.md
 !.claude/settings.local.json.example
 !.claude/auto-loop/
+!.claude/auto-loop/state.json
+!.claude/auto-loop/runs/
 !.claude/worktrees/
 ```
+
+> **注意**：如果上述规则在实测中仍不生效（某些 git 版本对目录通配行为不同），fallback 方案是不依赖 .gitignore，改用 `git add -f` 强制添加 state.json。实现时先跑 Step 4 验证，不生效则切换 fallback。
 
 - [ ] **Step 2: 在 auto-loop.sh 补全 dry-run 逻辑**
 
@@ -896,11 +1068,12 @@ git commit -m "feat(auto-loop): add auto-loop.sh entry script with CLI parsing a
 ```bash
 # 在 "---------- 组装 prompt ----------" 之前
 if [ "${DRY_RUN:-false}" = "true" ]; then
-    # dry-run 标记注入到 prompt
     PROMPT_DRY_RUN_NOTE="
 
 注意：这是 --dry-run 模式。只执行到步骤 4（提 issue）后停止，不执行 SDD 修复。
-完成步骤 4 后输出 AUTO_LOOP_DRY_RUN_COMPLETE 并退出。
+完成步骤 4 后：
+1. jq 更新 state.json 的 current_step = 'dry_run_done'
+2. 输出 AUTO_LOOP_COMPLETE（脚本侧检测后会跳过 worktree 清理，因为 dry-run 不改代码）
 "
 fi
 ```
@@ -915,16 +1088,23 @@ PROMPT="${PROMPT}${PROMPT_DRY_RUN_NOTE:-}"
 Run: `bash scripts/auto-loop.sh --dry-run --help 2>&1 | grep -qi "usage"`
 Expected: 匹配到 usage（参数解析正常）
 
-- [ ] **Step 4: 验证 .gitignore 生效**
+- [ ] **Step 3b: 验证 origin remote 检查逻辑**
+
+Run: `grep -q "evanfang0054/superpowers" scripts/auto-loop.sh && echo OK`
+Expected: `OK`（脚本含 remote 验证）
+
+- [ ] **Step 4: 验证 .gitignore 放行生效**
 
 Run: `git check-ignore .claude/auto-loop/state.json || echo "NOT IGNORED"`
-Expected: `NOT IGNORED`（被放行）
+Expected: `NOT IGNORED`
 
 Run: `git check-ignore .claude/auto-loop/runs/test/sessions.md || echo "NOT IGNORED"`
 Expected: `NOT IGNORED`
 
 Run: `git check-ignore .claude/worktrees/auto-loop-test || echo "NOT IGNORED"`
-Expected: `NOT IGNORED`（worktree 目录也被放行）
+Expected: `NOT IGNORED`
+
+**如果上述任一返回被忽略（非 NOT IGNORED）**：切换 fallback 方案，在 `auto-loop.sh` 的 `state_init` 后加 `git add -f "$STATE_FILE"` 强制跟踪。
 
 - [ ] **Step 5: Commit**
 
@@ -944,6 +1124,19 @@ git commit -m "feat(auto-loop): gitignore exception for state + dry-run mode"
 
 Run: `cd tests/plugin-infrastructure && ./run-all.sh`
 Expected: 所有 15 个 suite PASSED（原 11 + 新增 4 个 auto-loop 测试：state/worktree/observe/cli），0 FAILED
+
+- [ ] **Step 1b: 补充 0-issue 边界测试**
+
+在 `test-auto-loop-cli.sh` 末尾（`print_summary` 之前）添加：
+
+```bash
+# Case 7: orchestrator-prompt 包含 0-issue 退出指令
+PROMPT_FILE="$REPO_ROOT/skills/auto-loop/orchestrator-prompt.md"
+if grep -q "0 个问题\|0 issues\|无问题" "$PROMPT_FILE"; then pass "prompt handles 0-issue case"; else fail "prompt handles 0-issue case"; fi
+
+# Case 8: orchestrator-prompt 包含 push 失败信号
+if grep -q "AUTO_LOOP_PUSH_FAILED" "$PROMPT_FILE"; then pass "prompt defines push-failed signal"; else fail "prompt defines push-failed signal"; fi
+```
 
 - [ ] **Step 2: 手动验证 --help 输出**
 
@@ -978,21 +1171,23 @@ git commit -m "test(auto-loop): integration smoke validation"
 ## Self-Review 清单
 
 **Spec coverage**（逐条对照 spec）：
-- ✅ 目标 1 全自动闭环 → Task 3+4（prompt + 脚本）
-- ✅ 目标 2 可观测 → Task 2（observe.sh 三层输出）
+- ✅ 目标 1 全自动闭环 → Task 3+4（prompt + 脚本）；闭环信号由 process_line 检测 + Claude 用 jq 写 state.json
+- ✅ 目标 2 可观测 → Task 2（observe.sh 三层输出 + 主 shell 心跳 + 信号检测）
 - ✅ 目标 3 可恢复 → Task 1+1b（state.sh + worktree.sh checkpoint）+ Task 4（--resume）
-- ✅ 目标 4 可介入 → Task 3（orchestrator-prompt 介入协议）
+- ✅ 目标 4 可介入 → Task 3（orchestrator-prompt 介入协议 + jq 写 intervention）+ Task 2（LAST_SIGNAL 检测）
 - ✅ 目标 5 扫描范围 → Task 4（--project/--all-projects 参数）
 - ✅ 8 步链路（含 worktree 创建/清理） → Task 3（prompt）+ Task 1b（worktree.sh）+ Task 4（脚本集成）
-- ✅ Worktree 隔离 → Task 1b（worktree.sh 生命周期）+ Task 4（脚本 cd/worktree_remove 集成）+ Task 5（.gitignore 放行）
-- ✅ 异常场景处理 → Task 1+2+4（API retry、心跳、SIGINT、checkpoint、worktree 保留）
+- ✅ Worktree 隔离 → Task 1b（worktree.sh 生命周期，含分支重名处理）+ Task 4（脚本 cd/worktree_remove）+ Task 5（.gitignore 放行 + fallback）
+- ✅ 异常场景处理 → Task 1+2+4（API retry、心跳、SIGINT、checkpoint、worktree 保留、PUSH_FAILED 信号、STATE_ERROR 信号）
 - ✅ 最保守决策 → Task 3（prompt 注入原则）
 - ✅ CLI 接口 → Task 4
-- ✅ 错误处理 → Task 4（前置检查）
-- ✅ 测试策略 → Task 1/1b/2/4（单元）+ Task 6（集成冒烟）
+- ✅ 错误处理 → Task 4（前置检查 + origin remote 验证）
+- ✅ 缺失场景 → Task 3（prompt 处理 0-issue / push 失败）+ Task 1b（worktree 分支重名）
+- ✅ JSON 安全 → Task 1（state_init 用 jq -n --arg，state_set_str 包装）
+- ✅ 测试策略 → Task 1/1b/2/4（单元 + 特殊字符 + 信号检测）+ Task 6（集成冒烟 + 0-issue/push-fail prompt 验证）
 
 **Placeholder scan**: ✅ 无 TBD/TODO，每个步骤都有完整代码
 
-**Type consistency**: ✅ state.sh 的 `state_init`/`state_get`/`state_set`/`state_clear` 签名一致；worktree.sh 的 `worktree_create`/`worktree_remove`/`worktree_exists`/`worktree_cleanup_all` 在测试和主脚本中一致；observe.sh 的 `emit_event`/`emit_status`/`parse_stream_event`/`log_raw` 一致
+**Type consistency**: ✅ state.sh 的 `state_init`(jq -n --arg)/`state_get`/`state_set`(JSON value)/`state_set_str`(raw string)/`state_clear` 签名一致；worktree.sh 的 `worktree_create`(分支重名处理)/`worktree_remove`/`worktree_exists`/`worktree_cleanup_all` 一致；observe.sh 的 `process_line`(替代 parse_stream_event)/`emit_event`/`check_heartbeat`(主 shell) 一致
 
 **Scope check**: ✅ 单个脚本+辅助库（state/observe/worktree），适合单个 plan
