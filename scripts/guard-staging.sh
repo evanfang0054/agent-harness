@@ -27,7 +27,17 @@ case "$COMMAND" in
     *" -f"*|*" --force"*) exit 0 ;;
 esac
 
-# Broad-catch forms that stage everything
+# Check for explicit protected path mentions FIRST (more specific than broad-catch)
+for p in "${PROTECTED_PATHS[@]}"; do
+    case "$COMMAND" in
+        *"$p"*)
+            echo "[guard-staging] Blocked: refusing to stage protected runtime path '$p'. Use -f to force." >&2
+            exit 2
+            ;;
+    esac
+done
+
+# Broad-catch forms that stage everything (git add ., git add -A, git add --all)
 case "$COMMAND" in
     *"git add ."*|*"git add -A"*|*"git add --all"*)
         cat >&2 <<'EOF'
@@ -39,15 +49,5 @@ EOF
         exit 2
         ;;
 esac
-
-# Check for explicit protected path mentions
-for p in "${PROTECTED_PATHS[@]}"; do
-    case "$COMMAND" in
-        *"$p"*)
-            echo "[guard-staging] Blocked: refusing to stage protected runtime path '$p'. Use -f to force." >&2
-            exit 2
-            ;;
-    esac
-done
 
 exit 0
