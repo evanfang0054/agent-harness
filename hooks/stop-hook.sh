@@ -190,8 +190,10 @@ fi
 
 # Update iteration in frontmatter (portable across macOS and Linux)
 # Create temp file, then atomically replace
+# 关键：sed 必须限定在 frontmatter（第 2 行到第一个 `---`）内，
+# 否则模式 `^iteration: .*` 会污染 prompt 正文中任何以 `iteration:` 开头的行（#27）。
 TEMP_FILE="${RALPH_STATE_FILE}.tmp.$$"
-sed "s/^iteration: .*/iteration: $NEXT_ITERATION/" "$RALPH_STATE_FILE" > "$TEMP_FILE"
+sed "2,/^---$/ s/^iteration: .*/iteration: $NEXT_ITERATION/" "$RALPH_STATE_FILE" > "$TEMP_FILE"
 mv "$TEMP_FILE" "$RALPH_STATE_FILE"
 
 # Build system message with iteration count and completion promise info

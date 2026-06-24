@@ -50,7 +50,13 @@ EOF
 
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --project) PROJECT="$2"; shift 2 ;;
+        --project)
+            # 防御 set -u 下的 unbound variable（#29）：缺参数给友好提示而非裸崩溃
+            if [ -z "${2:-}" ]; then
+                echo "错误: --project 需要一个路径参数" >&2
+                exit 1
+            fi
+            PROJECT="$2"; shift 2 ;;
         --all-projects) ALL_PROJECTS=true; shift ;;
         --resume) RESUME=true; shift ;;
         --cleanup) CLEANUP=true; shift ;;
@@ -233,6 +239,8 @@ cleanup_on_signal() {
     if [ -n "${HEARTBEAT_PID:-}" ]; then
         kill "$HEARTBEAT_PID" 2>/dev/null || true
     fi
+    # 清理 mktemp 创建的 EXIT_CODE_FILE（#28：信号路径原本跳过 line 289 的 rm -f）
+    rm -f "${EXIT_CODE_FILE:-}" 2>/dev/null || true
     echo "运行已暂停。恢复: $0 --resume"
     cd "$ORIGINAL_PWD" 2>/dev/null || true
     exit 130
