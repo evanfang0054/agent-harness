@@ -1,5 +1,11 @@
 # Superpowers Release Notes
 
+## v6.0.0 (2026-06-24)
+
+### Changes
+
+- 引入 gate-driven-test-design skill 并为全部 superpowers skills 补齐 headless 行为测试套件，同时完成P0-P2 全业务域（地址/评价/收藏/优惠券/退款/商品规格/Banner/推荐位等）的端到端交付。
+
 ## v5.0.21-beta.5 (2026-06-18)
 
 ### Changes

@@ -38,3 +38,4 @@ triage/
 skills/harness-optimizer/tests
 skills/harness-optimizer/scripts/__pycache__
 .superpowers/session-analysis
+!CLAUDE.md

@@ -1,6 +1,6 @@
 {
   "name": "superpowers",
-  "version": "5.0.21-beta.5",
+  "version": "6.0.0",
   "description": "为 coding agent 提供的技能框架与软件开发方法论：规划、TDD、调试、协作工作流",
   "author": {
     "name": "evanfang",
