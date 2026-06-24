@@ -182,6 +182,20 @@ echo ""
 - templates/ 目录（起步模板，无运行时行为）
 - design skill 命名稳定性（已重命名完成，不再调整；问题本质是缺乏命名决策前置流程，属于流程问题而非技术问题）
 - headless skill 触发的根本修复（这是 Claude API 行为问题，非项目可控）
+- Stop hook 重入防护（`stop_hook_active` / `CLAUDE_CODE_STOP_HOOK_BLOCK_CAP`）——Issue #3 中提到，但属于 hook 基础设施改造，独立于本 spec 的三个优化域；如需处理应开独立 spec
+
+## Linked Issues
+
+本 spec 的实现将关闭以下 GitHub issues：
+
+| Issue | 标题 | 对应域 | 关闭条件 |
+|-------|------|--------|---------|
+| #1 | bug: scripts use relative paths causing wrong file locations in nested repos | Domain 1 | PreToolUse 防护 hook 上线 + 路径一致性验证通过 |
+| #2 | bug: subagent task drift — implementer analyzes unrelated projects | Domain 2 | SDD task brief 增加 CRITICAL BOUNDARIES + SubagentStop 审计 hook 上线 |
+| #3 | bug: headless mode skill triggering unreliable, slash-form /skill fails in `claude -p` | Domain 3 | session-start 无条件注入 headless skill 调用提示 |
+| #4 | perf: excessive token waste from unfinished tasks, misdiagnosis, and skill naming churn | Domain 1/2/3（间接） | 前三项问题修复后，token 浪费的主要来源（意外 staging 重做、子代理偏离、headless 重试）被消除；关闭时附注说明间接改善 |
+
+**关闭策略：** 实现完成、所有测试通过后，在关闭 issue 的评论中引用本 spec 路径和对应的提交 SHA。Issue #4 以 "indirectly addressed" 关闭，评论说明 token 浪费的根因（问题 3/4/5）已被本 spec 消除，剩余的命名稳定性属流程问题，不在技术修复范围。
 
 ## Success Criteria
 
