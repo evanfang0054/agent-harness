@@ -4,13 +4,21 @@
 set -euo pipefail
 
 # macOS 兼容：coreutils 默认无 `timeout` 命令
+# 注意：perl `alarm` 默认退出码是 142 (128+SIGALRM=14)，而 GNU timeout 约定 124 表示超时。
+# 必须显式捕获 SIGALRM 并 exit 124，否则 run-skill-tests.sh 的 `[ $exit_code -eq 124 ]` 判断永远不匹配。
 if ! command -v timeout &> /dev/null; then
     if command -v gtimeout &> /dev/null; then
         timeout() { gtimeout "$@"; }
     else
         timeout() {
             local dur="$1"; shift
-            perl -e 'alarm shift @ARGV; exec @ARGV' "$dur" "$@"
+            perl -e '
+                $SIG{ALRM} = sub { exit 124 };
+                alarm shift @ARGV;
+                my $rc = system(@ARGV);
+                exit($rc >> 8) if $rc != -1;
+                exit 127;
+            ' "$dur" "$@"
         }
     fi
 fi
