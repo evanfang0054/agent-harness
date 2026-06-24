@@ -274,6 +274,7 @@ done < <(
     echo $? > "$EXIT_CODE_FILE"
 )
 EXIT_CODE=$(cat "$EXIT_CODE_FILE" 2>/dev/null || echo 0)
+EXIT_CODE=${EXIT_CODE:-0}  # claude 被 SIGKILL 时 echo 不执行，文件为空（#14）
 rm -f "$EXIT_CODE_FILE"
 kill "$HEARTBEAT_PID" 2>/dev/null || true
 
