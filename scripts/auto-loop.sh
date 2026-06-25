@@ -127,6 +127,8 @@ if $RESUME; then
     echo "检测到未完成运行，从 $(state_get "$STATE_DIR" '.current_step') 继续..."
     # 恢复 scope 描述，避免下游 prompt 组装时空串
     SCOPE_DESC="(从上次运行恢复)"
+    # SCAN_TARGET 从 state.json 读取（首次运行时已持久化），避免恢复时丢失
+    SCAN_TARGET=$(state_get "$STATE_DIR" '.scan_target // ""' 2>/dev/null || echo "")
     # 继续 fall-through 到主流程
 else
     # ---------- 全新运行 ----------
@@ -140,19 +142,23 @@ else
         exit 1
     fi
 
-    # 确定 scope
+    # 确定 scope 和扫描目标路径
     SCOPE_DESC=""
+    SCAN_TARGET=""
     if $ALL_PROJECTS; then
         SCOPE_DESC="扫描所有项目 (~/.claude/projects/)"
+        SCAN_TARGET="$HOME/.claude/projects/"
     elif [ -n "$PROJECT" ]; then
         SCOPE_DESC="扫描指定项目: $PROJECT"
+        SCAN_TARGET="$PROJECT"
     else
         SCOPE_DESC="扫描当前项目: $REPO_ROOT"
+        SCAN_TARGET="$REPO_ROOT"
     fi
 
     RUN_ID="run-$(date +%Y-%m-%d-%H%M%S)"
     BRANCH="feat/auto-improvement-$(date +%Y-%m-%d)"
-    state_init "$RUN_ID" "$BRANCH" "$REQUEST" "$STATE_DIR"
+    state_init "$RUN_ID" "$BRANCH" "$REQUEST" "$STATE_DIR" "$SCAN_TARGET"
 
     # 注意：state.json 是本地运行态文件（--resume 时读本地文件即可），不纳入 git 跟踪，
     # 否则会混进 PR diff。详见 orchestrator-prompt.md 的 State.json 操作协议。
@@ -203,6 +209,10 @@ RUN_ID=$(state_get "$STATE_DIR" '.run_id')
 BRANCH=$(state_get "$STATE_DIR" '.branch')
 REQUEST_VAL=$(state_get "$STATE_DIR" '.request')
 SCOPE_VAL="$SCOPE_DESC"
+# scan_target 优先用本次 CLI 传入的，resume 时从 state.json 读
+SCAN_TARGET_VAL="${SCAN_TARGET:-$(state_get "$STATE_DIR" '.scan_target // ""' 2>/dev/null || echo "")}"
+# 空时回退到 REPO_ROOT（向后兼容旧 state.json）
+[ -z "$SCAN_TARGET_VAL" ] && SCAN_TARGET_VAL="$REPO_ROOT"
 
 # 读模板，用 jq --raw-input slurp 把整个文件作为一个字符串读取
 # （jq -R 默认逐行读，input 只取第一行；--slurp 把所有行合成一个 JSON 字符串）
@@ -212,11 +222,13 @@ PROMPT=$(jq --raw-input --slurp \
     --arg branch "$BRANCH" \
     --arg state "$STATE_FILE" \
     --arg repo "$REPO_ROOT" \
+    --arg scan_target "$SCAN_TARGET_VAL" \
     'gsub("{{REQUEST}}"; $req)
      | gsub("{{SCOPE}}"; $scope)
      | gsub("{{BRANCH}}"; $branch)
      | gsub("{{STATE_FILE}}"; $state)
-     | gsub("{{REPO_ROOT}}"; $repo)' \
+     | gsub("{{REPO_ROOT}}"; $repo)
+     | gsub("{{SCAN_TARGET}}"; $scan_target)' \
     < "$REPO_ROOT/skills/auto-loop/orchestrator-prompt.md")
 
 PROMPT="${PROMPT}${PROMPT_DRY_RUN_NOTE:-}"

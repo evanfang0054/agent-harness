@@ -23,6 +23,7 @@
 
 - **用户需求**: {{REQUEST}}
 - **扫描范围**: {{SCOPE}}
+- **会话扫描目标路径**: `{{SCAN_TARGET}}`（claude-code-log 用这个路径导出会话日志，可能与目标仓库不同）
 - **目标仓库**: evanfang0054/superpowers（所有 issue 和 PR 都提到这里）
 - **当前分支**: {{BRANCH}}
 - **当前工作目录**: 已在独立 git worktree 内，直接修改文件即可
@@ -31,9 +32,9 @@
 
 **重要：如何导出会话日志（步骤 2）**
 
-使用 `uvx claude-code-log@latest` 命令导出会话。示例：
+使用 `uvx claude-code-log@latest` 命令导出会话。**第一个参数必须是 `{{SCAN_TARGET}}`**（用户指定的扫描目标，不是 REPO_ROOT）：
 ```bash
-uvx claude-code-log@latest {{REPO_ROOT}} \
+uvx claude-code-log@latest {{SCAN_TARGET}} \
     --from-date "3 days ago" \
     --detail low --format md --compact \
     -o <state.artifacts.sessions_md 路径>
