@@ -47,7 +47,7 @@ export function UploadButton({
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={uploading}
-        className="px-3 py-2 text-sm border border-gray-200 rounded-2xl text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+        className="px-3 py-2 text-sm border border-brand-border rounded-2xl text-brand-dark hover:bg-brand-bg disabled:opacity-50"
       >
         {uploading ? '上传中...' : '选择图片'}
       </button>
@@ -64,7 +64,7 @@ export function UploadButton({
         }}
       />
       {value && (
-        <div className="w-12 h-12 rounded-2xl overflow-hidden bg-gray-100 flex-shrink-0">
+        <div className="w-12 h-12 rounded-2xl overflow-hidden bg-brand-btn-bg flex-shrink-0">
           <img
             src={value}
             alt="preview"

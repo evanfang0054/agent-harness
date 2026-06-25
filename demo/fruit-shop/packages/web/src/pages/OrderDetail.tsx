@@ -280,7 +280,7 @@ export default function OrderDetail() {
       {/* Refund modal */}
       {showRefundModal && (
         <div className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center px-6">
-          <div className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-xl">
+          <div className="bg-white rounded-2xl w-full max-w-sm p-5 border border-brand-border">
             <h3 className="text-base font-semibold text-brand-dark mb-3">申请退款</h3>
             <textarea
               value={refundReason}
@@ -315,7 +315,7 @@ export default function OrderDetail() {
       {/* Review modal */}
       {showReviewModal && currentOrder && (
         <div className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center px-4">
-          <div className="bg-white rounded-3xl w-full max-w-md p-5 shadow-xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-3xl w-full max-w-md p-5 border border-brand-border max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-base font-bold text-brand-dark">评价订单</h3>
               <button

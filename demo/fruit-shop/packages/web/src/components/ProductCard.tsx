@@ -48,7 +48,7 @@ export function ProductCard({ product }: ProductCardProps) {
             )}
           </div>
           {product.originalPrice && product.originalPrice > product.price && (
-            <span className="text-[11px] text-gray-300 line-through">
+            <span className="text-[11px] text-brand-muted line-through">
               ¥{product.originalPrice}
             </span>
           )}

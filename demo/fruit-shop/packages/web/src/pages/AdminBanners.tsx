@@ -112,12 +112,12 @@ export default function AdminBanners() {
     }
   };
 
-  const inputCls = 'w-full border border-gray-200 rounded-2xl px-3 py-2 focus:ring-2 focus:ring-brand-primary/30';
+  const inputCls = 'w-full border border-brand-border rounded-2xl px-3 py-2 focus:ring-2 focus:ring-brand-primary/30';
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-brand-bg p-6">
       <header className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Banner 管理</h1>
+        <h1 className="text-2xl font-bold text-brand-dark">Banner 管理</h1>
         <button
           onClick={openCreate}
           className="bg-brand-primary text-white px-4 py-2 rounded-2xl font-bold"
@@ -127,12 +127,12 @@ export default function AdminBanners() {
       </header>
 
       {isLoading ? (
-        <div className="text-center py-10 text-gray-500">加载中...</div>
+        <div className="text-center py-10 text-brand-muted">加载中...</div>
       ) : banners.length === 0 ? (
-        <div className="text-center py-10 text-gray-500">暂无 Banner</div>
+        <div className="text-center py-10 text-brand-muted">暂无 Banner</div>
       ) : (
-        <table className="w-full bg-white rounded-2xl border border-gray-200">
-          <thead className="bg-gray-100 text-gray-600 text-sm">
+        <table className="w-full bg-brand-card rounded-2xl border border-brand-border">
+          <thead className="bg-brand-btn-bg text-brand-muted text-sm">
             <tr>
               <th className="text-left p-3">标题</th>
               <th className="text-left p-3">状态</th>
@@ -143,11 +143,11 @@ export default function AdminBanners() {
           </thead>
           <tbody>
             {banners.map((b) => (
-              <tr key={b.id} className="border-t border-gray-100">
+              <tr key={b.id} className="border-t border-brand-border">
                 <td className="p-3 font-medium">{b.title}</td>
                 <td className="p-3">
                   <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                    b.status === 1 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                    b.status === 1 ? 'bg-brand-green/15 text-brand-green' : 'bg-brand-btn-bg text-brand-muted'
                   }`}>
                     {b.status === 1 ? '上架' : '下架'}
                   </span>
@@ -172,7 +172,7 @@ export default function AdminBanners() {
 
       {modalOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+          <div className="bg-brand-card rounded-3xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">
               {editingId ? '编辑 Banner' : '新建 Banner'}
             </h2>
@@ -190,7 +190,7 @@ export default function AdminBanners() {
                 className={inputCls}
               />
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">背景图</label>
+                <label className="block text-sm font-medium text-brand-dark mb-1">背景图</label>
                 <UploadButton
                   value={form.image}
                   onChange={(url) => setForm({ ...form, image: url })}
@@ -241,7 +241,7 @@ export default function AdminBanners() {
               >保存</button>
               <button
                 onClick={() => setModalOpen(false)}
-                className="flex-1 py-2.5 rounded-2xl border border-gray-200 font-bold"
+                className="flex-1 py-2.5 rounded-2xl border border-brand-border font-bold"
               >取消</button>
             </div>
           </div>

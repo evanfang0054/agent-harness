@@ -15,7 +15,7 @@ export function PriceSection({ price, originalPrice, unit, tags }: PriceSectionP
         </span>
         {unit && <span className="text-[13px] text-brand-muted">/ {unit}</span>}
         {originalPrice && originalPrice > price && (
-          <span className="text-[13px] text-gray-300 line-through ml-1">
+          <span className="text-[13px] text-brand-muted line-through ml-1">
             ¥{originalPrice}
           </span>
         )}

@@ -146,12 +146,12 @@ export default function AdminCoupons() {
     }
   };
 
-  const inputCls = 'w-full border border-gray-200 rounded-2xl px-3 py-2 focus:ring-2 focus:ring-brand-primary/30';
+  const inputCls = 'w-full border border-brand-border rounded-2xl px-3 py-2 focus:ring-2 focus:ring-brand-primary/30';
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-brand-bg p-6">
       <header className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">优惠券管理</h1>
+        <h1 className="text-2xl font-bold text-brand-dark">优惠券管理</h1>
         <button
           onClick={openCreate}
           className="bg-brand-primary text-white px-4 py-2 rounded-2xl font-bold"
@@ -161,12 +161,12 @@ export default function AdminCoupons() {
       </header>
 
       {isLoading ? (
-        <div className="text-center py-10 text-gray-500">加载中...</div>
+        <div className="text-center py-10 text-brand-muted">加载中...</div>
       ) : templates.length === 0 ? (
-        <div className="text-center py-10 text-gray-500">暂无优惠券模板</div>
+        <div className="text-center py-10 text-brand-muted">暂无优惠券模板</div>
       ) : (
-        <table className="w-full bg-white rounded-2xl border border-gray-200">
-          <thead className="bg-gray-100 text-gray-600 text-sm">
+        <table className="w-full bg-white rounded-2xl border border-brand-border">
+          <thead className="bg-brand-btn-bg text-brand-muted text-sm">
             <tr>
               <th className="text-left p-3">名称</th>
               <th className="text-left p-3">类型</th>
@@ -179,7 +179,7 @@ export default function AdminCoupons() {
           </thead>
           <tbody>
             {templates.map((t) => (
-              <tr key={t.id} className="border-t border-gray-100">
+              <tr key={t.id} className="border-t border-brand-border">
                 <td className="p-3 font-medium">{t.name}</td>
                 <td className="p-3">{TYPE_LABEL[t.type]}</td>
                 <td className="p-3 text-sm">
@@ -192,14 +192,14 @@ export default function AdminCoupons() {
                 <td className="p-3 text-sm">
                   {t.claimedCount}/{t.totalCount}
                 </td>
-                <td className="p-3 text-xs text-gray-500">
+                <td className="p-3 text-xs text-brand-muted">
                   {new Date(t.startAt).toLocaleDateString()} ~{' '}
                   {new Date(t.endAt).toLocaleDateString()}
                 </td>
                 <td className="p-3">
                   <span
                     className={`px-2 py-0.5 rounded text-xs font-bold ${
-                      t.status === 1 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                      t.status === 1 ? 'bg-brand-green/15 text-brand-green' : 'bg-brand-btn-bg text-brand-muted'
                     }`}
                   >
                     {t.status === 1 ? '上架' : '下架'}
@@ -304,14 +304,14 @@ export default function AdminCoupons() {
                 className={inputCls}
               />
 
-              <label className="block text-xs text-gray-500">生效时间</label>
+              <label className="block text-xs text-brand-muted">生效时间</label>
               <input
                 type="datetime-local"
                 value={form.startAt}
                 onChange={(e) => setForm({ ...form, startAt: e.target.value })}
                 className={inputCls}
               />
-              <label className="block text-xs text-gray-500">失效时间</label>
+              <label className="block text-xs text-brand-muted">失效时间</label>
               <input
                 type="datetime-local"
                 value={form.endAt}
@@ -337,7 +337,7 @@ export default function AdminCoupons() {
               </button>
               <button
                 onClick={() => setModalOpen(false)}
-                className="flex-1 py-2.5 rounded-2xl border border-gray-200 font-bold"
+                className="flex-1 py-2.5 rounded-2xl border border-brand-border font-bold"
               >
                 取消
               </button>

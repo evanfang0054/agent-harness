@@ -144,7 +144,7 @@ export default function Addresses() {
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
           <button
             onClick={() => navigate(-1)}
-            className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-brand-btn-bg hover:bg-brand-border transition-colors"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M19 12H5M12 19l-7-7 7-7" />
@@ -249,7 +249,7 @@ export default function Addresses() {
               </h3>
               <button
                 onClick={closeForm}
-                className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 text-brand-dark"
+                className="w-7 h-7 flex items-center justify-center rounded-full bg-brand-btn-bg text-brand-dark"
               >
                 &times;
               </button>

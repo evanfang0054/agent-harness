@@ -15,7 +15,7 @@ const STATUS_LABELS: Record<ProductStatus, string> = {
 };
 
 const STATUS_COLORS: Record<ProductStatus, string> = {
-  [ProductStatus.OFF]: 'text-gray-400',
+  [ProductStatus.OFF]: 'text-brand-muted',
   [ProductStatus.ON]: 'text-brand-green',
 };
 
@@ -83,7 +83,7 @@ export default function AdminProducts() {
   if (user?.role !== 'admin') {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
-        <p className="text-gray-400">无权访问此页面</p>
+        <p className="text-brand-muted">无权访问此页面</p>
         <button
           onClick={() => navigate('/')}
           className="mt-4 text-brand-primary text-sm hover:underline"
@@ -237,18 +237,18 @@ export default function AdminProducts() {
   return (
     <div className="min-h-screen bg-brand-bg">
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-sm border-b border-gray-200">
+      <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-sm border-b border-brand-border">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate('/')}
-              className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+              className="w-9 h-9 flex items-center justify-center rounded-full bg-brand-btn-bg hover:bg-brand-border transition-colors"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M19 12H5M12 19l-7-7 7-7" />
               </svg>
             </button>
-            <h1 className="text-lg font-semibold text-gray-900">商品管理</h1>
+            <h1 className="text-lg font-semibold text-brand-dark">商品管理</h1>
           </div>
           <button
             onClick={openCreateModal}
@@ -267,7 +267,7 @@ export default function AdminProducts() {
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             placeholder="搜索商品..."
-            className="flex-1 px-4 py-2 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
+            className="flex-1 px-4 py-2 rounded-2xl border border-brand-border text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
           />
           <button
             type="submit"
@@ -284,20 +284,20 @@ export default function AdminProducts() {
           </div>
         ) : products.length === 0 ? (
           <div className="text-center py-20">
-            <p className="text-gray-400 text-sm">暂无商品</p>
+            <p className="text-brand-muted text-sm">暂无商品</p>
           </div>
         ) : (
           <>
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl border border-brand-border overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="bg-brand-bg border-b border-gray-100">
-                      <th className="px-4 py-3 text-left font-medium text-gray-600">商品</th>
-                      <th className="px-4 py-3 text-left font-medium text-gray-600">价格</th>
-                      <th className="px-4 py-3 text-left font-medium text-gray-600">库存</th>
-                      <th className="px-4 py-3 text-left font-medium text-gray-600">状态</th>
-                      <th className="px-4 py-3 text-right font-medium text-gray-600">操作</th>
+                    <tr className="bg-brand-bg border-b border-brand-border">
+                      <th className="px-4 py-3 text-left font-medium text-brand-muted">商品</th>
+                      <th className="px-4 py-3 text-left font-medium text-brand-muted">价格</th>
+                      <th className="px-4 py-3 text-left font-medium text-brand-muted">库存</th>
+                      <th className="px-4 py-3 text-left font-medium text-brand-muted">状态</th>
+                      <th className="px-4 py-3 text-right font-medium text-brand-muted">操作</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-brand-bg">
@@ -305,7 +305,7 @@ export default function AdminProducts() {
                       <tr key={product.id} className="hover:bg-brand-bg transition-colors">
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-2xl overflow-hidden bg-gray-100 flex-shrink-0">
+                            <div className="w-10 h-10 rounded-2xl overflow-hidden bg-brand-btn-bg flex-shrink-0">
                               <img
                                 src={product.image || '/placeholder-fruit.png'}
                                 alt={product.name}
@@ -313,9 +313,9 @@ export default function AdminProducts() {
                               />
                             </div>
                             <div>
-                              <p className="font-medium text-gray-800 line-clamp-1">{product.name}</p>
+                              <p className="font-medium text-brand-dark line-clamp-1">{product.name}</p>
                               {product.origin && (
-                                <p className="text-xs text-gray-400">{product.origin}</p>
+                                <p className="text-xs text-brand-muted">{product.origin}</p>
                               )}
                             </div>
                           </div>
@@ -325,12 +325,12 @@ export default function AdminProducts() {
                             ¥{Number(product.price).toFixed(2)}
                           </span>
                           {product.originalPrice && (
-                            <span className="text-xs text-gray-400 line-through ml-1">
+                            <span className="text-xs text-brand-muted line-through ml-1">
                               ¥{Number(product.originalPrice).toFixed(2)}
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-gray-600">{product.stock}</td>
+                        <td className="px-4 py-3 text-brand-muted">{product.stock}</td>
                         <td className="px-4 py-3">
                           <span className={`text-xs font-medium ${STATUS_COLORS[product.status]}`}>
                             {STATUS_LABELS[product.status]}
@@ -378,14 +378,14 @@ export default function AdminProducts() {
       {/* Create/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto shadow-xl">
-            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="text-base font-semibold text-gray-900">
+          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto border border-brand-border">
+            <div className="px-5 py-4 border-b border-brand-border flex items-center justify-between">
+              <h2 className="text-base font-semibold text-brand-dark">
                 {editingProduct ? '编辑商品' : '新增商品'}
               </h2>
               <button
                 onClick={() => setShowModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-brand-muted hover:text-brand-muted"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M18 6L6 18M6 6l12 12" />
@@ -395,89 +395,89 @@ export default function AdminProducts() {
 
             <form onSubmit={handleFormSubmit} className="p-5 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">商品名称</label>
+                <label className="block text-sm font-medium text-brand-dark mb-1">商品名称</label>
                 <input
                   type="text"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="请输入商品名称"
-                  className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
+                  className="w-full px-3 py-2.5 rounded-2xl border border-brand-border text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">价格</label>
+                  <label className="block text-sm font-medium text-brand-dark mb-1">价格</label>
                   <input
                     type="number"
                     step="0.01"
                     value={form.price}
                     onChange={(e) => setForm({ ...form, price: e.target.value })}
                     placeholder="0.00"
-                    className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
+                    className="w-full px-3 py-2.5 rounded-2xl border border-brand-border text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">原价</label>
+                  <label className="block text-sm font-medium text-brand-dark mb-1">原价</label>
                   <input
                     type="number"
                     step="0.01"
                     value={form.originalPrice}
                     onChange={(e) => setForm({ ...form, originalPrice: e.target.value })}
                     placeholder="0.00（选填）"
-                    className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
+                    className="w-full px-3 py-2.5 rounded-2xl border border-brand-border text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">产地</label>
+                  <label className="block text-sm font-medium text-brand-dark mb-1">产地</label>
                   <input
                     type="text"
                     value={form.origin}
                     onChange={(e) => setForm({ ...form, origin: e.target.value })}
                     placeholder="产地"
-                    className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
+                    className="w-full px-3 py-2.5 rounded-2xl border border-brand-border text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">单位</label>
+                  <label className="block text-sm font-medium text-brand-dark mb-1">单位</label>
                   <input
                     type="text"
                     value={form.unit}
                     onChange={(e) => setForm({ ...form, unit: e.target.value })}
                     placeholder="斤"
-                    className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
+                    className="w-full px-3 py-2.5 rounded-2xl border border-brand-border text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">分类ID</label>
+                  <label className="block text-sm font-medium text-brand-dark mb-1">分类ID</label>
                   <input
                     type="number"
                     value={form.categoryId}
                     onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
                     placeholder="分类ID"
-                    className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
+                    className="w-full px-3 py-2.5 rounded-2xl border border-brand-border text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">库存</label>
+                  <label className="block text-sm font-medium text-brand-dark mb-1">库存</label>
                   <input
                     type="number"
                     value={form.stock}
                     onChange={(e) => setForm({ ...form, stock: e.target.value })}
                     placeholder="库存数量"
-                    className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
+                    className="w-full px-3 py-2.5 rounded-2xl border border-brand-border text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">图片</label>
+                <label className="block text-sm font-medium text-brand-dark mb-1">图片</label>
                 <UploadButton
                   value={form.image}
                   onChange={(url) => setForm({ ...form, image: url })}
@@ -485,79 +485,79 @@ export default function AdminProducts() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">描述</label>
+                <label className="block text-sm font-medium text-brand-dark mb-1">描述</label>
                 <textarea
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   placeholder="商品描述（选填）"
                   rows={3}
-                  className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary resize-none"
+                  className="w-full px-3 py-2.5 rounded-2xl border border-brand-border text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary resize-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">甜度</label>
+                  <label className="block text-sm font-medium text-brand-dark mb-1">甜度</label>
                   <input
                     type="text"
                     value={form.sweetness}
                     onChange={(e) => setForm({ ...form, sweetness: e.target.value })}
                     placeholder="如 甜、酸甜"
-                    className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
+                    className="w-full px-3 py-2.5 rounded-2xl border border-brand-border text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">规格重量</label>
+                  <label className="block text-sm font-medium text-brand-dark mb-1">规格重量</label>
                   <input
                     type="text"
                     value={form.weight}
                     onChange={(e) => setForm({ ...form, weight: e.target.value })}
                     placeholder="如 500g、1kg"
-                    className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
+                    className="w-full px-3 py-2.5 rounded-2xl border border-brand-border text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">色板色值</label>
+                  <label className="block text-sm font-medium text-brand-dark mb-1">色板色值</label>
                   <input
                     type="text"
                     value={form.color}
                     onChange={(e) => setForm({ ...form, color: e.target.value })}
                     placeholder="如 #FF6B35"
-                    className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
+                    className="w-full px-3 py-2.5 rounded-2xl border border-brand-border text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">标签</label>
+                  <label className="block text-sm font-medium text-brand-dark mb-1">标签</label>
                   <input
                     type="text"
                     value={form.tags}
                     onChange={(e) => setForm({ ...form, tags: e.target.value })}
                     placeholder="逗号分隔，如 甜,新鲜,限时"
-                    className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
+                    className="w-full px-3 py-2.5 rounded-2xl border border-brand-border text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">规格 JSON</label>
+                <label className="block text-sm font-medium text-brand-dark mb-1">规格 JSON</label>
                 <textarea
                   value={form.specs}
                   onChange={(e) => setForm({ ...form, specs: e.target.value })}
                   placeholder='如 [{"name":"规格","values":["500g/盒","1kg/袋"]}]'
                   rows={3}
-                  className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary resize-none"
+                  className="w-full px-3 py-2.5 rounded-2xl border border-brand-border text-xs font-mono focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary resize-none"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">状态</label>
+                <label className="block text-sm font-medium text-brand-dark mb-1">状态</label>
                 <select
                   value={form.status}
                   onChange={(e) => setForm({ ...form, status: Number(e.target.value) as ProductStatus })}
-                  className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
+                  className="w-full px-3 py-2.5 rounded-2xl border border-brand-border text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
                 >
                   <option value={ProductStatus.ON}>上架</option>
                   <option value={ProductStatus.OFF}>下架</option>
@@ -566,24 +566,24 @@ export default function AdminProducts() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                  <label className="flex items-center gap-2 text-sm font-medium text-brand-dark mb-1">
                     <input
                       type="checkbox"
                       checked={form.isRecommended}
                       onChange={(e) => setForm({ ...form, isRecommended: e.target.checked })}
-                      className="rounded border-gray-300 text-brand-primary focus:ring-brand-primary/30"
+                      className="rounded brand-border text-brand-primary focus:ring-brand-primary/30"
                     />
                     <span>设为推荐商品</span>
                   </label>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">推荐排序</label>
+                  <label className="block text-sm font-medium text-brand-dark mb-1">推荐排序</label>
                   <input
                     type="number"
                     value={form.featuredSortOrder}
                     onChange={(e) => setForm({ ...form, featuredSortOrder: Number(e.target.value) })}
                     placeholder="小的在前"
-                    className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
+                    className="w-full px-3 py-2.5 rounded-2xl border border-brand-border text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary"
                   />
                 </div>
               </div>
@@ -592,7 +592,7 @@ export default function AdminProducts() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-2xl hover:bg-brand-bg transition-colors"
+                  className="flex-1 py-2.5 text-sm text-brand-muted border border-brand-border rounded-2xl hover:bg-brand-bg transition-colors"
                 >
                   取消
                 </button>
@@ -612,15 +612,15 @@ export default function AdminProducts() {
       {/* Delete confirmation */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-          <div className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-xl">
-            <h3 className="text-base font-semibold text-gray-900 mb-2">确认删除</h3>
-            <p className="text-sm text-gray-500 mb-5">
+          <div className="bg-white rounded-2xl w-full max-w-sm p-5 border border-brand-border">
+            <h3 className="text-base font-semibold text-brand-dark mb-2">确认删除</h3>
+            <p className="text-sm text-brand-muted mb-5">
               确定要删除商品「{deleteTarget.name}」吗？此操作不可恢复。
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteTarget(null)}
-                className="flex-1 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-2xl hover:bg-brand-bg transition-colors"
+                className="flex-1 py-2.5 text-sm text-brand-muted border border-brand-border rounded-2xl hover:bg-brand-bg transition-colors"
               >
                 取消
               </button>

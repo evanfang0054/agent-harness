@@ -28,8 +28,8 @@ export function ProductHero({ image, name, color }: ProductHeroProps) {
       </div>
       <div className="flex justify-center gap-1.5 pb-3">
         <div className="w-5 h-1 rounded-sm bg-brand-primary" />
-        <div className="w-2 h-1 rounded-sm bg-gray-300" />
-        <div className="w-2 h-1 rounded-sm bg-gray-300" />
+        <div className="w-2 h-1 rounded-sm bg-brand-border" />
+        <div className="w-2 h-1 rounded-sm bg-brand-border" />
       </div>
     </div>
   );

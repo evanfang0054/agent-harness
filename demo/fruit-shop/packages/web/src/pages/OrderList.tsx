@@ -30,9 +30,9 @@ const STATUS_COLORS: Record<OrderStatus, string> = {
   [OrderStatus.PAID]: 'text-brand-accent',
   [OrderStatus.SHIPPED]: 'text-brand-primary',
   [OrderStatus.COMPLETED]: 'text-brand-green',
-  [OrderStatus.CANCELLED]: 'text-gray-400',
+  [OrderStatus.CANCELLED]: 'text-brand-muted',
   [OrderStatus.REFUNDING]: 'text-brand-coral',
-  [OrderStatus.REFUNDED]: 'text-gray-400',
+  [OrderStatus.REFUNDED]: 'text-brand-muted',
 };
 
 export default function OrderList() {
