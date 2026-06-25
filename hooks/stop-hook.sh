@@ -190,11 +190,14 @@ fi
 
 # Update iteration in frontmatter (portable across macOS and Linux)
 # Create temp file, then atomically replace
-# 关键：sed 必须限定在 frontmatter（第 2 行到第一个 `---`）内，
-# 否则模式 `^iteration: .*` 会污染 prompt 正文中任何以 `iteration:` 开头的行（#27）。
 TEMP_FILE="${RALPH_STATE_FILE}.tmp.$$"
-sed "2,/^---$/ s/^iteration: .*/iteration: $NEXT_ITERATION/" "$RALPH_STATE_FILE" > "$TEMP_FILE"
+# Ensure temp file is removed if sed fails (set -e exits) or the hook is
+# signaled (SIGHUP/SIGINT/SIGTERM are common for Stop hooks). Mirrors the
+# _SUPERPOWERS_TMP_CLEANUP trap already present in search-learnings.sh (#19).
+trap 'rm -f "$TEMP_FILE"' INT TERM HUP
+sed "s/^iteration: .*/iteration: $NEXT_ITERATION/" "$RALPH_STATE_FILE" > "$TEMP_FILE"
 mv "$TEMP_FILE" "$RALPH_STATE_FILE"
+trap - INT TERM HUP
 
 # Build system message with iteration count and completion promise info
 if [[ "$COMPLETION_PROMISE" != "null" ]] && [[ -n "$COMPLETION_PROMISE" ]]; then
