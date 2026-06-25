@@ -47,6 +47,11 @@ Subagent (general-purpose):
     5. Self-review (see below)
     6. Report back
 
+    **You MUST complete ALL steps before returning.** A report that says
+    "I will read the brief now" or that lacks a commit hash and test
+    output is NOT a completion — it is an incomplete attempt that wastes
+    a round-trip. If you cannot finish, return BLOCKED with specifics.
+
     Work from: [directory]
 
     **While you work:** If you encounter something unexpected or unclear, **ask questions**.

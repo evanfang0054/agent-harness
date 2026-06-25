@@ -130,6 +130,10 @@ Every step must contain the actual content an engineer needs. These are **plan f
 - Exact commands with expected output
 - DRY, YAGNI, TDD, frequent commits
 
+## Scope Scan
+
+After defining the task list, check whether any task involves a **global pattern replacement** (token rename, CSS class migration, API signature change, import path shift). If it does, run a project-wide search (Grep) for the pattern before finalizing the plan. List every affected file in the relevant task — do not assume the brainstorming-confirmed file list is exhaustive. A cleanup task that discovers 13 affected files when the plan listed 8 is a plan failure, not a win for the cleanup task.
+
 ## Self-Review
 
 After writing the complete plan, look at the spec with fresh eyes and check the plan against it. This is a checklist you run yourself — not a subagent dispatch.
