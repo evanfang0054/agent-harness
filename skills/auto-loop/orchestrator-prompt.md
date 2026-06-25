@@ -81,6 +81,31 @@ jq '.intervention = {"reason": "具体原因", "options": ["选项1"], "current_
    - 完成后: `jq '.progress.branch_created = true | .current_step = "exporting"'`
 2. **导出会话**: 调用 claude-code-log skill，`--detail low --format md --compact`，导出到 state.artifacts.sessions_md
    - 完成后: `jq '.progress.sessions_exported = true | .current_step = "analyzing"'`
+
+## 会话筛选协议
+
+用户指定的过滤条件: {{FILTER}}
+
+**判定规则：**
+- 如果 {{FILTER}} 为空 → 分析所有导出的会话（默认行为）
+- 如果 {{FILTER}} 非空 → **只分析符合该条件的会话**，不符合的会话直接跳过，不计入问题识别
+
+**筛选执行步骤（在步骤 3 分析之前）：**
+1. 逐个会话判断是否符合 {{FILTER}} 条件
+2. 在 analysis.json 里记录 `filtered_sessions`（保留的会话列表）和 `excluded_sessions`（排除的会话列表 + 排除原因）
+3. 只对 `filtered_sessions` 识别问题
+
+**判定示例（供参考，按自然语言理解执行）：**
+- filter="调用了 superpower 相关 skill" → 会话内出现 Skill 工具调用且 skill 名匹配 superpowers skill 列表（brainstorming / writing-plans / subagent-driven-development / verification-before-completion / finishing-a-development-branch / auto-loop 等）
+- filter="出现 hook 报错" → 会话内有 PreToolUse / SessionStart / Stop hook 的报错文本
+- filter="会话时长 > 30 分钟" → 按 timestamp 跨度判断
+
+**重要：**
+- 如果 filter 条件模糊或无法判定，宁可保留会话（宁可多分析，不要漏掉）
+- excluded_sessions 必须给出明确排除原因，便于用户审计
+- 不要因为筛选而跳过 state.json 的步骤更新
+- 如果所有会话都被排除（filtered_sessions 为空），在 analysis.json 里说明"无符合条件的会话"，不提 issue，直接跳到步骤 7
+
 3. **分析会话**: 识别问题模式（代码 bug / 流程问题 / skill 改进），输出 analysis.json
    - 完成后: `jq '.progress.analysis_completed = true | .current_step = "creating_issues"'`
    - **如果发现 0 个问题**: 直接跳到步骤 7（无需修复），在 PR 描述里说明"分析未发现问题"
