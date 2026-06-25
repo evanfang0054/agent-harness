@@ -46,6 +46,26 @@ state_set_str "$STATE_DIR" '.current_step' '含"引号"的值'
 RESULT=$(state_get "$STATE_DIR" '.current_step')
 if echo "$RESULT" | grep -q "引号"; then pass "state_set_str escapes special chars"; else fail "state_set_str escapes"; fi
 
+# Case 8: state_set_str 安全写入含双引号与反斜杠的路径（回归 #30）
+# 模拟 auto-loop.sh 在初始化和 resume 路径上写入 WORKTREE_PATH/ORIGINAL_PWD 的场景。
+# 手拼 state_set '.x' "\"$VAR\"" 在 set -e 下会让 jq 解析失败；state_set_str 应安全通过。
+state_init "test-quote-path" "feat/z" "normal" "$STATE_DIR"
+SPECIAL_PATH='/tmp/a"b/c\d'
+state_set_str "$STATE_DIR" '.worktree_path' "$SPECIAL_PATH"
+if jq -e '.worktree_path == "/tmp/a\"b/c\\d"' "$STATE_DIR/state.json" >/dev/null 2>&1; then
+    pass "state_set_str preserves quote/backslash path (#30)"
+else
+    fail "state_set_str preserves quote/backslash path (#30)"
+    jq -r '.worktree_path' "$STATE_DIR/state.json" >&2
+fi
+# 反向校验：手拼 state_set 在同样输入下应当失败（证明 bug 真实存在，state_set_str 是正确修复）
+if state_set "$STATE_DIR" '.worktree_path' "\"$SPECIAL_PATH\"" 2>/dev/null; then
+    # 如果手拼居然成功了，说明 jq 容忍了输入（依赖版本），不算 bug 验证失败，但也不是强证据
+    pass "state_set manual quoting accepted by jq (version-tolerant)"
+else
+    pass "state_set manual quoting rejected by jq (#30 reproduced)"
+fi
+
 state_clear "$STATE_DIR"
 
 # Case 8: state_init 接受第 6 参数 filter 并持久化

@@ -53,7 +53,13 @@ EOF
 
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --project) PROJECT="$2"; shift 2 ;;
+        --project)
+            # 防御 set -u 下的 unbound variable（#29）：缺参数给友好提示而非裸崩溃
+            if [ -z "${2:-}" ]; then
+                echo "错误: --project 需要一个路径参数" >&2
+                exit 1
+            fi
+            PROJECT="$2"; shift 2 ;;
         --all-projects) ALL_PROJECTS=true; shift ;;
         --resume) RESUME=true; shift ;;
         --cleanup) CLEANUP=true; shift ;;
@@ -172,8 +178,11 @@ else
 
     # ---------- 创建 worktree 隔离工作区 ----------
     WORKTREE_PATH=$(worktree_create "$REPO_ROOT" "$RUN_ID" "$BRANCH")
-    state_set "$STATE_DIR" '.worktree_path' "\"$WORKTREE_PATH\""
-    state_set "$STATE_DIR" '.original_pwd' "\"$ORIGINAL_PWD\""
+    # 用 state_set_str（jq --arg 安全转义）而不是手拼 JSON 字符串字面量。
+    # 若 WORKTREE_PATH/ORIGINAL_PWD 含双引号或反斜杠，手拼的 "\"$VAR\"" 会让
+    # state.sh 的 `jq "$path = $value"` 解析失败，set -e 直接退出。详见 #30。
+    state_set_str "$STATE_DIR" '.worktree_path' "$WORKTREE_PATH"
+    state_set_str "$STATE_DIR" '.original_pwd' "$ORIGINAL_PWD"
     emit_event "📂" "[1/8]" "worktree 已创建: $WORKTREE_PATH"
 
     # cd 进 worktree，所有后续操作在此进行
@@ -195,7 +204,7 @@ if $RESUME; then
         echo "警告: worktree 不存在 ($WORKTREE_PATH)，重新创建"
         BRANCH=$(state_get "$STATE_DIR" '.branch')
         WORKTREE_PATH=$(worktree_create "$REPO_ROOT" "$(state_get "$STATE_DIR" '.run_id')" "$BRANCH")
-        state_set "$STATE_DIR" '.worktree_path' "\"$WORKTREE_PATH\""
+        state_set_str "$STATE_DIR" '.worktree_path' "$WORKTREE_PATH"
         cd "$WORKTREE_PATH"
     fi
 fi
@@ -256,6 +265,8 @@ cleanup_on_signal() {
     if [ -n "${HEARTBEAT_PID:-}" ]; then
         kill "$HEARTBEAT_PID" 2>/dev/null || true
     fi
+    # 清理 mktemp 创建的 EXIT_CODE_FILE（#28：信号路径原本跳过 line 289 的 rm -f）
+    rm -f "${EXIT_CODE_FILE:-}" 2>/dev/null || true
     echo "运行已暂停。恢复: $0 --resume"
     cd "$ORIGINAL_PWD" 2>/dev/null || true
     exit 130
