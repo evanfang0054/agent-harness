@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar } from '@/components/Avatar';
 import { TabBar } from '@/components/TabBar';
+import { Button } from '@/components/ui';
 import { useAuthStore } from '@/store/auth.store';
 import { userApi } from '@/api/user';
 import { useToast } from '@/components/Toast';
@@ -45,9 +46,9 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen bg-brand-canvas pb-20">
+    <div className="min-h-screen bg-brand-bg pb-20">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-brand-canvas/90 backdrop-blur-[10px] border-b border-brand-border px-4 py-3">
+      <header className="sticky top-0 z-50 bg-brand-bg/90 backdrop-blur-[10px] border-b border-brand-border px-4 py-3">
         <h1 className="text-[22px] font-black text-brand-dark">个人中心</h1>
       </header>
 
@@ -67,20 +68,22 @@ export default function Profile() {
                 className="text-center text-[18px] font-bold border border-brand-border rounded-2xl px-3 py-2 w-full max-w-[220px] focus:outline-none focus:border-brand-primary"
               />
               <div className="flex gap-2">
-                <button
-                  onClick={handleSave}
+                <Button
+                  variant="primary"
+                  size="sm"
                   disabled={saving || nickname.trim().length === 0}
-                  className="px-5 py-1.5 rounded-2xl bg-gradient-to-br from-brand-primary to-brand-coral text-white text-sm font-bold disabled:opacity-50"
+                  onClick={handleSave}
                 >
                   {saving ? '保存中...' : '保存'}
-                </button>
-                <button
-                  onClick={handleCancel}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
                   disabled={saving}
-                  className="px-5 py-1.5 rounded-2xl border border-brand-border text-sm font-bold text-brand-dark"
+                  onClick={handleCancel}
                 >
                   取消
-                </button>
+                </Button>
               </div>
             </div>
           ) : (
@@ -94,12 +97,14 @@ export default function Profile() {
                   管理员
                 </span>
               )}
-              <button
+              <Button
+                variant="primary"
+                fullWidth={false}
+                className="mt-2 w-full max-w-[220px]"
                 onClick={() => { setNickname(user.nickname ?? ''); setIsEditing(true); }}
-                className="mt-2 w-full max-w-[220px] py-2.5 rounded-2xl bg-gradient-to-br from-brand-primary to-brand-coral text-white text-sm font-bold"
               >
                 编辑资料
-              </button>
+              </Button>
             </>
           )}
         </div>
