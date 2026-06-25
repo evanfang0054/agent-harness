@@ -8,6 +8,7 @@ import type { Address, UserCoupon, CouponTemplate, CouponPreviewResponse } from 
 import { CouponType } from 'shared';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { Toast } from '@/components/Toast';
+import { NavBar, BottomActionBar, Button } from '@/components/ui';
 
 type MyCouponItem = UserCoupon & { coupon: CouponTemplate | null };
 
@@ -174,26 +175,14 @@ export default function Checkout() {
   return (
     <div className="min-h-screen bg-brand-bg pb-28">
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-sm border-b border-gray-100">
-        <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <h1 className="text-lg font-semibold text-gray-900">确认订单</h1>
-        </div>
-      </header>
+      <NavBar title="确认订单" />
 
       <main className="max-w-lg mx-auto px-4 mt-3">
         {/* Address form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <section className="bg-white rounded-2xl p-4 space-y-4 shadow-sm">
+          <section className="bg-brand-card rounded-2xl border border-brand-border p-4 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-gray-800">收货信息</h2>
+              <h2 className="text-sm font-semibold text-brand-dark">收货信息</h2>
               <button
                 type="button"
                 onClick={() => navigate('/addresses')}
@@ -252,31 +241,31 @@ export default function Checkout() {
             )}
 
             <div>
-              <label className="block text-sm text-gray-600 mb-1">收货地址</label>
+              <label className="block text-sm text-brand-muted mb-1">收货地址</label>
               <textarea
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="请输入详细收货地址"
                 rows={2}
-                className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 bg-brand-bg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary transition-colors resize-none text-sm"
+                className="w-full px-3 py-2.5 rounded-2xl border border-brand-border bg-brand-bg text-brand-dark placeholder-brand-muted/70 focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary transition-colors resize-none text-sm"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-gray-600 mb-1">手机号</label>
+              <label className="block text-sm text-brand-muted mb-1">手机号</label>
               <input
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="请输入收货人手机号"
                 maxLength={11}
-                className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 bg-brand-bg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary transition-colors text-sm"
+                className="w-full px-3 py-2.5 rounded-2xl border border-brand-border bg-brand-bg text-brand-dark placeholder-brand-muted/70 focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary transition-colors text-sm"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-gray-600 mb-1">
-                备注 <span className="text-gray-400">（选填）</span>
+              <label className="block text-sm text-brand-muted mb-1">
+                备注 <span className="text-brand-muted">（选填）</span>
               </label>
               <input
                 type="text"
@@ -284,18 +273,18 @@ export default function Checkout() {
                 onChange={(e) => setRemark(e.target.value)}
                 placeholder="对订单有什么要求？"
                 maxLength={100}
-                className="w-full px-3 py-2.5 rounded-2xl border border-gray-200 bg-brand-bg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary transition-colors text-sm"
+                className="w-full px-3 py-2.5 rounded-2xl border border-brand-border bg-brand-bg text-brand-dark placeholder-brand-muted/70 focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary transition-colors text-sm"
               />
             </div>
           </section>
 
           {/* Selected items summary */}
-          <section className="bg-white rounded-2xl p-4 shadow-sm">
-            <h2 className="text-sm font-semibold text-gray-800 mb-3">商品清单</h2>
+          <section className="bg-brand-card rounded-2xl border border-brand-border p-4">
+            <h2 className="text-sm font-semibold text-brand-dark mb-3">商品清单</h2>
             <div className="space-y-3">
               {selected.map((item) => (
                 <div key={item.id} className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                  <div className="w-12 h-12 rounded-lg overflow-hidden bg-brand-btn-bg flex-shrink-0">
                     <img
                       src={item.product.image || '/placeholder-fruit.png'}
                       alt={item.product.name}
@@ -303,16 +292,16 @@ export default function Checkout() {
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-800 line-clamp-1">{item.product.name}</p>
+                    <p className="text-sm text-brand-dark line-clamp-1">{item.product.name}</p>
                     {item.specLabel && (
-                      <p className="text-xs text-gray-400">{item.specLabel}</p>
+                      <p className="text-xs text-brand-muted">{item.specLabel}</p>
                     )}
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="text-sm font-medium text-brand-primary">
                       ¥{Number(item.product.price).toFixed(2)}
                     </p>
-                    <p className="text-xs text-gray-400">x{item.quantity}</p>
+                    <p className="text-xs text-brand-muted">x{item.quantity}</p>
                   </div>
                 </div>
               ))}
@@ -320,26 +309,26 @@ export default function Checkout() {
           </section>
 
           {/* Price summary */}
-          <section className="bg-white rounded-2xl p-4 shadow-sm">
+          <section className="bg-brand-card rounded-2xl border border-brand-border p-4">
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between text-gray-600">
+              <div className="flex justify-between text-brand-muted">
                 <span>商品小计</span>
                 <span>¥{Number(subtotal).toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-gray-600">
+              <div className="flex justify-between text-brand-muted">
                 <span>配送费</span>
                 <span className={shippingFee === 0 ? 'text-brand-green' : ''}>
                   {shippingFee === 0 ? '免运费' : `¥${Number(shippingFee).toFixed(2)}`}
                 </span>
               </div>
               {shippingFee > 0 && (
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-brand-muted">
                   再买¥{(99 - Number(subtotal)).toFixed(2)}即可免运费
                 </p>
               )}
 
               {/* 优惠券行 */}
-              <div className="flex justify-between items-center text-gray-600">
+              <div className="flex justify-between items-center text-brand-muted">
                 <span>优惠券</span>
                 {selectedCoupon ? (
                   <div className="flex items-center gap-2">
@@ -365,8 +354,8 @@ export default function Checkout() {
                 )}
               </div>
 
-              <div className="border-t border-gray-100 pt-2 flex justify-between items-center">
-                <span className="font-medium text-gray-800">合计</span>
+              <div className="border-t border-brand-border pt-2 flex justify-between items-center">
+                <span className="font-medium text-brand-dark">合计</span>
                 <span className="text-xl font-bold text-brand-primary">
                   ¥{Number(totalAmount).toFixed(2)}
                 </span>
@@ -444,23 +433,21 @@ export default function Checkout() {
       )}
 
       {/* Bottom submit bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-50 safe-bottom">
-        <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
-          <div>
-            <span className="text-sm text-gray-500">应付：</span>
-            <span className="text-xl font-bold text-brand-primary">
-              ¥{Number(totalAmount).toFixed(2)}
-            </span>
-          </div>
-          <button
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="px-8 py-2.5 bg-brand-primary text-white text-sm font-semibold rounded-full hover:opacity-90 disabled:opacity-50 transition-opacity"
-          >
-            {isSubmitting ? '提交中...' : '提交订单'}
-          </button>
+      <BottomActionBar>
+        <div>
+          <span className="text-sm text-brand-muted">应付：</span>
+          <span className="text-xl font-bold text-brand-primary">
+            ¥{Number(totalAmount).toFixed(2)}
+          </span>
         </div>
-      </div>
+        <Button
+          variant="primary"
+          loading={isSubmitting}
+          onClick={handleSubmit}
+        >
+          {isSubmitting ? '提交中...' : '提交订单'}
+        </Button>
+      </BottomActionBar>
     </div>
   );
 }
