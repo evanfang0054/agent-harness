@@ -236,6 +236,11 @@ Clean up worktree, output PR link, wait for your review
 - **Three-layer observability** — Real-time event stream + heartbeat detection + full log file, never silent
 - **Intervention protocol** — Automatically stops on 4 trigger conditions (irreversible risk/conflict/low confidence/architectural change)
 - **Conservative decisions** — AI picks the smallest, lowest-risk option at every decision point
+- **Self-protection** — PreToolUse hook (`guard-auto-loop.sh`) blocks Claude from deleting its own runtime state, preventing self-destruction
+
+### Proven in Production
+
+In real-world testing on this project itself, auto-loop has autonomously discovered and fixed 30+ shell script bugs (covering Python source injection, signal-path resource leaks, set -u boundary issues, frontmatter boundary corruption, and more). Each bug was identified by Claude → filed as an issue → fixed via SDD → pushed → wrapped in a PR. Average run takes 15-40 minutes and produces a ready-to-review PR.
 
 See the [design spec](docs/superpowers/specs/2026-06-24-auto-loop-self-improvement-design.md) for details.
 

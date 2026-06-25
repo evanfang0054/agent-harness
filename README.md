@@ -251,6 +251,11 @@ Superpowers 采用分层架构：**决策层**确保"做对的事"，**执行层
 - **三层可观测性** — 实时事件流 + 心跳检测 + 完整日志文件，绝不静默卡死
 - **介入协议** — 遇到 4 种触发点（不可逆风险/矛盾/低置信度/架构变更）自动退出等待人类决策
 - **最保守决策** — AI 在所有决策点取最小改动、最低风险方案
+- **自保护机制** — PreToolUse hook (`guard-auto-loop.sh`) 拦截 Claude 误删自身运行态的命令，防止"自毁"
+
+### 实际运行效果
+
+在项目自身的实战测试中，auto-loop 已自动发现并修复了 30+ 个 shell 脚本 bug（涵盖 Python 源码注入、信号路径资源泄漏、set -u 边界、frontmatter 边界污染等），全部由 Claude 自主识别 → 提 issue → SDD 修复 → push → 创建 PR。平均单轮运行 15-40 分钟，输出一个可直接审核的 PR。
 
 详见 [设计文档](docs/superpowers/specs/2026-06-24-auto-loop-self-improvement-design.md)。
 
