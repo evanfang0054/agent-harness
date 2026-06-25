@@ -159,8 +159,11 @@ else
 
     # ---------- 创建 worktree 隔离工作区 ----------
     WORKTREE_PATH=$(worktree_create "$REPO_ROOT" "$RUN_ID" "$BRANCH")
-    state_set "$STATE_DIR" '.worktree_path' "\"$WORKTREE_PATH\""
-    state_set "$STATE_DIR" '.original_pwd' "\"$ORIGINAL_PWD\""
+    # 用 state_set_str（jq --arg 安全转义）而不是手拼 JSON 字符串字面量。
+    # 若 WORKTREE_PATH/ORIGINAL_PWD 含双引号或反斜杠，手拼的 "\"$VAR\"" 会让
+    # state.sh 的 `jq "$path = $value"` 解析失败，set -e 直接退出。详见 #30。
+    state_set_str "$STATE_DIR" '.worktree_path' "$WORKTREE_PATH"
+    state_set_str "$STATE_DIR" '.original_pwd' "$ORIGINAL_PWD"
     emit_event "📂" "[1/8]" "worktree 已创建: $WORKTREE_PATH"
 
     # cd 进 worktree，所有后续操作在此进行
@@ -182,7 +185,7 @@ if $RESUME; then
         echo "警告: worktree 不存在 ($WORKTREE_PATH)，重新创建"
         BRANCH=$(state_get "$STATE_DIR" '.branch')
         WORKTREE_PATH=$(worktree_create "$REPO_ROOT" "$(state_get "$STATE_DIR" '.run_id')" "$BRANCH")
-        state_set "$STATE_DIR" '.worktree_path' "\"$WORKTREE_PATH\""
+        state_set_str "$STATE_DIR" '.worktree_path' "$WORKTREE_PATH"
         cd "$WORKTREE_PATH"
     fi
 fi
