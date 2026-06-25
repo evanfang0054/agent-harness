@@ -5,6 +5,7 @@ import { OrderStatus } from 'shared';
 import type { CreateReviewItemDTO } from 'shared';
 import { orderApi } from '@/api/order';
 import { reviewApi } from '@/api/review';
+import { NavBar, BottomActionBar, Button } from '@/components/ui';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { Toast } from '@/components/Toast';
 
@@ -23,9 +24,9 @@ const STATUS_BG: Record<OrderStatus, string> = {
   [OrderStatus.PAID]: 'bg-brand-accent',
   [OrderStatus.SHIPPED]: 'bg-brand-primary',
   [OrderStatus.COMPLETED]: 'bg-brand-green',
-  [OrderStatus.CANCELLED]: 'bg-gray-400',
+  [OrderStatus.CANCELLED]: 'bg-brand-muted/60',
   [OrderStatus.REFUNDING]: 'bg-brand-coral',
-  [OrderStatus.REFUNDED]: 'bg-gray-400',
+  [OrderStatus.REFUNDED]: 'bg-brand-muted/60',
 };
 
 export default function OrderDetail() {
@@ -131,7 +132,7 @@ export default function OrderDetail() {
   if (!currentOrder) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
-        <p className="text-gray-400 text-sm">订单不存在</p>
+        <p className="text-brand-muted text-sm">订单不存在</p>
         <button
           onClick={() => navigate('/orders')}
           className="mt-4 text-brand-primary text-sm hover:underline"
@@ -155,20 +156,7 @@ export default function OrderDetail() {
 
   return (
     <div className="min-h-screen bg-brand-bg pb-24">
-      {/* Header */}
-      <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-sm border-b border-gray-100">
-        <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <h1 className="text-lg font-semibold text-gray-900">订单详情</h1>
-        </div>
-      </header>
+      <NavBar title="订单详情" />
 
       <main className="max-w-lg mx-auto px-4 mt-3 space-y-3">
         {/* Status header */}
@@ -181,8 +169,8 @@ export default function OrderDetail() {
         </section>
 
         {/* Shipping info */}
-        <section className="bg-white rounded-2xl p-4 shadow-sm">
-          <h2 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+        <section className="bg-brand-card rounded-2xl border border-brand-border p-4">
+          <h2 className="text-sm font-semibold text-brand-dark mb-3 flex items-center gap-2">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-brand-primary">
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
               <circle cx="12" cy="10" r="3" />
@@ -191,29 +179,29 @@ export default function OrderDetail() {
           </h2>
           <div className="space-y-2 text-sm">
             <div className="flex items-start gap-2">
-              <span className="text-gray-400 w-16 flex-shrink-0">收货地址</span>
-              <span className="text-gray-800">{order.address}</span>
+              <span className="text-brand-muted w-16 flex-shrink-0">收货地址</span>
+              <span className="text-brand-dark">{order.address}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-gray-400 w-16 flex-shrink-0">手机号</span>
-              <span className="text-gray-800">{order.phone}</span>
+              <span className="text-brand-muted w-16 flex-shrink-0">手机号</span>
+              <span className="text-brand-dark">{order.phone}</span>
             </div>
             {order.remark && (
               <div className="flex items-start gap-2">
-                <span className="text-gray-400 w-16 flex-shrink-0">备注</span>
-                <span className="text-gray-800">{order.remark}</span>
+                <span className="text-brand-muted w-16 flex-shrink-0">备注</span>
+                <span className="text-brand-dark">{order.remark}</span>
               </div>
             )}
           </div>
         </section>
 
         {/* Items list */}
-        <section className="bg-white rounded-2xl p-4 shadow-sm">
-          <h2 className="text-sm font-semibold text-gray-800 mb-3">商品清单</h2>
+        <section className="bg-brand-card rounded-2xl border border-brand-border p-4">
+          <h2 className="text-sm font-semibold text-brand-dark mb-3">商品清单</h2>
           <div className="space-y-3">
             {order.items.map((item) => (
               <div key={item.id} className="flex items-center gap-3">
-                <div className="w-14 h-14 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                <div className="w-14 h-14 rounded-xl overflow-hidden bg-brand-btn-bg flex-shrink-0">
                   <img
                     src={item.image || '/placeholder-fruit.png'}
                     alt={item.productName}
@@ -221,23 +209,23 @@ export default function OrderDetail() {
                   />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-800 line-clamp-1">{item.productName}</p>
+                  <p className="text-sm text-brand-dark line-clamp-1">{item.productName}</p>
                   {item.specLabel && (
-                    <p className="text-xs text-gray-400">{item.specLabel}</p>
+                    <p className="text-xs text-brand-muted">{item.specLabel}</p>
                   )}
                 </div>
                 <div className="text-right flex-shrink-0">
                   <p className="text-sm font-medium text-brand-primary">
                     ¥{Number(item.price).toFixed(2)}
                   </p>
-                  <p className="text-xs text-gray-400">x{item.quantity}</p>
+                  <p className="text-xs text-brand-muted">x{item.quantity}</p>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="border-t border-gray-100 mt-3 pt-3 flex justify-between items-center">
-            <span className="text-sm text-gray-500">订单总额</span>
+          <div className="border-t border-brand-border mt-3 pt-3 flex justify-between items-center">
+            <span className="text-sm text-brand-muted">订单总额</span>
             <span className="text-lg font-bold text-brand-primary">
               ¥{Number(order.totalAmount).toFixed(2)}
             </span>
@@ -247,97 +235,78 @@ export default function OrderDetail() {
 
       {/* Bottom action bar */}
       {hasActionButtons && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-50 safe-bottom">
-          <div className="max-w-lg mx-auto px-4 py-3 flex gap-3">
-            <button
-              onClick={() => navigate('/orders')}
-              className="flex-1 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-full hover:bg-brand-bg transition-colors"
+        <BottomActionBar>
+          <Button variant="ghost" fullWidth onClick={() => navigate('/orders')}>
+            返回列表
+          </Button>
+          {showPayBtn && (
+            <Button variant="primary" loading={isPaying} disabled={isCancelling} onClick={handlePay}>
+              {isPaying ? '支付中...' : '去支付'}
+            </Button>
+          )}
+          {showPayBtn && (
+            <Button variant="danger" loading={isCancelling} disabled={isPaying} onClick={handleCancel}>
+              {isCancelling ? '取消中...' : '取消订单'}
+            </Button>
+          )}
+          {showConfirmBtn && (
+            <Button variant="primary" loading={isConfirming} onClick={handleConfirm}>
+              {isConfirming ? '处理中...' : '确认收货'}
+            </Button>
+          )}
+          {showRefundBtn && (
+            <Button variant="ghost" onClick={openRefundModal} disabled={isConfirming}>
+              <span className="text-brand-coral">申请退款</span>
+            </Button>
+          )}
+          {showReviewBtn && (
+            <Button
+              variant="primary"
+              onClick={() => {
+                const drafts: Record<number, { rating: number; content: string }> = {};
+                order.items.forEach((it) => {
+                  drafts[it.productId] = { rating: 5, content: '' };
+                });
+                setReviewDrafts(drafts);
+                setShowReviewModal(true);
+              }}
             >
-              返回列表
-            </button>
-            {showPayBtn && (
-              <button
-                onClick={handlePay}
-                disabled={isPaying || isCancelling}
-                className="flex-1 py-2.5 text-sm text-white bg-brand-primary rounded-full hover:opacity-90 disabled:opacity-50 transition-opacity"
-              >
-                {isPaying ? '支付中...' : '去支付'}
-              </button>
-            )}
-            {showPayBtn && (
-              <button
-                onClick={handleCancel}
-                disabled={isCancelling || isPaying}
-                className="flex-1 py-2.5 text-sm text-white bg-brand-coral rounded-full hover:opacity-90 disabled:opacity-50 transition-opacity"
-              >
-                {isCancelling ? '取消中...' : '取消订单'}
-              </button>
-            )}
-            {showConfirmBtn && (
-              <button
-                onClick={handleConfirm}
-                disabled={isConfirming}
-                className="flex-1 py-2.5 text-sm text-white bg-brand-primary rounded-full hover:opacity-90 disabled:opacity-50 transition-opacity"
-              >
-                {isConfirming ? '处理中...' : '确认收货'}
-              </button>
-            )}
-            {showRefundBtn && (
-              <button
-                onClick={openRefundModal}
-                disabled={isConfirming}
-                className="flex-1 py-2.5 text-sm text-brand-coral border border-brand-coral rounded-full hover:bg-brand-coral/5 disabled:opacity-50 transition-colors"
-              >
-                申请退款
-              </button>
-            )}
-            {showReviewBtn && (
-              <button
-                onClick={() => {
-                  const drafts: Record<number, { rating: number; content: string }> = {};
-                  order.items.forEach((it) => {
-                    drafts[it.productId] = { rating: 5, content: '' };
-                  });
-                  setReviewDrafts(drafts);
-                  setShowReviewModal(true);
-                }}
-                className="flex-1 py-2.5 text-sm text-white bg-brand-primary rounded-full hover:opacity-90 transition-opacity"
-              >
-                去评价
-              </button>
-            )}
-          </div>
-        </div>
+              去评价
+            </Button>
+          )}
+        </BottomActionBar>
       )}
 
       {/* Refund modal */}
       {showRefundModal && (
         <div className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center px-6">
           <div className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-xl">
-            <h3 className="text-base font-semibold text-gray-900 mb-3">申请退款</h3>
+            <h3 className="text-base font-semibold text-brand-dark mb-3">申请退款</h3>
             <textarea
               value={refundReason}
               onChange={(e) => setRefundReason(e.target.value)}
               placeholder="请填写退款原因"
               rows={3}
-              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-brand-primary resize-none"
+              className="w-full text-sm border border-brand-border rounded-xl px-3 py-2 focus:outline-none focus:border-brand-primary resize-none"
               maxLength={200}
             />
             <div className="flex gap-3 mt-4">
-              <button
+              <Button
+                variant="ghost"
+                fullWidth
                 onClick={() => setShowRefundModal(false)}
                 disabled={isRefunding}
-                className="flex-1 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-full hover:bg-brand-bg transition-colors"
               >
                 取消
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
+                fullWidth
                 onClick={handleRequestRefund}
-                disabled={isRefunding}
-                className="flex-1 py-2.5 text-sm text-white bg-brand-coral rounded-full hover:opacity-90 disabled:opacity-50 transition-opacity"
+                loading={isRefunding}
               >
                 {isRefunding ? '提交中...' : '提交申请'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -351,7 +320,7 @@ export default function OrderDetail() {
               <h3 className="text-base font-bold text-brand-dark">评价订单</h3>
               <button
                 onClick={() => setShowReviewModal(false)}
-                className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 text-brand-dark"
+                className="w-7 h-7 flex items-center justify-center rounded-full bg-brand-btn-bg text-brand-dark"
               >
                 &times;
               </button>
@@ -424,14 +393,18 @@ export default function OrderDetail() {
               })}
             </div>
             <div className="flex gap-3 mt-4">
-              <button
+              <Button
+                variant="ghost"
+                fullWidth
                 onClick={() => setShowReviewModal(false)}
                 disabled={isReviewing}
-                className="flex-1 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-full hover:bg-brand-bg transition-colors"
               >
                 取消
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
+                fullWidth
+                loading={isReviewing}
                 onClick={async () => {
                   const reviews: CreateReviewItemDTO[] = currentOrder.items.map(
                     (item) => {
@@ -463,11 +436,9 @@ export default function OrderDetail() {
                     setIsReviewing(false);
                   }
                 }}
-                disabled={isReviewing}
-                className="flex-1 py-2.5 text-sm text-white bg-brand-primary rounded-full hover:opacity-90 disabled:opacity-50 transition-opacity"
               >
                 {isReviewing ? '提交中...' : '提交评价'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
