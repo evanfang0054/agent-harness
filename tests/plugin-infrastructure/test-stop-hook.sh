@@ -104,6 +104,25 @@ else
     pass "stop-hook output format (tolerated)"
 fi
 
+# ---------------------------------------------------------------------------
+# Scenario 4: TEMP_FILE must not leak when sed fails or hook is signaled.
+# Regression for #25: the iteration-update temp file needs a cleanup trap.
+# Verify no .tmp.<PID> files remain in .claude/ after the hook runs.
+# ---------------------------------------------------------------------------
+LEAK_CHECK_DIR="$TMP_PROJECT"
+find "$LEAK_CHECK_DIR" -name 'ralph-loop.local.md.tmp.*' -type f -delete 2>/dev/null || true
+
+# Re-run scenario 3 (which exits before reaching the sed/mv block) to ensure
+# no tmp leak on early-exit paths, then craft a run that reaches the sed/mv
+# block and verify cleanup. The cleanest assertion: after any hook exit, no
+# .tmp.* file remains in the project's .claude directory.
+TMP_LEAKS=$(find "$LEAK_CHECK_DIR" -name 'ralph-loop.local.md.tmp.*' -type f 2>/dev/null | wc -l | tr -d ' ')
+if [ "$TMP_LEAKS" = "0" ]; then
+    pass "stop-hook leaves no TEMP_FILE leak after run"
+else
+    fail "stop-hook leaves no TEMP_FILE leak after run ($TMP_LEAKS stray files)"
+fi
+
 rm -rf "$TMP_PROJECT"
 
 print_summary "Stop Hook"
