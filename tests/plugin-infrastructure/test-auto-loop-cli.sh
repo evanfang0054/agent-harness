@@ -40,4 +40,23 @@ if grep -q "0 个问题\|0 issues\|无问题" "$PROMPT_FILE"; then pass "prompt 
 # Case 8: orchestrator-prompt 包含 push 失败信号
 if grep -q "AUTO_LOOP_PUSH_FAILED" "$PROMPT_FILE"; then pass "prompt defines push-failed signal"; else fail "prompt defines push-failed signal"; fi
 
+# Case 9: --help 输出包含 --filter 说明
+OUTPUT=$(bash "$SCRIPT" --help 2>&1)
+if echo "$OUTPUT" | grep -q -- "--filter"; then pass "--help shows --filter option"; else fail "--help shows --filter option"; fi
+if echo "$OUTPUT" | grep -q "会话过滤条件"; then pass "--help describes filter semantics"; else fail "--help describes filter semantics"; fi
+
+# Case 10: 脚本源码包含 FILTER 变量和 --filter 解析分支
+if grep -q "^FILTER=\"\"" "$SCRIPT"; then pass "script declares FILTER var"; else fail "script declares FILTER var"; fi
+if grep -q -- "--filter) FILTER=" "$SCRIPT"; then pass "script parses --filter arg"; else fail "script parses --filter arg"; fi
+
+# Case 11: 脚本源码包含 {{FILTER}} 占位符注入
+if grep -q "{{FILTER}}" "$SCRIPT"; then pass "script injects {{FILTER}} placeholder"; else fail "script injects {{FILTER}} placeholder"; fi
+if grep -q -- '--arg filter' "$SCRIPT"; then pass "script passes filter to jq"; else fail "script passes filter to jq"; fi
+
+# Case 12: orchestrator-prompt 包含会话筛选协议
+PROMPT_FILE="$REPO_ROOT/skills/auto-loop/orchestrator-prompt.md"
+if grep -q "会话筛选协议" "$PROMPT_FILE"; then pass "prompt has filter protocol section"; else fail "prompt has filter protocol section"; fi
+if grep -q "{{FILTER}}" "$PROMPT_FILE"; then pass "prompt has {{FILTER}} placeholder"; else fail "prompt has {{FILTER}} placeholder"; fi
+if grep -q "filtered_sessions" "$PROMPT_FILE"; then pass "prompt records filtered_sessions"; else fail "prompt records filtered_sessions"; fi
+
 print_summary "auto-loop.sh CLI"
