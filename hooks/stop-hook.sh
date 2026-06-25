@@ -144,10 +144,12 @@ fi
 
 # Check for completion promise (only if set)
 if [[ "$COMPLETION_PROMISE" != "null" ]] && [[ -n "$COMPLETION_PROMISE" ]]; then
-  # Extract text from <promise> tags using Perl for multiline support
-  # -0777 slurps entire input, s flag makes . match newlines
-  # .*? is non-greedy (takes FIRST tag), whitespace normalized
-  PROMISE_TEXT=$(echo "$LAST_OUTPUT" | perl -0777 -pe 's/.*?<promise>(.*?)<\/promise>.*/$1/s; s/^\s+|\s+$//g; s/\s+/ /g' 2>/dev/null || echo "")
+  # Extract text from <promise> tags using Perl for multiline support.
+  # 关键：必须 fail closed —— 当 LAST_OUTPUT 不含 <promise> 标签时，PROMISE_TEXT 必须为空，
+  # 否则原 s/// 表达式不替换输入，PROMISE_TEXT 会变成整个 LAST_OUTPUT，
+  # 与 COMPLETION_PROMISE 短字符串（如 "DONE"）相等时触发误匹配，提前结束 Ralph loop。
+  # 用条件匹配 + print $1：无 <promise> 标签时 perl 不输出任何内容，PROMISE_TEXT 为空。
+  PROMISE_TEXT=$(echo "$LAST_OUTPUT" | perl -0777 -ne 'if (/<promise>(.*?)<\/promise>/s) { my $t = $1; $t =~ s/^\s+|\s+$//g; $t =~ s/\s+/ /g; print $t }' 2>/dev/null || echo "")
 
   # Use = for literal string comparison (not pattern matching)
   # == in [[ ]] does glob pattern matching which breaks with *, ?, [ characters

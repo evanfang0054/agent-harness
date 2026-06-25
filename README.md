@@ -198,6 +198,67 @@ Superpowers 采用分层架构：**决策层**确保"做对的事"，**执行层
 
 **AI 助手在执行任何任务前都会检查相关技能。** 这是强制性的工作流程，而非建议。
 
+## Auto-Loop：全自动自我提升闭环
+
+`scripts/auto-loop.sh` 是一个独立的自动化工具，不依赖 skill 自动触发，需要手动运行。它把「从会话发现问题 → 提 issue → SDD 修复 → PR」这条链路完全自动化。
+
+### 快速开始
+
+```bash
+# 分析当前项目今天的会话，找出问题、修复、提 PR
+./scripts/auto-loop.sh "分析今天的会话，找出问题并修复"
+
+# 扫描指定项目
+./scripts/auto-loop.sh --project ~/code/my-app "分析本周会话"
+
+# 扫描所有项目（~/.claude/projects/）
+./scripts/auto-loop.sh --all-projects "找出所有项目最近的问题"
+
+# 只分析+提 issue，不修复（dry-run）
+./scripts/auto-loop.sh --dry-run "分析今天的会话"
+
+# 恢复中断的运行
+./scripts/auto-loop.sh --resume
+
+# 清理 state 和 worktree
+./scripts/auto-loop.sh --cleanup
+```
+
+### 工作流程
+
+```
+你输入一句话需求
+    ↓
+[1] 创建 git worktree（隔离工作区，不碰当前目录）
+    ↓
+[2] 调用 claude-code-log 导出筛选后的会话内容
+    ↓
+[3] Claude 分析会话，识别问题模式
+    ↓
+[4] 自动提 issue 到 evanfang0054/superpowers
+    ↓
+[5] 逐个 issue 走 SDD 修复（brainstorming → writing-plans → 实现）
+    ↓
+[6] 验证 → push → 创建 PR（关联 closes #N）
+    ↓
+清理 worktree，输出 PR 链接，等你审核
+```
+
+### 特性
+
+- **git worktree 隔离** — 所有修复在独立 worktree 进行，当前工作区零污染
+- **断点恢复** — 任何中断（崩溃/休眠/Ctrl+C）后 `--resume` 从断点继续
+- **三层可观测性** — 实时事件流 + 心跳检测 + 完整日志文件，绝不静默卡死
+- **介入协议** — 遇到 4 种触发点（不可逆风险/矛盾/低置信度/架构变更）自动退出等待人类决策
+- **最保守决策** — AI 在所有决策点取最小改动、最低风险方案
+- **自保护机制** — PreToolUse hook (`guard-auto-loop.sh`) 拦截 Claude 误删自身运行态的命令，防止"自毁"
+
+### 实际运行效果
+
+在项目自身的实战测试中，auto-loop 已自动发现并修复了 30+ 个 shell 脚本 bug（涵盖 Python 源码注入、信号路径资源泄漏、set -u 边界、frontmatter 边界污染等），全部由 Claude 自主识别 → 提 issue → SDD 修复 → push → 创建 PR。平均单轮运行 15-40 分钟，输出一个可直接审核的 PR。
+
+详见 [设计文档](docs/superpowers/specs/2026-06-24-auto-loop-self-improvement-design.md)。
+
 ## 包含内容
 
 ### 技能库

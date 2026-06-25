@@ -31,6 +31,10 @@ dist-ssr
 .claude/*
 !.claude/README.md
 !.claude/settings.local.json.example
+!.claude/auto-loop/
+!.claude/auto-loop/state.json
+!.claude/auto-loop/runs/
+!.claude/worktrees/
 .DS_Store
 node_modules/
 inspo

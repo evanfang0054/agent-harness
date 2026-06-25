@@ -21,6 +21,16 @@ set -euo pipefail
 LEARNINGS_DIR="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}"
 LEARNINGS_FILE="$LEARNINGS_DIR/.superpowers/learnings.jsonl"
 
+# Cleanup any temp files we create (esp. for --recent branch which can leak
+# under set -e if format_learnings raises Python exception on bad JSON).
+_SUPERPOWERS_TMP_CLEANUP=""
+_superpowers_cleanup() {
+    if [ -n "$_SUPERPOWERS_TMP_CLEANUP" ] && [ -f "$_SUPERPOWERS_TMP_CLEANUP" ]; then
+        rm -f "$_SUPERPOWERS_TMP_CLEANUP"
+    fi
+}
+trap _superpowers_cleanup EXIT
+
 # Check if learnings file exists
 if [ ! -f "$LEARNINGS_FILE" ]; then
     exit 0
@@ -158,9 +168,14 @@ case "$1" in
         n="${2:-10}"
         echo "=== Recent $n Learnings ==="
         # For recent, just show last N lines formatted
-        tail -"$n" "$LEARNINGS_FILE" > /tmp/superpowers_recent_$$.jsonl
-        LEARNINGS_FILE="/tmp/superpowers_recent_$$.jsonl" format_learnings ""
-        rm -f /tmp/superpowers_recent_$$.jsonl
+        # NOTE: 之前用 `/tmp/superpowers_recent_$$.jsonl`，set -e 下 format_learnings
+        # 失败（如 JSON 损坏）时 rm 永不执行，临时文件泄漏。改用 mktemp + 全局 EXIT trap。
+        tmp_recent=$(mktemp -t superpowers_recent)
+        _SUPERPOWERS_TMP_CLEANUP="$tmp_recent"
+        tail -"$n" "$LEARNINGS_FILE" > "$tmp_recent"
+        LEARNINGS_FILE="$tmp_recent" format_learnings ""
+        rm -f "$tmp_recent"
+        _SUPERPOWERS_TMP_CLEANUP=""
         ;;
     --type)
         if [ -z "${2:-}" ]; then

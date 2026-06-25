@@ -5,13 +5,21 @@
 # After return, $LOG_FILE points to the captured stream-json log.
 
 # macOS 兼容 timeout（复用 tests/claude-code/run-skill-tests.sh 的 fallback）
+# 注意：perl `alarm` 默认退出码 142 (128+14)，必须捕获 SIGALRM 并 exit 124，
+# 否则上游 run-skill-tests.sh 的 `[ $exit_code -eq 124 ]` 判断永远不匹配。
 if ! command -v timeout &> /dev/null; then
     if command -v gtimeout &> /dev/null; then
         timeout() { gtimeout "$@"; }
     else
         timeout() {
             local dur="$1"; shift
-            perl -e 'alarm shift @ARGV; exec @ARGV' "$dur" "$@"
+            perl -e '
+                $SIG{ALRM} = sub { exit 124 };
+                alarm shift @ARGV;
+                my $rc = system(@ARGV);
+                exit($rc >> 8) if $rc != -1;
+                exit 127;
+            ' "$dur" "$@"
         }
     fi
 fi

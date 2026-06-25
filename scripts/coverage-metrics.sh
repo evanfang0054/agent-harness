@@ -35,7 +35,15 @@ echo ""
 
 # Sensor coverage
 if [ -f "${SENSORS_FILE}" ]; then
-    sensor_count=$(python3 -c "import json; print(len(json.load(open('${SENSORS_FILE}'))['sensors']))" 2>/dev/null || echo "?")
+    # 用环境变量传 SENSORS_FILE，避免路径含撇号/反斜杠时触发 Python 源码注入（同 #17/#18/#19 bug class）
+    sensor_count=$(SENSORS_FILE="${SENSORS_FILE}" python3 -c '
+import json, os
+try:
+    with open(os.environ["SENSORS_FILE"]) as f:
+        print(len(json.load(f).get("sensors", [])))
+except Exception:
+    print("?")
+' 2>/dev/null || echo "?")
     echo "Computational Sensors:   ${sensor_count} configured"
 else
     echo "Computational Sensors:   NOT CONFIGURED (.superpowers/sensors.json missing)"

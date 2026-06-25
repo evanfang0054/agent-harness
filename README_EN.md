@@ -183,6 +183,67 @@ Superpowers uses a layered architecture: **Decision Layer** ensures "doing the r
 
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
 
+## Auto-Loop: Autonomous Self-Improvement Loop
+
+`scripts/auto-loop.sh` is a standalone automation tool — it does not rely on automatic skill triggering and must be invoked manually. It fully automates the chain: "discover problems from sessions → file issues → SDD fix → create PR".
+
+### Quick Start
+
+```bash
+# Analyze today's sessions for the current project, find issues, fix, create PR
+./scripts/auto-loop.sh "Analyze today's sessions, find and fix issues"
+
+# Scan a specific project
+./scripts/auto-loop.sh --project ~/code/my-app "Analyze this week's sessions"
+
+# Scan all projects (~/.claude/projects/)
+./scripts/auto-loop.sh --all-projects "Find recent issues across all projects"
+
+# Analyze + file issues only, no fixes (dry-run)
+./scripts/auto-loop.sh --dry-run "Analyze today's sessions"
+
+# Resume an interrupted run
+./scripts/auto-loop.sh --resume
+
+# Clean up state and worktrees
+./scripts/auto-loop.sh --cleanup
+```
+
+### How It Works
+
+```
+You provide a natural language request
+    ↓
+[1] Create a git worktree (isolated workspace, never touches your CWD)
+    ↓
+[2] Call claude-code-log to export filtered session content
+    ↓
+[3] Claude analyzes sessions, identifies problem patterns
+    ↓
+[4] File issues to evanfang0054/superpowers
+    ↓
+[5] Fix each issue via SDD (brainstorming → writing-plans → implement)
+    ↓
+[6] Verify → push → create PR (with closes #N references)
+    ↓
+Clean up worktree, output PR link, wait for your review
+```
+
+### Features
+
+- **Git worktree isolation** — All fixes happen in an isolated worktree; your current workspace stays untouched
+- **Checkpoint recovery** — Any interruption (crash/sleep/Ctrl+C) can be resumed with `--resume`
+- **Three-layer observability** — Real-time event stream + heartbeat detection + full log file, never silent
+- **Intervention protocol** — Automatically stops on 4 trigger conditions (irreversible risk/conflict/low confidence/architectural change)
+- **Conservative decisions** — AI picks the smallest, lowest-risk option at every decision point
+- **Self-protection** — PreToolUse hook (`guard-auto-loop.sh`) blocks Claude from deleting its own runtime state, preventing self-destruction
+
+### Proven in Production
+
+In real-world testing on this project itself, auto-loop has autonomously discovered and fixed 30+ shell script bugs (covering Python source injection, signal-path resource leaks, set -u boundary issues, frontmatter boundary corruption, and more). Each bug was identified by Claude → filed as an issue → fixed via SDD → pushed → wrapped in a PR. Average run takes 15-40 minutes and produces a ready-to-review PR.
+
+See the [design spec](docs/superpowers/specs/2026-06-24-auto-loop-self-improvement-design.md) for details.
+
 ## What's Inside
 
 ### Skills Library

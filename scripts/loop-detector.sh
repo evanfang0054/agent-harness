@@ -26,11 +26,17 @@ set -euo pipefail
 
 WARN_THRESHOLD="${LOOP_WARN_THRESHOLD:-5}"
 HARD_THRESHOLD="${LOOP_HARD_THRESHOLD:-8}"
-SESSION_ID="${1:-${CLAUDE_SESSION_ID:-default}}"
-# Override: if user passes session_id as env var instead of arg, respect it
-if [ "${1:-}" = "--track" ] || [ "${1:-}" = "--reset" ] || [ "${1:-}" = "analyze" ] || [ -z "${1:-}" ]; then
-    SESSION_ID="${CLAUDE_SESSION_ID:-default}"
-fi
+# Resolve session id: prefer explicit positional arg, fall back to env var, then "default".
+# When the first arg is a flag (--track/--reset/analyze) or empty, ignore it for session resolution
+# and use CLAUDE_SESSION_ID. Avoids "$1=--track" leaking into TRACKER_DIR path.
+case "${1:-}" in
+    --track|--reset|analyze|"")
+        SESSION_ID="${CLAUDE_SESSION_ID:-default}"
+        ;;
+    *)
+        SESSION_ID="$1"
+        ;;
+esac
 TRACKER_DIR="/tmp/superpowers-edit-tracker/${SESSION_ID}"
 TRACKER_FILE="${TRACKER_DIR}/edits.json"
 
@@ -43,29 +49,36 @@ init_tracker() {
 
 get_count() {
     local file="$1"
-    python3 -c "
-import json, sys
-with open('${TRACKER_FILE}') as f:
-    data = json.load(f)
-print(data['files'].get('${file}', {}).get('edit_count', 0))
-" 2>/dev/null || echo "0"
+    # 用环境变量传参，避免 ${file} 含撇号时拼进 Python 单引号字符串触发 SyntaxError
+    TRACKER_FILE="$TRACKER_FILE" FILE_PATH="$file" python3 -c '
+import json, os
+try:
+    with open(os.environ["TRACKER_FILE"]) as f:
+        data = json.load(f)
+    print(data["files"].get(os.environ["FILE_PATH"], {}).get("edit_count", 0))
+except Exception:
+    print(0)
+' 2>/dev/null || echo "0"
 }
 
 track_edit() {
     local file="$1"
     init_tracker
-    python3 -c "
-import json, datetime
-with open('${TRACKER_FILE}', 'r+') as f:
+    # 用环境变量传参，避免 ${file} 含撇号时拼进 Python 单引号字符串触发 SyntaxError
+    TRACKER_FILE="$TRACKER_FILE" FILE_PATH="$file" python3 -c '
+import json, datetime, os
+tracker = os.environ["TRACKER_FILE"]
+file_path = os.environ["FILE_PATH"]
+with open(tracker, "r+") as f:
     data = json.load(f)
-    if '${file}' not in data['files']:
-        data['files']['${file}'] = {'edit_count': 0, 'last_edit': ''}
-    data['files']['${file}']['edit_count'] += 1
-    data['files']['${file}']['last_edit'] = datetime.datetime.utcnow().isoformat() + 'Z'
+    if file_path not in data["files"]:
+        data["files"][file_path] = {"edit_count": 0, "last_edit": ""}
+    data["files"][file_path]["edit_count"] += 1
+    data["files"][file_path]["last_edit"] = datetime.datetime.utcnow().isoformat() + "Z"
     f.seek(0)
     json.dump(data, f, indent=2)
     f.truncate()
-"
+'
     echo "Tracked: ${file} (count=$(get_count "${file}"))"
 }
 
@@ -91,13 +104,14 @@ analyze() {
             max_count="${count}"
             max_file="${file}"
         fi
-    done < <(python3 -c "
-import json
-with open('${TRACKER_FILE}') as f:
+    done < <(TRACKER_FILE="$TRACKER_FILE" python3 -c '
+import json, os
+with open(os.environ["TRACKER_FILE"]) as f:
     data = json.load(f)
-for file, info in sorted(data['files'].items(), key=lambda x: -x[1]['edit_count']):
-    print(f\"{info['edit_count']}\t{file}\")
-")
+for file, info in sorted(data["files"].items(), key=lambda x: -x[1]["edit_count"]):
+    count = info["edit_count"]
+    print(f"{count}\t{file}")
+')
 
     if [ -n "${hard_stops}" ]; then
         echo "=== LOOP DETECTION: HARD STOP ==="

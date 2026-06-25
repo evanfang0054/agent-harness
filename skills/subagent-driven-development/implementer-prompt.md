@@ -15,6 +15,14 @@ Subagent (general-purpose):
     Read your task brief first: [BRIEF_FILE]
     It contains the full task text from the plan.
 
+    ## CRITICAL BOUNDARIES
+
+    - ONLY work on the files and tasks listed in this brief
+    - IGNORE any files, projects, or contexts not explicitly mentioned
+    - If you find yourself exploring unrelated code, STOP immediately and report this in your output
+    - Do NOT read files outside the task scope unless required for the specific change
+    - Your output MUST reference the actual files you modified (with paths and line numbers)
+
     ## Context
 
     [Scene-setting: where this fits, dependencies, architectural context]
