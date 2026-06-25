@@ -92,12 +92,12 @@ export default function AdminCategories() {
   };
 
   const inputCls =
-    'w-full border border-gray-200 rounded-2xl px-3 py-2 focus:ring-2 focus:ring-brand-primary/30';
+    'w-full border border-brand-border rounded-2xl px-3 py-2 focus:ring-2 focus:ring-brand-primary/30';
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-brand-bg p-6">
       <header className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">分类管理</h1>
+        <h1 className="text-2xl font-bold text-brand-dark">分类管理</h1>
         <button
           onClick={openCreate}
           className="bg-brand-primary text-white px-4 py-2 rounded-2xl font-bold"
@@ -107,12 +107,12 @@ export default function AdminCategories() {
       </header>
 
       {isLoading ? (
-        <div className="text-center py-10 text-gray-500">加载中...</div>
+        <div className="text-center py-10 text-brand-muted">加载中...</div>
       ) : categories.length === 0 ? (
-        <div className="text-center py-10 text-gray-500">暂无分类</div>
+        <div className="text-center py-10 text-brand-muted">暂无分类</div>
       ) : (
-        <table className="w-full bg-white rounded-2xl border border-gray-200">
-          <thead className="bg-gray-100 text-gray-600 text-sm">
+        <table className="w-full bg-white rounded-2xl border border-brand-border">
+          <thead className="bg-brand-btn-bg text-brand-muted text-sm">
             <tr>
               <th className="text-left p-3">ID</th>
               <th className="text-left p-3">名称</th>
@@ -123,8 +123,8 @@ export default function AdminCategories() {
           </thead>
           <tbody>
             {categories.map((c) => (
-              <tr key={c.id} className="border-t border-gray-100">
-                <td className="p-3 text-gray-500">{c.id}</td>
+              <tr key={c.id} className="border-t border-brand-border">
+                <td className="p-3 text-brand-muted">{c.id}</td>
                 <td className="p-3 font-medium">{c.name}</td>
                 <td className="p-3">{c.icon ?? '-'}</td>
                 <td className="p-3">{c.sortOrder}</td>
@@ -186,7 +186,7 @@ export default function AdminCategories() {
               </button>
               <button
                 onClick={() => setModalOpen(false)}
-                className="flex-1 py-2.5 rounded-2xl border border-gray-200 font-bold"
+                className="flex-1 py-2.5 rounded-2xl border border-brand-border font-bold"
               >
                 取消
               </button>

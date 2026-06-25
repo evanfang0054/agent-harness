@@ -4,6 +4,7 @@ import { favoriteApi } from '@/api/favorite';
 import type { FavoriteWithProduct } from 'shared';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { Toast } from '@/components/Toast';
+import { NavBar, EmptyState, Button } from '@/components/ui';
 
 const PAGE_SIZE = 10;
 
@@ -46,7 +47,6 @@ export default function Favorites() {
     try {
       await favoriteApi.remove(fav.product.id);
       Toast.show('已取消收藏', 'info');
-      // 当前页若已空且非首页则回退一页
       if (list.length === 1 && page > 1) {
         fetchPage(page - 1);
       } else {
@@ -61,27 +61,18 @@ export default function Favorites() {
 
   return (
     <div className="min-h-screen bg-brand-bg pb-24">
-      {/* Header */}
-      <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-sm border-b border-brand-border">
-        <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <h1 className="text-lg font-bold text-brand-dark">
+      <NavBar
+        title={
+          <span>
             我的收藏
             {total > 0 && (
               <span className="ml-1 text-[13px] text-brand-muted font-medium">
                 ({total})
               </span>
             )}
-          </h1>
-        </div>
-      </header>
+          </span>
+        }
+      />
 
       <main className="max-w-lg mx-auto px-4 mt-3">
         {loading ? (
@@ -89,15 +80,15 @@ export default function Favorites() {
             <LoadingSpinner size="lg" />
           </div>
         ) : list.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-brand-border p-8 text-center">
-            <p className="text-sm text-brand-muted">还没有收藏任何商品</p>
-            <button
-              onClick={() => navigate('/')}
-              className="mt-4 px-6 py-2 rounded-full bg-gradient-to-br from-brand-primary to-brand-coral text-white text-sm font-bold"
-            >
-              去逛逛
-            </button>
-          </div>
+          <EmptyState
+            title="还没有收藏任何商品"
+            description="去首页挑喜欢的水果吧"
+            action={
+              <Button variant="primary" size="md" onClick={() => navigate('/')}>
+                去逛逛
+              </Button>
+            }
+          />
         ) : (
           <div className="grid grid-cols-2 gap-3">
             {list.map((fav) => {
@@ -106,7 +97,7 @@ export default function Favorites() {
                 return (
                   <div
                     key={fav.id}
-                    className="bg-white rounded-2xl border border-brand-border p-4 text-[12px] text-brand-muted"
+                    className="bg-brand-card rounded-2xl border border-brand-border p-4 text-[12px] text-brand-muted"
                   >
                     商品已下架
                   </div>
@@ -115,7 +106,7 @@ export default function Favorites() {
               return (
                 <div
                   key={fav.id}
-                  className="bg-white rounded-3xl border border-brand-border overflow-hidden flex flex-col"
+                  className="bg-brand-card rounded-3xl border border-brand-border overflow-hidden flex flex-col"
                 >
                   <div
                     onClick={() => navigate(`/product/${product.id}`)}
@@ -157,23 +148,25 @@ export default function Favorites() {
 
         {!loading && totalPages > 1 && (
           <div className="mt-5 flex items-center justify-center gap-3">
-            <button
-              onClick={() => fetchPage(Math.max(1, page - 1))}
+            <Button
+              variant="ghost"
+              size="sm"
               disabled={page <= 1}
-              className="px-3 py-1.5 text-[12px] rounded-full border border-brand-border text-brand-dark disabled:opacity-40"
+              onClick={() => fetchPage(Math.max(1, page - 1))}
             >
               上一页
-            </button>
+            </Button>
             <span className="text-[12px] text-brand-muted">
               {page} / {totalPages}
             </span>
-            <button
-              onClick={() => fetchPage(Math.min(totalPages, page + 1))}
+            <Button
+              variant="ghost"
+              size="sm"
               disabled={page >= totalPages}
-              className="px-3 py-1.5 text-[12px] rounded-full border border-brand-border text-brand-dark disabled:opacity-40"
+              onClick={() => fetchPage(Math.min(totalPages, page + 1))}
             >
               下一页
-            </button>
+            </Button>
           </div>
         )}
       </main>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCartStore } from '@/store/cart.store';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { Toast } from '@/components/Toast';
+import { NavBar, BottomActionBar, EmptyState, Button } from '@/components/ui';
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -88,25 +89,16 @@ export default function Cart() {
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-brand-bg pb-20">
-        <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-sm border-b border-gray-100">
-          <div className="max-w-lg mx-auto px-4 py-3">
-            <h1 className="text-lg font-semibold text-gray-900 text-center">购物车</h1>
-          </div>
-        </header>
-        <div className="flex flex-col items-center justify-center py-32">
-          <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-gray-300">
-            <circle cx="9" cy="21" r="1" />
-            <circle cx="20" cy="21" r="1" />
-            <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" />
-          </svg>
-          <p className="text-gray-400 mt-4 text-sm">购物车空空如也</p>
-          <button
-            onClick={() => navigate('/')}
-            className="mt-4 px-6 py-2 bg-brand-primary text-white text-sm rounded-full hover:opacity-90 transition-opacity"
-          >
-            去逛逛
-          </button>
-        </div>
+        <NavBar title="购物车" showBack={false} />
+        <EmptyState
+          title="购物车空空如也"
+          description="去挑选喜欢的水果吧"
+          action={
+            <Button variant="primary" size="md" onClick={() => navigate('/')}>
+              去逛逛
+            </Button>
+          }
+        />
       </div>
     );
   }
@@ -114,11 +106,12 @@ export default function Cart() {
   return (
     <div className="min-h-screen bg-brand-bg pb-36">
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-sm border-b border-gray-100">
-        <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
-          <h1 className="text-lg font-semibold text-gray-900">购物车</h1>
-          <div className="flex items-center gap-3 ml-auto">
-            <span className="text-sm text-gray-500">{items.length}件商品</span>
+      <NavBar
+        title="购物车"
+        showBack={false}
+        right={
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-brand-muted">{items.length}件商品</span>
             {items.length > 0 && (
               <button
                 onClick={() => setClearTarget(true)}
@@ -128,15 +121,15 @@ export default function Cart() {
               </button>
             )}
           </div>
-        </div>
-      </header>
+        }
+      />
 
       {/* Cart items */}
       <main className="max-w-lg mx-auto px-4 mt-3 space-y-3">
         {items.map((item) => (
           <div
             key={item.id}
-            className="bg-white rounded-2xl p-4 flex gap-3 shadow-sm"
+            className="bg-brand-card rounded-2xl border border-brand-border p-4 flex gap-3"
           >
             {/* Checkbox */}
             <button
@@ -144,7 +137,7 @@ export default function Cart() {
               className={`w-5 h-5 mt-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-colors ${
                 item.selected
                   ? 'bg-brand-primary border-brand-primary'
-                  : 'border-gray-300'
+                  : 'border-brand-border'
               }`}
             >
               {item.selected && (
@@ -156,7 +149,7 @@ export default function Cart() {
 
             {/* Product image */}
             <div
-              className="w-20 h-20 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 cursor-pointer"
+              className="w-20 h-20 rounded-xl overflow-hidden bg-brand-btn-bg flex-shrink-0 cursor-pointer"
               onClick={() => navigate(`/product/${item.productId}`)}
             >
               <img
@@ -170,13 +163,13 @@ export default function Cart() {
             <div className="flex-1 min-w-0 flex flex-col justify-between">
               <div>
                 <h3
-                  className="text-sm font-medium text-gray-800 line-clamp-1 cursor-pointer"
+                  className="text-sm font-medium text-brand-dark line-clamp-1 cursor-pointer"
                   onClick={() => navigate(`/product/${item.productId}`)}
                 >
                   {item.product.name}
                 </h3>
                 {item.specLabel && (
-                  <p className="text-xs text-gray-400 mt-0.5">{item.specLabel}</p>
+                  <p className="text-xs text-brand-muted mt-0.5">{item.specLabel}</p>
                 )}
               </div>
 
@@ -184,7 +177,7 @@ export default function Cart() {
                 <span className="text-brand-primary font-semibold text-sm">
                   ¥{Number(item.product.price).toFixed(2)}
                   {item.product.unit && (
-                    <span className="text-xs text-gray-400 font-normal">
+                    <span className="text-xs text-brand-muted font-normal">
                       /{item.product.unit}
                     </span>
                   )}
@@ -195,7 +188,7 @@ export default function Cart() {
                   <button
                     onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
                     disabled={item.quantity <= 1 || loadingItemId === item.id}
-                    className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40 transition-colors"
+                    className="w-7 h-7 flex items-center justify-center rounded-full bg-brand-btn-bg text-brand-muted hover:bg-brand-bg disabled:opacity-40 transition-colors"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M5 12h14" />
@@ -221,7 +214,7 @@ export default function Cart() {
             <button
               onClick={() => handleRemove(item.id)}
               disabled={loadingItemId === item.id}
-              className="self-start mt-1 p-1 text-gray-300 hover:text-brand-coral transition-colors"
+              className="self-start mt-1 p-1 text-brand-muted/60 hover:text-brand-coral transition-colors"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M18 6L6 18M6 6l12 12" />
@@ -232,45 +225,40 @@ export default function Cart() {
       </main>
 
       {/* Bottom checkout bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-50 safe-bottom">
-        <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
-          <button
-            onClick={toggleSelectAll}
-            className="flex items-center gap-2"
+      <BottomActionBar>
+        <button onClick={toggleSelectAll} className="flex items-center gap-2">
+          <span
+            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+              isSelectedAll()
+                ? 'bg-brand-primary border-brand-primary'
+                : 'border-brand-border'
+            }`}
           >
-            <span
-              className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                isSelectedAll()
-                  ? 'bg-brand-primary border-brand-primary'
-                  : 'border-gray-300'
-              }`}
-            >
-              {isSelectedAll() && (
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              )}
-            </span>
-            <span className="text-sm text-gray-600">全选</span>
-          </button>
+            {isSelectedAll() && (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            )}
+          </span>
+          <span className="text-sm text-brand-muted">全选</span>
+        </button>
 
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <span className="text-sm text-gray-500">合计：</span>
-              <span className="text-lg font-bold text-brand-primary">
-                ¥{Number(total).toFixed(2)}
-              </span>
-            </div>
-            <button
-              onClick={handleCheckout}
-              disabled={selectedCount === 0 || isUpdating}
-              className="px-6 py-2.5 bg-brand-primary text-white text-sm font-semibold rounded-full hover:opacity-90 disabled:opacity-40 transition-opacity"
-            >
-              结算({selectedCount})
-            </button>
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <span className="text-sm text-brand-muted">合计：</span>
+            <span className="text-lg font-bold text-brand-primary">
+              ¥{Number(total).toFixed(2)}
+            </span>
           </div>
+          <Button
+            variant="primary"
+            disabled={selectedCount === 0 || isUpdating}
+            onClick={handleCheckout}
+          >
+            结算({selectedCount})
+          </Button>
         </div>
-      </div>
+      </BottomActionBar>
 
       {/* Clear confirmation modal */}
       {clearTarget && (
@@ -280,18 +268,12 @@ export default function Cart() {
               确定清空购物车？此操作不可撤销
             </p>
             <div className="flex gap-2">
-              <button
-                onClick={confirmClear}
-                className="flex-1 py-2.5 rounded-2xl bg-brand-coral text-white font-bold"
-              >
+              <Button variant="danger" fullWidth onClick={confirmClear}>
                 确定清空
-              </button>
-              <button
-                onClick={() => setClearTarget(false)}
-                className="flex-1 py-2.5 rounded-2xl border border-brand-border font-bold"
-              >
+              </Button>
+              <Button variant="ghost" fullWidth onClick={() => setClearTarget(false)}>
                 取消
-              </button>
+              </Button>
             </div>
           </div>
         </div>

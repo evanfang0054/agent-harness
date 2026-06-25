@@ -83,18 +83,18 @@ export default function AdminRefunds() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-brand-bg p-6">
       <header className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">退款审批</h1>
+        <h1 className="text-2xl font-bold text-brand-dark">退款审批</h1>
       </header>
 
       {isLoading ? (
-        <div className="text-center py-10 text-gray-500">加载中...</div>
+        <div className="text-center py-10 text-brand-muted">加载中...</div>
       ) : refunds.length === 0 ? (
-        <div className="text-center py-10 text-gray-500">暂无退款申请</div>
+        <div className="text-center py-10 text-brand-muted">暂无退款申请</div>
       ) : (
-        <table className="w-full bg-white rounded-2xl border border-gray-200">
-          <thead className="bg-gray-100 text-gray-600 text-sm">
+        <table className="w-full bg-brand-card rounded-2xl border border-brand-border">
+          <thead className="bg-brand-btn-bg text-brand-muted text-sm">
             <tr>
               <th className="text-left p-3">退款单号</th>
               <th className="text-left p-3">订单号</th>
@@ -106,11 +106,11 @@ export default function AdminRefunds() {
           </thead>
           <tbody>
             {refunds.map((r) => (
-              <tr key={r.id} className="border-t border-gray-100">
+              <tr key={r.id} className="border-t border-brand-border">
                 <td className="p-3 font-medium">#{r.id}</td>
                 <td className="p-3">#{r.orderId}</td>
                 <td className="p-3">{r.userId}</td>
-                <td className="p-3 text-sm text-gray-700 max-w-xs truncate">
+                <td className="p-3 text-sm text-brand-dark max-w-xs truncate">
                   {r.reason}
                 </td>
                 <td className="p-3">{renderStatus(r.status)}</td>
@@ -131,7 +131,7 @@ export default function AdminRefunds() {
                       </button>
                     </>
                   ) : (
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-brand-muted">
                       {r.adminNote ? `备注：${r.adminNote}` : '—'}
                     </span>
                   )}
@@ -144,9 +144,9 @@ export default function AdminRefunds() {
 
       {rejectTarget && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl p-6 w-full max-w-md">
+          <div className="bg-brand-card rounded-3xl p-6 w-full max-w-md">
             <h2 className="text-xl font-bold mb-2">拒绝退款申请</h2>
-            <p className="text-sm text-gray-500 mb-4">
+            <p className="text-sm text-brand-muted mb-4">
               退款单 #{rejectTarget.id}（订单 #{rejectTarget.orderId}）
             </p>
             <textarea
@@ -154,7 +154,7 @@ export default function AdminRefunds() {
               onChange={(e) => setAdminNote(e.target.value)}
               placeholder="请填写驳回原因（必填）"
               rows={4}
-              className="w-full border border-gray-200 rounded-2xl px-3 py-2 focus:ring-2 focus:ring-brand-primary/30 resize-none"
+              className="w-full border border-brand-border rounded-2xl px-3 py-2 focus:ring-2 focus:ring-brand-primary/30 resize-none"
             />
             <div className="flex gap-2 mt-6">
               <button
@@ -165,7 +165,7 @@ export default function AdminRefunds() {
               </button>
               <button
                 onClick={() => setRejectTarget(null)}
-                className="flex-1 py-2.5 rounded-2xl border border-gray-200 font-bold"
+                className="flex-1 py-2.5 rounded-2xl border border-brand-border font-bold"
               >
                 取消
               </button>
