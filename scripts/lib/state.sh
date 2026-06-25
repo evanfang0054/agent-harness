@@ -2,10 +2,10 @@
 # state.sh — Checkpoint 读写库 for auto-loop
 # Usage: source scripts/lib/state.sh
 
-# state_init <run_id> <branch> <request> <state_dir> [scan_target]
-# 用 jq -R --arg 安全注入，防止 request 含特殊字符破坏 JSON
+# state_init <run_id> <branch> <request> <state_dir> [scan_target] [filter]
+# 用 jq -R --arg 安全注入，防止 request / filter 含特殊字符破坏 JSON
 state_init() {
-    local run_id="$1" branch="$2" request="$3" state_dir="$4" scan_target="${5:-}"
+    local run_id="$1" branch="$2" request="$3" state_dir="$4" scan_target="${5:-}" filter="${6:-}"
     mkdir -p "$state_dir/runs/$run_id"
     local wt_path="$state_dir/../worktrees/auto-loop-$run_id"
     local started_at; started_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
@@ -21,12 +21,14 @@ state_init() {
         --arg wt_path "$wt_path" \
         --arg orig_pwd "$orig_pwd" \
         --arg scan_target "$scan_target" \
+        --arg filter "$filter" \
         '{
             run_id: $run_id,
             started_at: $started_at,
             branch: $branch,
             request: $request,
             scan_target: $scan_target,
+            filter: $filter,
             current_step: "init",
             progress: {
                 branch_created: false,
@@ -35,7 +37,9 @@ state_init() {
                 issues_created: [],
                 fixes_completed: [],
                 current_fix: null,
-                pr_created: false
+                pr_created: false,
+                filtered_sessions: [],
+                excluded_sessions: []
             },
             artifacts: {
                 sessions_md: $sessions_md,

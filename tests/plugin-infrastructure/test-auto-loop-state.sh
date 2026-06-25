@@ -47,4 +47,24 @@ RESULT=$(state_get "$STATE_DIR" '.current_step')
 if echo "$RESULT" | grep -q "引号"; then pass "state_set_str escapes special chars"; else fail "state_set_str escapes"; fi
 
 state_clear "$STATE_DIR"
+
+# Case 8: state_init 接受第 6 参数 filter 并持久化
+rm -rf "$STATE_DIR" 2>/dev/null || true
+state_init "test-filter" "feat/f" "需求" "$STATE_DIR" "/scan/path" "调用了 superpower"
+assert_file_exists "$STATE_DIR/state.json" "state_init with filter creates state.json"
+assert_json_field "$STATE_DIR/state.json" '.filter' '调用了 superpower' "state has filter field"
+
+# Case 9: state_init 不传 filter 时，filter 为空字符串（向后兼容）
+rm -rf "$STATE_DIR" 2>/dev/null || true
+state_init "test-no-filter" "feat/g" "需求" "$STATE_DIR"
+assert_json_field "$STATE_DIR/state.json" '.filter' '' "state filter defaults to empty"
+
+# Case 10: state_init filter 含特殊字符（双引号、管道符）安全注入
+rm -rf "$STATE_DIR" 2>/dev/null || true
+state_init "test-filter-special" "feat/h" "需求" "$STATE_DIR" "/path" '含"双引号"和|管道符'
+RESULT=$(state_get "$STATE_DIR" '.filter')
+if echo "$RESULT" | grep -q "双引号"; then pass "state_init filter escapes special chars"; else fail "state_init filter escapes special chars"; fi
+if jq empty "$STATE_DIR/state.json" 2>/dev/null; then pass "state.json valid with special filter"; else fail "state.json valid with special filter"; fi
+
+state_clear "$STATE_DIR"
 print_summary "auto-loop state.sh"
