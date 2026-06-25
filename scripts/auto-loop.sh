@@ -26,6 +26,7 @@ RESUME=false
 CLEANUP=false
 DRY_RUN=false
 REQUEST=""
+FILTER=""
 ORIGINAL_PWD="$PWD"
 
 usage() {
@@ -35,6 +36,7 @@ usage() {
 选项:
   --project <path>      扫描指定项目（默认当前目录）
   --all-projects        扫描所有项目
+  --filter "<条件>"     会话过滤条件（自然语言），只分析符合的会话
   --resume              恢复中断的运行
   --cleanup             清理 state 和 runs/
   --dry-run             只分析+提 issue，不修复
@@ -44,6 +46,7 @@ usage() {
   auto-loop.sh "分析今天的会话"
   auto-loop.sh --project ~/code/foo "分析本周会话"
   auto-loop.sh --all-projects "找出所有项目的问题"
+  auto-loop.sh --filter "调用了 superpower 相关 skill" "只盘点相关会话"
   auto-loop.sh --resume
 EOF
 }
@@ -55,6 +58,7 @@ while [[ $# -gt 0 ]]; do
         --resume) RESUME=true; shift ;;
         --cleanup) CLEANUP=true; shift ;;
         --dry-run) DRY_RUN=true; shift ;;
+        --filter) FILTER="$2"; shift 2 ;;
         -h|--help) usage; exit 0 ;;
         *) REQUEST="$1"; shift ;;
     esac
@@ -129,6 +133,7 @@ if $RESUME; then
     SCOPE_DESC="(从上次运行恢复)"
     # SCAN_TARGET 从 state.json 读取（首次运行时已持久化），避免恢复时丢失
     SCAN_TARGET=$(state_get "$STATE_DIR" '.scan_target // ""' 2>/dev/null || echo "")
+    FILTER=$(state_get "$STATE_DIR" '.filter // ""' 2>/dev/null || echo "")
     # 继续 fall-through 到主流程
 else
     # ---------- 全新运行 ----------
@@ -158,7 +163,7 @@ else
 
     RUN_ID="run-$(date +%Y-%m-%d-%H%M%S)"
     BRANCH="feat/auto-improvement-$(date +%Y-%m-%d)"
-    state_init "$RUN_ID" "$BRANCH" "$REQUEST" "$STATE_DIR" "$SCAN_TARGET"
+    state_init "$RUN_ID" "$BRANCH" "$REQUEST" "$STATE_DIR" "$SCAN_TARGET" "$FILTER"
 
     # 注意：state.json 是本地运行态文件（--resume 时读本地文件即可），不纳入 git 跟踪，
     # 否则会混进 PR diff。详见 orchestrator-prompt.md 的 State.json 操作协议。
@@ -213,6 +218,8 @@ SCOPE_VAL="$SCOPE_DESC"
 SCAN_TARGET_VAL="${SCAN_TARGET:-$(state_get "$STATE_DIR" '.scan_target // ""' 2>/dev/null || echo "")}"
 # 空时回退到 REPO_ROOT（向后兼容旧 state.json）
 [ -z "$SCAN_TARGET_VAL" ] && SCAN_TARGET_VAL="$REPO_ROOT"
+# filter 优先用本次 CLI 传入的，resume 时从 state.json 读
+FILTER_VAL="${FILTER:-$(state_get "$STATE_DIR" '.filter // ""' 2>/dev/null || echo "")}"
 
 # 读模板，用 jq --raw-input slurp 把整个文件作为一个字符串读取
 # （jq -R 默认逐行读，input 只取第一行；--slurp 把所有行合成一个 JSON 字符串）
@@ -223,12 +230,14 @@ PROMPT=$(jq --raw-input --slurp \
     --arg state "$STATE_FILE" \
     --arg repo "$REPO_ROOT" \
     --arg scan_target "$SCAN_TARGET_VAL" \
+    --arg filter "$FILTER_VAL" \
     'gsub("{{REQUEST}}"; $req)
      | gsub("{{SCOPE}}"; $scope)
      | gsub("{{BRANCH}}"; $branch)
      | gsub("{{STATE_FILE}}"; $state)
      | gsub("{{REPO_ROOT}}"; $repo)
-     | gsub("{{SCAN_TARGET}}"; $scan_target)' \
+     | gsub("{{SCAN_TARGET}}"; $scan_target)
+     | gsub("{{FILTER}}"; $filter)' \
     < "$REPO_ROOT/skills/auto-loop/orchestrator-prompt.md")
 
 PROMPT="${PROMPT}${PROMPT_DRY_RUN_NOTE:-}"
