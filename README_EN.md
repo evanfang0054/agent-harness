@@ -199,6 +199,9 @@ Superpowers uses a layered architecture: **Decision Layer** ensures "doing the r
 # Scan all projects (~/.claude/projects/)
 ./scripts/auto-loop.sh --all-projects "Find recent issues across all projects"
 
+# Filter sessions by natural language condition
+./scripts/auto-loop.sh --filter "sessions that invoked superpower skills" "Only inventory relevant sessions"
+
 # Analyze + file issues only, no fixes (dry-run)
 ./scripts/auto-loop.sh --dry-run "Analyze today's sessions"
 

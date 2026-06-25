@@ -50,6 +50,7 @@
 ./scripts/auto-loop.sh "<自然语言需求>"            # 扫描当前仓库
 ./scripts/auto-loop.sh --project <path> "<需求>"   # 扫描指定项目
 ./scripts/auto-loop.sh --all-projects "<需求>"     # 扫描 ~/.claude/projects/
+./scripts/auto-loop.sh --filter "<条件>" "<需求>"  # 自然语言筛选会话（如"调用了 superpower 相关 skill"）
 ./scripts/auto-loop.sh --resume                    # 从中断点恢复（Ctrl+C 后）
 ./scripts/auto-loop.sh --dry-run "<需求>"          # 只分析+提 issue，不做 SDD 修复
 ./scripts/auto-loop.sh --cleanup                   # 清理 state.json 和所有 worktree
@@ -73,11 +74,13 @@
 - `scripts/lib/state.sh` — `state_init` / `state_get` / `state_set`（jq 安全注入）
 - `scripts/lib/worktree.sh` — `worktree_create`（分支重名/已存在自动复用）/ `worktree_remove` / `worktree_cleanup_all`
 - `scripts/lib/observe.sh` — `process_line`（解析 stream-json）、`emit_event`（三层可观测性）、`check_heartbeat`（30s 心跳，通过 `HEARTBEAT_TIMESTAMP_FILE` 解决子 shell 变量隔离）
-- `skills/auto-loop/orchestrator-prompt.md` — 注入 Claude 的主大脑指令（含生存规则、state.json 操作协议、8 步链路），由 auto-loop.sh 用 jq `gsub` 填充 `{{REQUEST}}` / `{{SCOPE}}` / `{{BRANCH}}` / `{{STATE_FILE}}` / `{{REPO_ROOT}}` 占位符
+- `skills/auto-loop/orchestrator-prompt.md` — 注入 Claude 的主大脑指令（含生存规则、state.json 操作协议、8 步链路、会话筛选协议），由 auto-loop.sh 用 jq `gsub` 填充 `{{REQUEST}}` / `{{SCOPE}}` / `{{BRANCH}}` / `{{STATE_FILE}}` / `{{REPO_ROOT}}` / `{{FILTER}}` 占位符
 
 **开发注意：**
 - 修改 orchestrator-prompt.md 后，至少跑一次 `./scripts/auto-loop.sh --dry-run "测试"` 验证占位符填充正确
 - 新增信号必须在 `observe.sh` 的 `process_line` 里加 grep 分支，否则主循环检测不到
+- 新增 `{{PLACEHOLDER}}` 必须同时在 auto-loop.sh 的 jq `gsub` 调用里添加对应分支
+- `--filter` 条件会持久化到 state.json，`--resume` 时自动读取（除非 CLI 显式覆盖）
 - 不要把 state.json 纳入 git 跟踪，会污染 PR diff（仅 `--resume` 读本地文件，不跨机器同步）
 
 ### Demo 项目（`demo/fruit-shop/`）

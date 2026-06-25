@@ -214,6 +214,9 @@ Superpowers 采用分层架构：**决策层**确保"做对的事"，**执行层
 # 扫描所有项目（~/.claude/projects/）
 ./scripts/auto-loop.sh --all-projects "找出所有项目最近的问题"
 
+# 只分析特定类型的会话（自然语言筛选）
+./scripts/auto-loop.sh --filter "调用了 superpower 相关 skill" "只盘点相关会话"
+
 # 只分析+提 issue，不修复（dry-run）
 ./scripts/auto-loop.sh --dry-run "分析今天的会话"
 
