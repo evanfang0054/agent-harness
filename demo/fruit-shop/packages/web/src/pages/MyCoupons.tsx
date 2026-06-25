@@ -108,7 +108,7 @@ export default function MyCoupons() {
   );
 
   return (
-    <div className="min-h-screen bg-brand-canvas pb-20">
+    <div className="min-h-screen bg-brand-bg pb-20">
       <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-sm border-b border-brand-border">
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
           <button

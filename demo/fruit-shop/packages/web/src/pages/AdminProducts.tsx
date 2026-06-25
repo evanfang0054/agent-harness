@@ -571,7 +571,7 @@ export default function AdminProducts() {
                       type="checkbox"
                       checked={form.isRecommended}
                       onChange={(e) => setForm({ ...form, isRecommended: e.target.checked })}
-                      className="rounded brand-border text-brand-primary focus:ring-brand-primary/30"
+                      className="rounded border border-brand-border text-brand-primary focus:ring-brand-primary/30"
                     />
                     <span>设为推荐商品</span>
                   </label>
