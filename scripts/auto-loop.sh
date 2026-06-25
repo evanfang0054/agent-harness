@@ -114,6 +114,8 @@ if $RESUME; then
         exit 0
     fi
     check_prerequisites
+    # 恢复运行也检查工作区，避免脏改动混入 auto-loop 提交（#12）
+    check_clean_workspace
     INTERVENTION=$(state_get "$STATE_DIR" '.intervention')
     if [ "$INTERVENTION" != "null" ]; then
         # 显示介入请求
@@ -307,6 +309,7 @@ done < <(
     echo $? > "$EXIT_CODE_FILE"
 )
 EXIT_CODE=$(cat "$EXIT_CODE_FILE" 2>/dev/null || echo 0)
+EXIT_CODE=${EXIT_CODE:-0}  # claude 被 SIGKILL 时 echo 不执行，文件为空（#14）
 rm -f "$EXIT_CODE_FILE"
 kill "$HEARTBEAT_PID" 2>/dev/null || true
 
@@ -315,11 +318,17 @@ INTERVENTION=$(state_get "$STATE_DIR" '.intervention' 2>/dev/null || echo "null"
 
 if [ "$LAST_SIGNAL" = "COMPLETE" ]; then
     emit_event "🏁" "" "Auto-Loop 完成（Claude 输出 COMPLETE）"
-    # 正常完成 → 清理 worktree
-    emit_event "🧹" "" "清理 worktree..."
-    worktree_remove "$REPO_ROOT" "$WORKTREE_PATH"
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+        # dry-run 模式保留 worktree，让用户检查 analysis.json/sessions.md（#13）
+        emit_event "📦" "" "dry-run 模式：保留 worktree 供检查：$WORKTREE_PATH"
+        emit_event "   " "" "恢复全新运行: $0 --resume 会先要求干净工作区"
+    else
+        # 正常完成 → 清理 worktree
+        emit_event "🧹" "" "清理 worktree..."
+        worktree_remove "$REPO_ROOT" "$WORKTREE_PATH"
+        emit_event "✨" "" "worktree 已清理，当前工作区已恢复"
+    fi
     cd "$ORIGINAL_PWD"
-    emit_event "✨" "" "worktree 已清理，当前工作区已恢复"
 elif [ "$LAST_SIGNAL" = "INTERVENTION" ] || { [ "$INTERVENTION" != "null" ] && [ -n "$INTERVENTION" ]; }; then
     echo ""
     echo "⚠️  需要介入: $(echo "$INTERVENTION" | jq -r '.reason // "见 state.json"')"
