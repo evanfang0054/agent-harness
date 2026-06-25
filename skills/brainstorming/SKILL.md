@@ -26,7 +26,7 @@ You MUST create a task for each of these items and complete them in order:
 2. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
 3. **Propose 2-3 approaches** — with trade-offs and your recommendation
 4. **Present design** — in sections scaled to their complexity, get user approval after each section
-5. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
+5. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` (check if target directory is gitignored before committing; if so, inform user and save anyway)
 6. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
 7. **User reviews written spec** — ask user to review the spec file before proceeding
 8. **Transition to implementation** — invoke writing-plans skill to create implementation plan
@@ -134,10 +134,13 @@ Wait for the user's response. If they request changes, make them and re-run the 
 
 After spec approval, before invoking writing-plans, use `superpowers:sprint-contract` to negotiate explicit Definition of Done. This prevents the common failure mode of "completed but not what was expected."
 
-Skip sprint contract only for:
-- Single-line typo fixes
-- Pure documentation changes
-- Truly trivial changes (no behavior modification)
+Skip sprint contract only for changes that meet ALL of these criteria:
+- **Scope**: single file, < 15 lines changed
+- **Risk**: no architecture decisions, no new API surface, no behavioral change to existing logic
+- **Clarity**: the user's request is unambiguous and the implementation path is obvious
+
+Examples of valid skips: typo fixes, pure documentation changes, renaming a variable, updating a constant value.
+If unsure whether a change qualifies, default to running sprint contract.
 
 **Implementation:**
 

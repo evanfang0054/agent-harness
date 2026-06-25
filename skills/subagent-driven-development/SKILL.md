@@ -24,7 +24,7 @@ You are the ORCHESTRATOR. Your job is to coordinate subagents, NOT implement cod
 3. Move to next task
 
 === MANDATORY Rules (DO NOT SKIP) ===
-1. You are COORDINATOR ONLY - never write implementation code yourself
+1. You are COORDINATOR ONLY - never write implementation code yourself. This includes fixing review findings: when a reviewer reports issues, you MUST dispatch a fix subagent (implementer) to address them — never fix them yourself, even for "trivial" one-line fixes.
 2. Each task requires TWO subagents: implementer → task reviewer (spec + quality in one pass)
 3. Subagents must follow superpowers:test-driven-development (TDD)
 4. Every dispatch MUST state its model explicitly (see SKILL.md Model Selection)
@@ -164,6 +164,8 @@ that implementer. Single-file mechanical fixes also take the cheapest tier.
 - Touches 1-2 files with a complete spec → cheap model
 - Touches multiple files with integration concerns → standard model
 - Requires design judgment or broad codebase understanding → most capable model
+
+**Single-file multi-task dispatch:** When multiple tasks all modify the same file and are tightly coupled (each task depends on the prior task's state in that file), combine them into a single implementer dispatch with all related task briefs. This avoids redundant file reads and merge conflicts. The two-stage review (spec + quality) still applies to the combined diff.
 
 ## Handling Implementer Status
 

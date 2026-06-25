@@ -16,6 +16,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
+- **Before saving:** Check if the target directory is gitignored (`git check-ignore <dir>`). If so, inform the user and suggest `.superpowers/plans/` as an alternative, but respect the user's choice.
 
 ## Scope Check
 
@@ -70,6 +71,15 @@ This structure informs the task decomposition. Each task should produce self-con
 
 ---
 ```
+
+## Commit Strategy
+
+Before generating tasks, determine the commit strategy:
+
+- **Ask the user:** "Should each task include a commit step, or do you prefer to commit manually at the end?"
+- **Default to manual-commit** if the user has previously expressed this preference (check session-learnings or project CLAUDE.md)
+- If auto-commit: include "Step N: Commit" in each task as shown in the Task Structure below
+- If manual-commit: omit commit steps from all tasks; add a single "Final commit" reminder at the end of the plan
 
 ## Task Structure
 
@@ -133,6 +143,16 @@ Every step must contain the actual content an engineer needs. These are **plan f
 ## Scope Scan
 
 After defining the task list, check whether any task involves a **global pattern replacement** (token rename, CSS class migration, API signature change, import path shift). If it does, run a project-wide search (Grep) for the pattern before finalizing the plan. List every affected file in the relevant task — do not assume the brainstorming-confirmed file list is exhaustive. A cleanup task that discovers 13 affected files when the plan listed 8 is a plan failure, not a win for the cleanup task.
+
+## API Type Verification
+
+When the plan references API types (interfaces, request/response types, DTOs), verify each referenced field exists before finalizing the plan:
+
+1. **Check type definitions**: open the actual type definition files (e.g., `data-contracts.ts`, `*.d.ts`, auto-generated API types) and confirm every field name and type mentioned in the plan matches
+2. **Check imports**: verify that named exports exist in the specified source files — do not assume re-exports
+3. **Record findings**: if a type mismatch is found, correct the plan before presenting it to the user
+
+This prevents plan execution interruptions from type errors discovered during implementation.
 
 ## Self-Review
 
