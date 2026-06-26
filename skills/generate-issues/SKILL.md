@@ -1,13 +1,14 @@
 ---
 name: generate-issues
-description: Use when the user wants to analyze Claude Code sessions and create GitHub issues from discovered problems WITHOUT fixing them. Trigger on phrases like "分析会话提 issue", "找出最近会话问题", "只生成 issue 不修复", "盘点会话问题". Do NOT use when fixing, writing code, or opening PRs.
+description: Use when the user wants to inventory session problems and file them as GitHub issues, with no code changes or PRs. Trigger on "分析会话提 issue", "找出最近会话问题", "只生成 issue 不修复", "盘点会话问题". Do NOT use when fixing, writing code, or opening PRs.
+argument-hint: "[natural language request]"
 ---
 
 # Generate Issues
 
 ## Overview
 
-Wraps `scripts/auto-loop.sh --dry-run`: scans Claude Code session logs → identifies problem patterns → opens GitHub issues on `evanfang0054/superpowers`. **Analysis and issue creation only — no fixes, no code, no PRs.**
+Analyze recent Claude Code sessions, identify problem patterns, and open GitHub issues — **analysis and issue creation only, no fixes, no code, no PRs.**
 
 ## When to Use
 
@@ -16,7 +17,7 @@ Wraps `scripts/auto-loop.sh --dry-run`: scans Claude Code session logs → ident
 - 想批量从历史会话挖掘问题，暂时不想修复
 
 **When NOT to use:**
-- 想修复已有 issue → 用 `fix-issues-and-pr` skill
+- 想修复已有 issue → 用 `superpowers:fix-issues-and-pr`
 - 想一次完成 分析+修复+PR → 直接调用 `scripts/auto-loop.sh`（不带 `--dry-run`）
 
 ## How to Invoke
@@ -60,7 +61,7 @@ Run `./scripts/auto-loop.sh --dry-run "<natural language request>"`. Common flag
 
 ## Scope Boundary (Do NOT)
 
-- ❌ 不修复 issue → 用 `fix-issues-and-pr`
+- ❌ 不修复 issue → 用 `superpowers:fix-issues-and-pr`
 - ❌ 不提 PR、不写代码、不调用 brainstorming / writing-plans / SDD
 
 完整能力见 `scripts/auto-loop.sh` 与 `skills/auto-loop/orchestrator-prompt.md`。

@@ -1,22 +1,23 @@
 ---
 name: fix-issues-and-pr
-description: Use when the user wants to fix existing GitHub issues and open a single PR — wraps auto-loop.sh --fix-only. Trigger on "修 #12", "把 open issues 都修了提 PR", "fix issue #15", "拉 issue 来修". Do NOT use when analyzing sessions or creating new issues.
+description: Use when the user wants to fix existing GitHub issues and open a single PR, without re-analyzing sessions. Trigger on "修 #12", "把 open issues 都修了提 PR", "fix issue #15", "拉 issue 来修". Do NOT use when analyzing sessions or creating new issues.
+argument-hint: "\"#12,#15\" or \"all\""
 ---
 
 # Fix Issues And PR
 
 ## Overview
 
-Wraps `scripts/auto-loop.sh --fix-only`: pulls existing GitHub issues → runs SDD (brainstorming → writing-plans → subagent-driven-development) per issue → **all fixes ship as ONE PR** that closes every target issue. **No session analysis, no new issues.**
+Pull existing GitHub issues, fix each via SDD workflow, and ship all fixes as **one PR** that closes every target issue — **no session analysis, no new issues.**
 
 ## When to Use
 
 - 用户说："修一下 #12" / "把 open issues 都修了提 PR" / "拉 issue 来修" / "fix issue #15"
 - 用户调用 `/fix-issues-and-pr #12,#15` 或 `/fix-issues-and-pr all`
-- Issues already exist (人工或 `generate-issues` 创建的)，现在要批量修复
+- Issues already exist (人工或 `superpowers:generate-issues` 创建的)，现在要批量修复
 
 **When NOT to use:**
-- 想从会话日志挖掘新问题 → 用 `generate-issues`
+- 想从会话日志挖掘新问题 → 用 `superpowers:generate-issues`
 - 想一次完成 分析+修复+PR → 直接调用 `scripts/auto-loop.sh`（不带 `--fix-only`）
 
 ## Key Constraint — One PR for All Issues
@@ -48,7 +49,7 @@ Wraps `scripts/auto-loop.sh --fix-only`: pulls existing GitHub issues → runs S
 
 ## Prerequisites
 
-同 `generate-issues`：`claude` / `gh`（已 `gh auth login`） / `jq` / `uv` 可用，工作区干净。
+同 `superpowers:generate-issues`：`claude` / `gh`（已 `gh auth login`） / `jq` / `uv` 可用，工作区干净。
 
 ## Outputs
 
@@ -57,7 +58,7 @@ Wraps `scripts/auto-loop.sh --fix-only`: pulls existing GitHub issues → runs S
 
 ## Scope Boundary (Do NOT)
 
-- ❌ 不重新分析会话 → 用 `generate-issues`
+- ❌ 不重新分析会话 → 用 `superpowers:generate-issues`
 - ❌ 不提新 issue → issue 来源是已存在的
 - ❌ 不拆分多个 PR → 当前实现只支持单 PR
 
