@@ -170,7 +170,7 @@ if $RESUME; then
     SCAN_TARGET=$(state_get "$STATE_DIR" '.scan_target // ""' 2>/dev/null || echo "")
     FILTER=$(state_get "$STATE_DIR" '.filter // ""' 2>/dev/null || echo "")
     MODE_VAL=$(state_get "$STATE_DIR" '.mode // "full"' 2>/dev/null || echo "full")
-    FIX_ONLY=$(state_get "$STATE_DIR" '.target_issues | if . == ["all"] then "all" elif length == 0 then "" else map(gsub("^#"; "")) | join(",") | "#" + . end' 2>/dev/null || echo "")
+    FIX_ONLY=$(state_get "$STATE_DIR" '.target_issues | if . == ["all"] then "all" elif length == 0 then "" else join(",") end' 2>/dev/null || echo "")
     MAX_ISSUES=$(state_get "$STATE_DIR" '.max_issues // ""' 2>/dev/null || echo "")
     # 继续 fall-through 到主流程
 else
