@@ -274,7 +274,7 @@ issue 来源是 state.target_issues（不是 state.progress.issues_created）。
 如果 state.target_issues = [\"all\"]，先在步骤 5 之前用 gh issue list 拉取 open issues 填充。
 所有修复打到同一分支，最终一个 PR 关联多个 closes #N。
 "
-    emit_event "🔧" "" "模式: fix-only（直接修复，目标: $FIX_ONLY）"
+    emit_event "🔧" "" "模式: fix-only（直接修复，目标: ${FIX_ONLY:-}）"
 fi
 
 # ---------- 组装 prompt（用 jq 安全注入，避免 sed 特殊字符问题） ----------
