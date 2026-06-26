@@ -37,6 +37,8 @@ OUT=$("$AUTO_LOOP" --max-issues 0 "test" 2>&1 || true)
 assert_contains "max-issues 0 被拒" "$OUT" "必须是正整数"
 OUT=$("$AUTO_LOOP" --max-issues abc "test" 2>&1 || true)
 assert_contains "max-issues abc 被拒" "$OUT" "必须是正整数"
+OUT=$("$AUTO_LOOP" --max-issues -3 "test" 2>&1 || true)
+assert_contains "max-issues 负数被拒" "$OUT" "必须是正整数"
 
 # Test 3: --fix-only 缺参数
 echo "--- Test 3: fix-only 缺参 ---"
