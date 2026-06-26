@@ -28,6 +28,9 @@
 - **当前分支**: {{BRANCH}}
 - **当前工作目录**: 已在独立 git worktree 内，直接修改文件即可
 - **Superpowers 仓库根目录**: `{{REPO_ROOT}}`（插件从这里加载，skills/hooks/commands 都在此目录下）
+- **运行模式**: {{MODE}}（`full` = 完整 8 步 / `dry_run` = 只到步骤 4 / `fix_only` = 跳过 1-4，从 5 开始）
+- **目标 issues（fix_only 模式专用）**: {{TARGET_ISSUES}}（空 / `"all"` / `"#12,#15"`）
+- **最多 issue 数**: {{MAX_ISSUES}}（空表示无上限）
 - **State checkpoint**: `{{STATE_FILE}}`（读它了解进度，用下方命令更新它）
 
 **重要：如何导出会话日志（步骤 2）**
@@ -75,6 +78,30 @@ jq '.intervention = {"reason": "具体原因", "options": ["选项1"], "current_
   jq '.current_step = "exporting"' {{STATE_FILE}} > /tmp/al-tmp-$$ && mv /tmp/al-tmp-$$ {{STATE_FILE}}
   ```
 
+## 模式分支守卫
+
+按 `{{MODE}}` 决定执行哪段链路:
+
+| MODE | 步骤 1-4 | 步骤 5-8 |
+|------|---------|---------|
+| `full` | ✅ 执行 | ✅ 执行 |
+| `dry_run` | ✅ 执行 | ❌ 步骤 4 后输出 AUTO_LOOP_COMPLETE |
+| `fix_only` | ❌ 跳过 | ✅ 执行（issue 来源见下方协议） |
+
+**fix_only 模式 issue 来源协议:**
+
+1. 启动时读 `state.target_issues`:
+   - 若为 `["all"]` → 先执行 `gh issue list --repo evanfang0054/superpowers --state open --limit {{MAX_ISSUES_LIMIT}} --json number,title` 拉取（limit 默认 10，由 max_issues 覆盖），把结果写回 `state.target_issues` 为 `["#N1","#N2",...]`
+   - 若已是具体列表 `["#12","#15"]` → 直接使用
+2. 步骤 5 的 SDD 链路里，issue 来源 **从 `state.target_issues` 读**，不要读 `state.progress.issues_created`（后者在 fix_only 模式恒为空数组）
+3. 所有修复打到同一分支（已由脚本侧 `feat/fix-issues-<first>-<date>` 命名），最终一个 PR 关联多个 `closes #N`
+
+**max_issues 协议（dry_run 与 full 模式）:**
+
+步骤 4 提 issue 前:
+1. `gh issue list` 去重（标题匹配），算出"将要新增的 issue 数"
+2. 如果 `(已提数 + 将要新增数) > max_issues`，停止提更多，在 `analysis.json` 写 `issues_truncated_at: N`
+
 ## 8 步链路
 
 1. **创建分支** `feat/auto-improvement-$(date +%Y-%m-%d)`（若 state.progress.branch_created=true 则跳过）
@@ -111,11 +138,17 @@ jq '.intervention = {"reason": "具体原因", "options": ["选项1"], "current_
    - **如果发现 0 个问题**: 直接跳到步骤 7（无需修复），在 PR 描述里说明"分析未发现问题"
 4. **提 issues**: 对每个问题 `gh issue create`，先 `gh issue list` 去重；全部提到 evanfang0054/superpowers
    - 每个 issue 成功后: `jq '.progress.issues_created += ["#N"]'`
-5. **逐个 SDD 修复**: 对每个 issue 走 brainstorming → writing-plans → subagent-driven-development
+5. **逐个 SDD 修复**: issue 列表来源视模式而定
+   - `full` 模式: 来自 `state.progress.issues_created`（步骤 4 提的）
+   - `fix_only` 模式: 来自 `state.target_issues`（脚本侧已填充或刚通过 `gh issue list` 拉取）
+   - 对每个 issue 走 brainstorming → writing-plans → subagent-driven-development
+   - **fix_only 模式跳过 brainstorming 审批等待**（issue 描述即需求），直接进 writing-plans
    - 每完成一个: `jq '.progress.fixes_completed += [{"issue":"#N","commit":"abc"}]'`
 6. **验证**: 调用 verification-before-completion
 7. **push**: `git push -u origin <branch>`（若 push 失败，输出 `AUTO_LOOP_PUSH_FAILED` 并退出）
-8. **创建 PR**: `gh pr create`，body 关联 `closes #N`
+8. **创建 PR**: `gh pr create`，body 关联所有目标 issue
+   - 单 issue: `closes #N`
+   - 多 issue: `closes #12\ncloses #15\ncloses #18`（每行一个，GitHub 会全部自动关闭）
    - 完成后: `jq '.progress.pr_created = true | .current_step = "done"'`
 
 ## 最保守决策原则
