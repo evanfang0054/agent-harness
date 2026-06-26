@@ -32,6 +32,7 @@ TESTS=(
     "test-auto-loop-worktree.sh"
     "test-auto-loop-observe.sh"
     "test-auto-loop-cli.sh"
+    "test-auto-loop-fix-only.sh"
 )
 
 for test in "${TESTS[@]}"; do
