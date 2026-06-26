@@ -91,7 +91,7 @@ jq '.intervention = {"reason": "具体原因", "options": ["选项1"], "current_
 **fix_only 模式 issue 来源协议:**
 
 1. 启动时读 `state.target_issues`:
-   - 若为 `["all"]` → 先执行 `gh issue list --repo evanfang0054/superpowers --state open --limit {{MAX_ISSUES_LIMIT}} --json number,title` 拉取（limit 默认 10，由 max_issues 覆盖），把结果写回 `state.target_issues` 为 `["#N1","#N2",...]`
+   - 若为 `["all"]` → 先执行 `gh issue list --repo evanfang0054/superpowers --state open --limit {{MAX_ISSUES}} --json number,title` 拉取（若 `{{MAX_ISSUES}}` 为空则用 `10` 作为默认），把结果写回 `state.target_issues` 为 `["#N1","#N2",...]`
    - 若已是具体列表 `["#12","#15"]` → 直接使用
 2. 步骤 5 的 SDD 链路里，issue 来源 **从 `state.target_issues` 读**，不要读 `state.progress.issues_created`（后者在 fix_only 模式恒为空数组）
 3. 所有修复打到同一分支（已由脚本侧 `feat/fix-issues-<first>-<date>` 命名），最终一个 PR 关联多个 `closes #N`
