@@ -215,7 +215,6 @@ else
 
     # fix-only 模式用首个 issue 号命名分支，便于追溯；多 issue 单 PR
     if [ "$MODE_VAL" = "fix_only" ] && [ "$FIX_ONLY" != "all" ] && [ -n "$FIX_ONLY" ]; then
-        local first_issue
         first_issue=$(echo "$FIX_ONLY" | sed 's/#//;s/,.*//;s/ *//')
         BRANCH="feat/fix-issues-${first_issue}-$(date +%Y-%m-%d)"
         state_set_str "$STATE_DIR" '.branch' "$BRANCH"
