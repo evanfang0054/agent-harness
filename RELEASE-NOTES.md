@@ -1,5 +1,11 @@
 # Superpowers Release Notes
 
+## v6.2.0 (2026-06-26)
+
+### Changes
+
+- 双子分离 --dry-run/--fix-only + 两 skill
+
 ## v6.1.0 (2026-06-25)
 
 ### Changes
