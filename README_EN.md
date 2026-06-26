@@ -205,6 +205,12 @@ Superpowers uses a layered architecture: **Decision Layer** ensures "doing the r
 # Analyze + file issues only, no fixes (dry-run)
 ./scripts/auto-loop.sh --dry-run "Analyze today's sessions"
 
+# Skip analysis, directly fix specified issues (fix-only)
+./scripts/auto-loop.sh --fix-only "#12,#15"
+
+# Pull all open issues and fix (up to 10)
+./scripts/auto-loop.sh --fix-only "all" --max-issues 10
+
 # Resume an interrupted run
 ./scripts/auto-loop.sh --resume
 
@@ -280,6 +286,10 @@ See the [design spec](docs/superpowers/specs/2026-06-24-auto-loop-self-improveme
 **Quality Assurance**
 - **qa-testing** - Systematically QA test web apps, auto-fix bugs with atomic commits
 - **trace-analysis** - Cross-session failure pattern analysis based on historical learnings data
+
+**Automation**
+- **generate-issues** - Analyze Claude Code sessions and generate GitHub issues (wraps auto-loop --dry-run)
+- **fix-issues-and-pr** - Pull existing issues and fix with SDD workflow, one PR for all (wraps auto-loop --fix-only)
 
 **Meta**
 - **writing-skills** - Create new skills following best practices (includes testing methodology)

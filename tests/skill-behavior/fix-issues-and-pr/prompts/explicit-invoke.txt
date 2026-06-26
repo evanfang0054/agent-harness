@@ -1,0 +1,1 @@
+Invoke the superpowers:fix-issues-and-pr skill via the Skill tool (its tool identifier is superpowers:fix-issues-and-pr). I want to fix issue #12 directly without re-analyzing sessions. Fix it and create a PR that closes the issue.

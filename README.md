@@ -220,6 +220,12 @@ Superpowers 采用分层架构：**决策层**确保"做对的事"，**执行层
 # 只分析+提 issue，不修复（dry-run）
 ./scripts/auto-loop.sh --dry-run "分析今天的会话"
 
+# 跳过分析，直接修复指定 issue（fix-only）
+./scripts/auto-loop.sh --fix-only "#12,#15"
+
+# 拉取所有 open issues 修复（最多 10 个）
+./scripts/auto-loop.sh --fix-only "all" --max-issues 10
+
 # 恢复中断的运行
 ./scripts/auto-loop.sh --resume
 
@@ -300,6 +306,10 @@ Superpowers 采用分层架构：**决策层**确保"做对的事"，**执行层
 - **documentation-sync** - 代码变更后自动同步文档
 - **post-deploy-monitoring** - 部署后健康检查和监控
 - **retrospective** - 工程回顾，分析工作成果和改进点
+
+**自动化**
+- **generate-issues** - 分析 Claude Code 会话并生成 GitHub issues（封装 auto-loop --dry-run）
+- **fix-issues-and-pr** - 拉取已有 issues 并用 SDD 修复，多 issue 单 PR（封装 auto-loop --fix-only）
 
 **知识管理**
 - **session-learnings** - 跨 Session 知识积累和复用

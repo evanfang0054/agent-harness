@@ -1,0 +1,1 @@
+Invoke the superpowers:generate-issues skill via the Skill tool (its tool identifier is superpowers:generate-issues). I want to analyze recent Claude Code sessions and file GitHub issues for problems found. Do not fix anything, just analyze and create issues.

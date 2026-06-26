@@ -25,6 +25,8 @@ ALL_PROJECTS=false
 RESUME=false
 CLEANUP=false
 DRY_RUN=false
+FIX_ONLY=""
+MAX_ISSUES=""
 REQUEST=""
 FILTER=""
 ORIGINAL_PWD="$PWD"
@@ -40,6 +42,8 @@ usage() {
   --resume              恢复中断的运行
   --cleanup             清理 state 和 runs/
   --dry-run             只分析+提 issue，不修复
+  --fix-only "[list]"   跳过分析，直接修复指定 issue（"all" 或 "#12,#15"，与 --dry-run 互斥）
+  --max-issues N        最多提/修 N 个 issue（A 模式限噪音，B 模式 all 限批量）
   -h, --help            显示帮助
 
 示例:
@@ -64,6 +68,22 @@ while [[ $# -gt 0 ]]; do
         --resume) RESUME=true; shift ;;
         --cleanup) CLEANUP=true; shift ;;
         --dry-run) DRY_RUN=true; shift ;;
+        --fix-only)
+            if [ -z "${2:-}" ]; then
+                echo "错误: --fix-only 需要一个参数（\"all\" 或 \"#12,#15\"）" >&2
+                exit 1
+            fi
+            FIX_ONLY="$2"; shift 2 ;;
+        --max-issues)
+            if [ -z "${2:-}" ]; then
+                echo "错误: --max-issues 需要一个正整数参数" >&2
+                exit 1
+            fi
+            if ! [[ "$2" =~ ^[0-9]+$ ]] || [ "$2" -le 0 ]; then
+                echo "错误: --max-issues 必须是正整数" >&2
+                exit 1
+            fi
+            MAX_ISSUES="$2"; shift 2 ;;
         --filter) FILTER="$2"; shift 2 ;;
         -h|--help) usage; exit 0 ;;
         *) REQUEST="$1"; shift ;;
@@ -79,6 +99,13 @@ if $CLEANUP; then
 fi
 
 # ---------- 前置检查 ----------
+check_mode_mutex() {
+    if $DRY_RUN && [ -n "$FIX_ONLY" ]; then
+        echo "错误: --dry-run 与 --fix-only 互斥" >&2
+        exit 1
+    fi
+}
+
 check_prerequisites() {
     command -v claude >/dev/null 2>&1 || { echo "错误: 未找到 claude CLI" >&2; exit 1; }
     command -v gh >/dev/null 2>&1 || { echo "错误: 未找到 gh CLI" >&2; exit 1; }
@@ -142,9 +169,13 @@ if $RESUME; then
     # SCAN_TARGET 从 state.json 读取（首次运行时已持久化），避免恢复时丢失
     SCAN_TARGET=$(state_get "$STATE_DIR" '.scan_target // ""' 2>/dev/null || echo "")
     FILTER=$(state_get "$STATE_DIR" '.filter // ""' 2>/dev/null || echo "")
+    MODE_VAL=$(state_get "$STATE_DIR" '.mode // "full"' 2>/dev/null || echo "full")
+    FIX_ONLY=$(state_get "$STATE_DIR" '.target_issues | if . == ["all"] then "all" elif length == 0 then "" else join(",") end' 2>/dev/null || echo "")
+    MAX_ISSUES=$(state_get "$STATE_DIR" '.max_issues // ""' 2>/dev/null || echo "")
     # 继续 fall-through 到主流程
 else
     # ---------- 全新运行 ----------
+    check_mode_mutex
     check_prerequisites
     check_clean_workspace
     check_git_remote
@@ -171,7 +202,23 @@ else
 
     RUN_ID="run-$(date +%Y-%m-%d-%H%M%S)"
     BRANCH="feat/auto-improvement-$(date +%Y-%m-%d)"
-    state_init "$RUN_ID" "$BRANCH" "$REQUEST" "$STATE_DIR" "$SCAN_TARGET" "$FILTER"
+    # 推算 mode 字符串供 state_init 与 prompt 组装使用
+    if $DRY_RUN; then
+        MODE_VAL="dry_run"
+    elif [ -n "$FIX_ONLY" ]; then
+        MODE_VAL="fix_only"
+    else
+        MODE_VAL="full"
+    fi
+    state_init "$RUN_ID" "$BRANCH" "$REQUEST" "$STATE_DIR" "$SCAN_TARGET" "$FILTER" \
+        "$MODE_VAL" "$FIX_ONLY" "$MAX_ISSUES"
+
+    # fix-only 模式用首个 issue 号命名分支，便于追溯；多 issue 单 PR
+    if [ "$MODE_VAL" = "fix_only" ] && [ "$FIX_ONLY" != "all" ] && [ -n "$FIX_ONLY" ]; then
+        first_issue=$(echo "$FIX_ONLY" | sed 's/#//;s/,.*//;s/ *//')
+        BRANCH="feat/fix-issues-${first_issue}-$(date +%Y-%m-%d)"
+        state_set_str "$STATE_DIR" '.branch' "$BRANCH"
+    fi
 
     # 注意：state.json 是本地运行态文件（--resume 时读本地文件即可），不纳入 git 跟踪，
     # 否则会混进 PR diff。详见 orchestrator-prompt.md 的 State.json 操作协议。
@@ -209,7 +256,7 @@ if $RESUME; then
     fi
 fi
 
-# ---------- dry-run 提示 ----------
+# ---------- mode 提示 ----------
 if [ "${DRY_RUN:-false}" = "true" ]; then
     PROMPT_DRY_RUN_NOTE="
 
@@ -218,6 +265,16 @@ if [ "${DRY_RUN:-false}" = "true" ]; then
 1. jq 更新 state.json 的 current_step = 'dry_run_done'
 2. 输出 AUTO_LOOP_COMPLETE（脚本侧检测后会跳过 worktree 清理，因为 dry-run 不改代码）
 "
+    emit_event "🏃" "" "模式: dry-run（只生成 issue，不修复）"
+elif [ -n "${FIX_ONLY:-}" ]; then
+    PROMPT_FIX_ONLY_NOTE="
+
+注意：这是 --fix-only 模式。跳过步骤 1-4（扫描/分析/提 issue），直接从步骤 5 开始。
+issue 来源是 state.target_issues（不是 state.progress.issues_created）。
+如果 state.target_issues = [\"all\"]，先在步骤 5 之前用 gh issue list 拉取 open issues 填充。
+所有修复打到同一分支，最终一个 PR 关联多个 closes #N。
+"
+    emit_event "🔧" "" "模式: fix-only（直接修复，目标: ${FIX_ONLY:-}）"
 fi
 
 # ---------- 组装 prompt（用 jq 安全注入，避免 sed 特殊字符问题） ----------
@@ -242,16 +299,22 @@ PROMPT=$(jq --raw-input --slurp \
     --arg repo "$REPO_ROOT" \
     --arg scan_target "$SCAN_TARGET_VAL" \
     --arg filter "$FILTER_VAL" \
+    --arg mode "$MODE_VAL" \
+    --arg target_issues "$FIX_ONLY" \
+    --arg max_issues "$MAX_ISSUES" \
     'gsub("{{REQUEST}}"; $req)
      | gsub("{{SCOPE}}"; $scope)
      | gsub("{{BRANCH}}"; $branch)
      | gsub("{{STATE_FILE}}"; $state)
      | gsub("{{REPO_ROOT}}"; $repo)
      | gsub("{{SCAN_TARGET}}"; $scan_target)
-     | gsub("{{FILTER}}"; $filter)' \
+     | gsub("{{FILTER}}"; $filter)
+     | gsub("{{MODE}}"; $mode)
+     | gsub("{{TARGET_ISSUES}}"; $target_issues)
+     | gsub("{{MAX_ISSUES}}"; $max_issues)' \
     < "$REPO_ROOT/skills/auto-loop/orchestrator-prompt.md")
 
-PROMPT="${PROMPT}${PROMPT_DRY_RUN_NOTE:-}"
+PROMPT="${PROMPT}${PROMPT_DRY_RUN_NOTE:-}${PROMPT_FIX_ONLY_NOTE:-}"
 
 # ---------- 运行 claude -p（用进程替换避免子 shell 隔离） ----------
 LOG_FILE="$STATE_DIR/runs/$RUN_ID/stream.log"

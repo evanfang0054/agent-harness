@@ -2,14 +2,33 @@
 # state.sh — Checkpoint 读写库 for auto-loop
 # Usage: source scripts/lib/state.sh
 
-# state_init <run_id> <branch> <request> <state_dir> [scan_target] [filter]
+# state_init <run_id> <branch> <request> <state_dir> [scan_target] [filter] [mode] [target_issues] [max_issues]
 # 用 jq -R --arg 安全注入，防止 request / filter 含特殊字符破坏 JSON
+# mode: "full" | "dry_run" | "fix_only"
+# target_issues: 空串、"all"、或 "#12,#15" 形式的逗号分隔列表
+# max_issues: 空串或正整数字符串
 state_init() {
     local run_id="$1" branch="$2" request="$3" state_dir="$4" scan_target="${5:-}" filter="${6:-}"
+    local mode="${7:-full}" target_issues="${8:-}" max_issues="${9:-}"
     mkdir -p "$state_dir/runs/$run_id"
     local wt_path="$state_dir/../worktrees/auto-loop-$run_id"
     local started_at; started_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
     local orig_pwd="$PWD"
+
+    # target_issues 字符串 → JSON 数组
+    local target_issues_json='[]'
+    if [ -n "$target_issues" ] && [ "$target_issues" != "all" ]; then
+        target_issues_json=$(echo "$target_issues" | tr ',' '\n' | sed 's/^ *//;s/ *$//' | jq -R . | jq -s .)
+    elif [ "$target_issues" = "all" ]; then
+        target_issues_json='["all"]'
+    fi
+
+    # max_issues 字符串 → JSON number 或 null
+    local max_issues_json='null'
+    if [ -n "$max_issues" ]; then
+        max_issues_json="$max_issues"
+    fi
+
     jq -n \
         --arg run_id "$run_id" \
         --arg branch "$branch" \
@@ -22,6 +41,9 @@ state_init() {
         --arg orig_pwd "$orig_pwd" \
         --arg scan_target "$scan_target" \
         --arg filter "$filter" \
+        --arg mode "$mode" \
+        --argjson target_issues "$target_issues_json" \
+        --argjson max_issues "$max_issues_json" \
         '{
             run_id: $run_id,
             started_at: $started_at,
@@ -29,6 +51,9 @@ state_init() {
             request: $request,
             scan_target: $scan_target,
             filter: $filter,
+            mode: $mode,
+            target_issues: $target_issues,
+            max_issues: $max_issues,
             current_step: "init",
             progress: {
                 branch_created: false,
