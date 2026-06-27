@@ -20,7 +20,7 @@ when_to_use: "[feedforward] Triggered between brainstorming and writing-plans fo
 
 ## Entry Contract（进入前置）
 
-- 已存在 `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
+- 已存在 `docs/agent-harness/specs/YYYY-MM-DD-<topic>-design.md`
 - 用户明确说「生成测试用例 / 生成 GDD 段 / 进入测试设计」
 - 若 spec 缺关键决策 → 返回 blocking questions，不写半成品
 

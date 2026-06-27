@@ -62,7 +62,7 @@ fi
 # fall back to git rev-parse for manual runs / CI.
 LEARNINGS_DIR="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}"
 # Create directory if needed
-mkdir -p "$LEARNINGS_DIR/.superpowers"
+mkdir -p "$LEARNINGS_DIR/.agent-harness"
 
 # Generate timestamp
 TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
@@ -80,7 +80,7 @@ fi
 
 TS="$TS" TYPE="$TYPE" KEY="$KEY" INSIGHT="$INSIGHT" \
     CONFIDENCE="$CONFIDENCE" SOURCE="$SOURCE" FILES_ARGS="$FILES_ARGS" \
-    python3 <<'PYTHON' >> "$LEARNINGS_DIR/.superpowers/learnings.jsonl"
+    python3 <<'PYTHON' >> "$LEARNINGS_DIR/.agent-harness/learnings.jsonl"
 import json, os
 entry = {
     "ts": os.environ["TS"],

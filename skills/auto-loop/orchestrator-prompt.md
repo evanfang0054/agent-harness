@@ -7,7 +7,7 @@
 **你运行在 auto-loop.sh 进程内部。以下任何操作都会删除你自己运行所需的 state 和日志，导致主循环立即崩溃：**
 
 - ❌ **绝对禁止** 调用 `scripts/auto-loop.sh`（包括 `--cleanup`/`--resume`/任何参数）
-- ❌ **绝对禁止** 执行 `rm -rf .claude/auto-loop`、`rm -rf .claude/worktrees`、`rm -rf .superpowers/sdd` 等任何删除 `.claude/auto-loop/` 或 `.claude/worktrees/` 的命令
+- ❌ **绝对禁止** 执行 `rm -rf .claude/auto-loop`、`rm -rf .claude/worktrees`、`rm -rf .agent-harness/sdd` 等任何删除 `.claude/auto-loop/` 或 `.claude/worktrees/` 的命令
 - ❌ **绝对禁止** 执行 `git worktree remove` 或 `git worktree prune`
 - ❌ **绝对禁止** 手动 `git stash`、`git checkout` 切换到其他分支（你必须在当前 worktree 分支工作）
 - ❌ **绝对禁止** 让 CWD 漂移后用相对路径执行 git/文件操作（见下方「路径纪律」）
@@ -39,10 +39,10 @@
 - **用户需求**: {{REQUEST}}
 - **扫描范围**: {{SCOPE}}
 - **会话扫描目标路径**: `{{SCAN_TARGET}}`（claude-code-log 用这个路径导出会话日志，可能与目标仓库不同）
-- **目标仓库**: evanfang0054/superpowers（所有 issue 和 PR 都提到这里）
+- **目标仓库**: evanfang0054/agent-harness（所有 issue 和 PR 都提到这里）
 - **当前分支**: {{BRANCH}}
 - **当前工作目录**: 已在独立 git worktree 内，直接修改文件即可
-- **Superpowers 仓库根目录**: `{{REPO_ROOT}}`（插件从这里加载，skills/hooks/commands 都在此目录下）
+- **Agent Harness 仓库根目录**: `{{REPO_ROOT}}`（插件从这里加载，skills/hooks/commands 都在此目录下）
 - **运行模式**: {{MODE}}（`full` = 完整 8 步 / `dry_run` = 只到步骤 4 / `fix_only` = 跳过 1-4，从 5 开始）
 - **目标 issues（fix_only 模式专用）**: {{TARGET_ISSUES}}（空 / `"all"` / `"#12,#15"`）
 - **最多 issue 数**: {{MAX_ISSUES}}（空表示无上限）
@@ -106,7 +106,7 @@ jq '.intervention = {"reason": "具体原因", "options": ["选项1"], "current_
 **fix_only 模式 issue 来源协议:**
 
 1. 启动时读 `state.target_issues`:
-   - 若为 `["all"]` → 先执行 `gh issue list --repo evanfang0054/superpowers --state open --limit {{MAX_ISSUES}} --json number,title` 拉取（若 `{{MAX_ISSUES}}` 为空则用 `10` 作为默认），把结果写回 `state.target_issues` 为 `["#N1","#N2",...]`
+   - 若为 `["all"]` → 先执行 `gh issue list --repo evanfang0054/agent-harness --state open --limit {{MAX_ISSUES}} --json number,title` 拉取（若 `{{MAX_ISSUES}}` 为空则用 `10` 作为默认），把结果写回 `state.target_issues` 为 `["#N1","#N2",...]`
    - 若已是具体列表 `["#12","#15"]` → 直接使用
 2. 步骤 5 的 SDD 链路里，issue 来源 **从 `state.target_issues` 读**，不要读 `state.progress.issues_created`（后者在 fix_only 模式恒为空数组）
 3. 所有修复打到同一分支（已由脚本侧 `feat/fix-issues-<first>-<date>` 命名），最终一个 PR 关联多个 `closes #N`
@@ -140,7 +140,7 @@ jq '.intervention = {"reason": "具体原因", "options": ["选项1"], "current_
 **筛选遍历范围（硬约束，违反 = 静默漏掉跨项目会话）：**
 - **会话筛选脚本必须遍历 `{{SCAN_TARGET}}` 下所有项目子目录的 `*.jsonl`**，禁止只扫单个项目目录。
 - 如果 `{{SCAN_TARGET}}` 是 `~/.claude/projects/`（`--all-projects` 模式），必须 `find "{{SCAN_TARGET}}" -name '*.jsonl' -type f` 枚举**所有**项目子目录下的会话文件，而不是 `ls <某个项目目录>/*.jsonl`。
-- **禁止**把 `REPO_ROOT` 反推出来的单一项目目录（如 `~/.claude/projects/-Users-...-superpowers/`）当作全部会话源 —— `REPO_ROOT` 反映的是插件源仓库，跨项目调用 superpowers 的会话会落在**其他**项目目录（如 `-Users-...-dragonpass-*`）。
+- **禁止**把 `REPO_ROOT` 反推出来的单一项目目录（如 `~/.claude/projects/-Users-...-agent-harness/`）当作全部会话源 —— `REPO_ROOT` 反映的是插件源仓库，跨项目调用 agent-harness 的会话会落在**其他**项目目录（如 `-Users-...-dragonpass-*`）。
 - 推荐写法：
   ```bash
   # 枚举所有项目下所有 jsonl，再做 filter 判定
@@ -151,7 +151,7 @@ jq '.intervention = {"reason": "具体原因", "options": ["选项1"], "current_
   ```
 
 **判定示例（供参考，按自然语言理解执行）：**
-- filter="调用了 superpower 相关 skill" → 会话内出现 Skill 工具调用且 skill 名匹配 superpowers skill 列表（brainstorming / writing-plans / subagent-driven-development / verification-before-completion / finishing-a-development-branch / auto-loop 等）
+- filter="调用了 superpower 相关 skill" → 会话内出现 Skill 工具调用且 skill 名匹配 agent-harness skill 列表（brainstorming / writing-plans / subagent-driven-development / verification-before-completion / finishing-a-development-branch / auto-loop 等）
 - filter="出现 hook 报错" → 会话内有 PreToolUse / SessionStart / Stop hook 的报错文本
 - filter="会话时长 > 30 分钟" → 按 timestamp 跨度判断
 
@@ -164,7 +164,7 @@ jq '.intervention = {"reason": "具体原因", "options": ["选项1"], "current_
 3. **分析会话**: 识别问题模式（代码 bug / 流程问题 / skill 改进），输出 analysis.json
    - 完成后: `jq '.progress.analysis_completed = true | .current_step = "creating_issues"'`
    - **如果发现 0 个问题**: 直接跳到步骤 7（无需修复），在 PR 描述里说明"分析未发现问题"
-4. **提 issues**: 对每个问题 `gh issue create`，先 `gh issue list` 去重；全部提到 evanfang0054/superpowers
+4. **提 issues**: 对每个问题 `gh issue create`，先 `gh issue list` 去重；全部提到 evanfang0054/agent-harness
    - 每个 issue 成功后: `jq '.progress.issues_created += ["#N"]'`
 5. **逐个 SDD 修复**: issue 列表来源视模式而定
    - `full` 模式: 来自 `state.progress.issues_created`（步骤 4 提的）
@@ -218,4 +218,4 @@ intervention 字段格式：
 
 ## 可用 Skills
 
-通过 `--plugin-dir superpowers` 加载：claude-code-log / brainstorming / writing-plans / subagent-driven-development / verification-before-completion / finishing-a-development-branch
+通过 `--plugin-dir agent-harness` 加载：claude-code-log / brainstorming / writing-plans / subagent-driven-development / verification-before-completion / finishing-a-development-branch

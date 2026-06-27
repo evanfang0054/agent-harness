@@ -31,7 +31,7 @@ Five types, run in order:
 
 ## Configuration
 
-`.superpowers/sensors.json`:
+`.agent-harness/sensors.json`:
 
 ```json
 {
@@ -49,7 +49,7 @@ Configure only sensors the project needs.
 
 If sensors.json missing:
 
-1. Detect stack → propose config → ask user → save to `.superpowers/sensors.json`
+1. Detect stack → propose config → ask user → save to `.agent-harness/sensors.json`
 
 | File Found | Stack | Defaults |
 |------------|-------|----------|

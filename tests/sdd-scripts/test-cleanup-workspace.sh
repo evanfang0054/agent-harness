@@ -10,7 +10,7 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 SCRIPT="$PLUGIN_DIR/skills/subagent-driven-development/scripts/cleanup-workspace"
-TEST_DIR="/tmp/superpowers-cleanup-test-$$"
+TEST_DIR="/tmp/agent-harness-cleanup-test-$$"
 
 # Colors
 RED='\033[0;31m'
@@ -47,7 +47,7 @@ echo "--- Test 1: 目录不存在 → exit 0 ---"
 setup_repo
 
 out=$(bash "$SCRIPT" 2>/tmp/cleanup-stderr-1); rc=$?
-if [ "$rc" = "0" ] && [ -z "$out" ] && [ ! -d ".superpowers/sdd" ]; then
+if [ "$rc" = "0" ] && [ -z "$out" ] && [ ! -d ".agent-harness/sdd" ]; then
     log_pass "exit=0, stdout empty, dir not created"
 else
     log_fail "rc=$rc, out='$out', stderr='$(cat /tmp/cleanup-stderr-1)'"
@@ -58,18 +58,18 @@ fi
 # ==========================================
 echo "--- Test 2: 目录有内容 → 清空 ---"
 setup_repo
-mkdir -p .superpowers/sdd
-touch .superpowers/sdd/.gitignore
-touch .superpowers/sdd/progress.md
-touch .superpowers/sdd/task-1-brief.md
-touch .superpowers/sdd/task-1-report.md
-touch .superpowers/sdd/review-aaa..bbb.diff
+mkdir -p .agent-harness/sdd
+touch .agent-harness/sdd/.gitignore
+touch .agent-harness/sdd/progress.md
+touch .agent-harness/sdd/task-1-brief.md
+touch .agent-harness/sdd/task-1-report.md
+touch .agent-harness/sdd/review-aaa..bbb.diff
 
 out=$(bash "$SCRIPT" 2>/tmp/cleanup-stderr-2); rc=$?
-remaining=$(ls -A .superpowers/sdd/ 2>/dev/null | wc -l | tr -d ' ')
+remaining=$(ls -A .agent-harness/sdd/ 2>/dev/null | wc -l | tr -d ' ')
 if [ "$rc" = "0" ] && \
    echo "$out" | grep -q "^cleaned:" && \
-   [ -d ".superpowers/sdd" ] && \
+   [ -d ".agent-harness/sdd" ] && \
    [ "$remaining" = "0" ]; then
     log_pass "exit=0, 'cleaned:' printed, dir kept empty (.gitignore removed)"
 else
@@ -84,13 +84,13 @@ if [ "$(id -u)" = "0" ]; then
     echo "    (skipped: running as root, permission test unreliable)"
 else
     setup_repo
-    mkdir -p .superpowers/sdd
-    touch .superpowers/sdd/.gitignore .superpowers/sdd/progress.md
+    mkdir -p .agent-harness/sdd
+    touch .agent-harness/sdd/.gitignore .agent-harness/sdd/progress.md
     # 父目录改只读，rm 无法删除内部文件
-    chmod 555 .superpowers/sdd
+    chmod 555 .agent-harness/sdd
 
     out=$(bash "$SCRIPT" 2>/tmp/cleanup-stderr-3); rc=$?
-    chmod 755 .superpowers/sdd  # 恢复以便 trap cleanup 能清理
+    chmod 755 .agent-harness/sdd  # 恢复以便 trap cleanup 能清理
     err=$(cat /tmp/cleanup-stderr-3)
     if [ "$rc" = "0" ] && \
        echo "$err" | grep -q "warning: cleanup-workspace failed"; then

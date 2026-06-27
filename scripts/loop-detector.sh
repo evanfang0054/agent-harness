@@ -15,7 +15,7 @@
 #   LOOP_WARN_THRESHOLD=5   (default)
 #   LOOP_HARD_THRESHOLD=8   (default)
 #
-# Storage: /tmp/superpowers-edit-tracker/{session_id}/edits.json
+# Storage: /tmp/agent-harness-edit-tracker/{session_id}/edits.json
 #
 # Exit codes:
 #   0 = OK (no warning)
@@ -37,7 +37,7 @@ case "${1:-}" in
         SESSION_ID="$1"
         ;;
 esac
-TRACKER_DIR="/tmp/superpowers-edit-tracker/${SESSION_ID}"
+TRACKER_DIR="/tmp/agent-harness-edit-tracker/${SESSION_ID}"
 TRACKER_FILE="${TRACKER_DIR}/edits.json"
 
 init_tracker() {
@@ -146,7 +146,7 @@ case "${1:-analyze}" in
     *)
         # Treat first arg as session_id when no flag given, then run analyze
         SESSION_ID="$1"
-        TRACKER_DIR="/tmp/superpowers-edit-tracker/${SESSION_ID}"
+        TRACKER_DIR="/tmp/agent-harness-edit-tracker/${SESSION_ID}"
         TRACKER_FILE="${TRACKER_DIR}/edits.json"
         analyze
         ;;

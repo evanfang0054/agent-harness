@@ -96,7 +96,7 @@ observed. Track progress in a ledger file, not only in todos.
 
 At skill start, ensure the SDD ledger directory exists and check for a ledger:
 ```
-SDD_DIR="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}"/.superpowers/sdd
+SDD_DIR="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}"/.agent-harness/sdd
 mkdir -p "$SDD_DIR"
 LEDGER="$SDD_DIR/progress.md"
 [ -f "$LEDGER" ] && cat "$LEDGER" || echo "(no prior SDD progress)"
@@ -128,12 +128,12 @@ After compaction, trust the ledger and `git log` over your own recollection.
 ## Integration
 
 **Required workflow skills:**
-- **superpowers:writing-plans** — creates the plan this skill executes.
-- **superpowers:requesting-code-review** — code review template for the final whole-branch review.
-- **superpowers:finishing-a-development-branch** — complete development after all tasks.
+- **agent-harness:writing-plans** — creates the plan this skill executes.
+- **agent-harness:requesting-code-review** — code review template for the final whole-branch review.
+- **agent-harness:finishing-a-development-branch** — complete development after all tasks.
 
 **Subagents should use:**
-- **superpowers:test-driven-development** — subagents follow TDD for each task.
+- **agent-harness:test-driven-development** — subagents follow TDD for each task.
 
 **Alternative workflow:**
-- **superpowers:executing-plans** — use for parallel session instead of same-session execution.
+- **agent-harness:executing-plans** — use for parallel session instead of same-session execution.

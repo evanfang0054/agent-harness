@@ -1,7 +1,7 @@
 {
-  "name": "superpowers",
+  "name": "agent-harness",
   "version": "6.2.0",
-  "description": "Superpowers skills and runtime bootstrap for coding agents",
+  "description": "Agent Harness skills and runtime bootstrap for coding agents",
   "type": "module",
   "scripts": {
     "release": "./scripts/bump-version.sh"
@@ -16,7 +16,7 @@
   ],
   "pi": {
     "extensions": [
-      "./.pi/extensions/superpowers.ts"
+      "./.pi/extensions/agent-harness.ts"
     ],
     "skills": [
       "./skills"

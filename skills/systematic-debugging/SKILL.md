@@ -177,7 +177,7 @@ You MUST complete each phase before proceeding to the next.
    - Automated test if possible
    - One-off test script if no framework
    - MUST have before fixing
-   - Use the `superpowers:test-driven-development` skill for writing proper failing tests
+   - Use the `agent-harness:test-driven-development` skill for writing proper failing tests
 
 2. **Implement Single Fix**
    - Address the root cause identified
@@ -285,8 +285,8 @@ These techniques are part of systematic debugging and available in this director
 - **`condition-based-waiting.md`** - Replace arbitrary timeouts with condition polling
 
 **Related skills:**
-- **superpowers:test-driven-development** - For creating failing test case (Phase 4, Step 1)
-- **superpowers:verification-before-completion** - Verify fix worked before claiming success
+- **agent-harness:test-driven-development** - For creating failing test case (Phase 4, Step 1)
+- **agent-harness:verification-before-completion** - Verify fix worked before claiming success
 
 ## Real-World Impact
 
@@ -305,8 +305,8 @@ From debugging sessions:
 ${CLAUDE_PLUGIN_ROOT}/scripts/log-learning.sh pitfall "SHORT_KEY" "WHAT_YOU_LEARNED" 8 error
 
 # Or manually
-mkdir -p .superpowers
-echo '{"ts":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'","type":"pitfall","key":"SHORT_KEY","insight":"WHAT_YOU_LEARNED","confidence":8,"source":"error"}' >> .superpowers/learnings.jsonl
+mkdir -p .agent-harness
+echo '{"ts":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'","type":"pitfall","key":"SHORT_KEY","insight":"WHAT_YOU_LEARNED","confidence":8,"source":"error"}' >> .agent-harness/learnings.jsonl
 ```
 
 **Record when:**

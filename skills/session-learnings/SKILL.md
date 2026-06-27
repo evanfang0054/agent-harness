@@ -41,7 +41,7 @@ Knowledge discovered in one session shouldn't be lost. Learnings accumulate proj
 
 ### Storage Location
 
-Learnings are stored in `.superpowers/learnings.jsonl` at the project root.
+Learnings are stored in `.agent-harness/learnings.jsonl` at the project root.
 
 ### Using the Script (Recommended)
 
@@ -59,10 +59,10 @@ ${CLAUDE_PLUGIN_ROOT}/scripts/log-learning.sh preference "explicit_types" "User 
 
 ```bash
 # Create directory if needed
-mkdir -p .superpowers
+mkdir -p .agent-harness
 
 # Append learning
-echo '{"ts":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'","type":"TYPE","key":"SHORT_KEY","insight":"DESCRIPTION","confidence":N,"source":"SOURCE","files":["path/to/relevant/file"]}' >> .superpowers/learnings.jsonl
+echo '{"ts":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'","type":"TYPE","key":"SHORT_KEY","insight":"DESCRIPTION","confidence":N,"source":"SOURCE","files":["path/to/relevant/file"]}' >> .agent-harness/learnings.jsonl
 ```
 
 ### Field Definitions
@@ -112,7 +112,7 @@ ${CLAUDE_PLUGIN_ROOT}/scripts/search-learnings.sh --type pitfall
 ${CLAUDE_PLUGIN_ROOT}/scripts/search-learnings.sh --recent 5
 
 # Or manual grep
-grep -i "keyword" .superpowers/learnings.jsonl 2>/dev/null
+grep -i "keyword" .agent-harness/learnings.jsonl 2>/dev/null
 ```
 
 ### Updating Learnings
@@ -121,7 +121,7 @@ If a learning becomes outdated or wrong:
 
 ```bash
 # Mark as superseded by adding a new learning
-echo '{"ts":"...","type":"pattern","key":"old_key_v2","insight":"Updated understanding: ...","confidence":8,"source":"observed","supersedes":"old_key"}' >> .superpowers/learnings.jsonl
+echo '{"ts":"...","type":"pattern","key":"old_key_v2","insight":"Updated understanding: ...","confidence":8,"source":"observed","supersedes":"old_key"}' >> .agent-harness/learnings.jsonl
 ```
 
 Don't delete old learnings - add superseding entries so history is preserved.
@@ -169,8 +169,8 @@ ${CLAUDE_PLUGIN_ROOT}/scripts/search-learnings.sh --recent 5
 ${CLAUDE_PLUGIN_ROOT}/scripts/search-learnings.sh --all
 
 # Manual
-cat .superpowers/learnings.jsonl                    # Read all
-grep -i "keyword" .superpowers/learnings.jsonl      # Search
+cat .agent-harness/learnings.jsonl                    # Read all
+grep -i "keyword" .agent-harness/learnings.jsonl      # Search
 ```
 
 ## Red Flags

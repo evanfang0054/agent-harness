@@ -56,7 +56,7 @@ print(json.dumps({
 " >> "$file"
 }
 
-TEST_DIR="/tmp/superpowers-stop-hook-test-$$"
+TEST_DIR="/tmp/agent-harness-stop-hook-test-$$"
 cleanup() { rm -rf "$TEST_DIR"; }
 trap cleanup EXIT
 

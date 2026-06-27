@@ -13,8 +13,8 @@ when_to_use: "[feedforward, feedback] Triggered when executing a written plan ta
 
 === MANDATORY Rules (DO NOT SKIP) ===
 1. Pick the highest-priority task and implement ONLY that one. You decide priority—not necessarily the first in the list.
-2. For EVERY task: follow superpowers:test-driven-development (write failing test FIRST, then implement).
-3. After completing each task, run superpowers:requesting-code-review before moving to the next task.
+2. For EVERY task: follow agent-harness:test-driven-development (write failing test FIRST, then implement).
+3. After completing each task, run agent-harness:requesting-code-review before moving to the next task.
 4. After completing the task, update the plan document to record what was done.
 5. When encountering unfamiliar or new APIs, use context7 to query the latest documentation.
 6. Stay in the current directory—do not cd into other directories unless absolutely necessary.
@@ -24,7 +24,7 @@ when_to_use: "[feedforward, feedback] Triggered when executing a written plan ta
 11. The Ralph loop replays this SAME prompt inside the current session. Keep progress in files and task state instead of rewriting the task.
 12. The completion promise uses exact string matching. Do not quote, mention, or emit it before all required work is complete.
 13. If you are approaching the iteration limit and are still blocked, document what is blocking progress, what you already tried, and the most likely next step.
-14. When ALL plan tasks are done, you MUST run superpowers:finishing-a-development-branch to complete the branch.
+14. When ALL plan tasks are done, you MUST run agent-harness:finishing-a-development-branch to complete the branch.
 15. ONLY after finishing-a-development-branch is executed, emit the completion signal exactly once as <promise>COMPLETE</promise>.
 " \
   --completion-promise "COMPLETE" \
@@ -39,7 +39,7 @@ Load plan, review critically, execute all tasks iteratively in the current sessi
 
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
-**Note:** Tell your human partner that Superpowers can benefit from subagents. If subagents are available, prefer superpowers:subagent-driven-development. Otherwise, continue with this skill in the current workspace.
+**Note:** Tell your human partner that Agent Harness can benefit from subagents. If subagents are available, prefer agent-harness:subagent-driven-development. Otherwise, continue with this skill in the current workspace.
 
 ## The Process
 
@@ -61,7 +61,7 @@ For each task:
 
 After all tasks complete and verified:
 - Announce: "I'm using the finishing-a-development-branch skill to complete this work."
-- **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
+- **REQUIRED SUB-SKILL:** Use agent-harness:finishing-a-development-branch
 - Follow that skill to verify tests, present options, execute choice
 
 ## When to Stop and Ask for Help
@@ -95,5 +95,5 @@ After all tasks complete and verified:
 ## Integration
 
 **Related workflow skills:**
-- **superpowers:writing-plans** - Creates the plan this skill executes
-- **superpowers:finishing-a-development-branch** - Complete development after all tasks
+- **agent-harness:writing-plans** - Creates the plan this skill executes
+- **agent-harness:finishing-a-development-branch** - Complete development after all tasks

@@ -50,7 +50,7 @@ git log --stat --since="1 week ago" --author="$(git config user.email)" | tail -
 **Learnings (if using session-learnings):**
 ```bash
 # Check for captured learnings
-cat .superpowers/learnings.jsonl 2>/dev/null | tail -20
+cat .agent-harness/learnings.jsonl 2>/dev/null | tail -20
 ```
 
 **Files changed:**
@@ -71,7 +71,7 @@ Use the output to identify:
 - Trends in agent behavior
 - Specific skills that may need improvement
 
-Reference: `superpowers:trace-analysis` for interpretation guidance.
+Reference: `agent-harness:trace-analysis` for interpretation guidance.
 
 ### Coverage Metrics Input
 
@@ -115,7 +115,7 @@ Files touched: Z
 
 #### Learnings Captured
 ```
-(From .superpowers/learnings.jsonl)
+(From .agent-harness/learnings.jsonl)
 - key: insight
 - key: insight
 ```

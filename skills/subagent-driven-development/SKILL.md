@@ -39,13 +39,13 @@ resolve to the wrong location and fail.
 === MANDATORY Rules (DO NOT SKIP) ===
 1. You are COORDINATOR ONLY - never write implementation code yourself. This includes fixing review findings: when a reviewer reports issues, you MUST dispatch a fix subagent (implementer) to address them — never fix them yourself, even for \"trivial\" one-line fixes.
 2. Each task requires TWO subagents: implementer → task reviewer (spec + quality in one pass)
-3. Subagents must follow superpowers:test-driven-development (TDD)
+3. Subagents must follow agent-harness:test-driven-development (TDD)
 4. Every dispatch MUST state its model explicitly (see references/controller-guide.md Model Selection)
 5. Do NOT skip any review stage
 6. Do NOT proceed if any review has open Critical/Important issues
 7. Do NOT tell the reviewer what to ignore or pre-rate severity
 8. When ALL tasks complete, dispatch FINAL CODE REVIEWER for entire implementation
-9. After final review, you MUST run superpowers:finishing-a-development-branch
+9. After final review, you MUST run agent-harness:finishing-a-development-branch
 10. ONLY after finishing-a-development-branch is executed, emit the completion signal exactly once (do not quote or mention it earlier).
 " \
   --completion-promise "COMPLETE" \
@@ -89,19 +89,19 @@ first review, or after compaction). Do not paste its content into dispatch promp
 When all tasks complete:
 1. Dispatch final whole-branch review (template: `../requesting-code-review/code-reviewer.md`) with a review package spanning `MERGE_BASE..HEAD`.
 2. If findings: dispatch ONE fix subagent with the complete findings list.
-3. Run **superpowers:finishing-a-development-branch**.
+3. Run **agent-harness:finishing-a-development-branch**.
 
 ## Prompt Templates
 
 - [implementer-prompt.md](implementer-prompt.md) — dispatch implementer subagent.
 - [task-reviewer-prompt.md](task-reviewer-prompt.md) — dispatch task reviewer (spec + quality).
-- Final review: [code-reviewer.md](../requesting-code-review/code-reviewer.md) from superpowers:requesting-code-review.
+- Final review: [code-reviewer.md](../requesting-code-review/code-reviewer.md) from agent-harness:requesting-code-review.
 
 ## Durable Progress (essential)
 
 Conversation memory does not survive compaction. Track progress in a ledger:
 ```
-SDD_DIR="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}"/.superpowers/sdd
+SDD_DIR="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}"/.agent-harness/sdd
 mkdir -p "$SDD_DIR"
 LEDGER="$SDD_DIR/progress.md"
 [ -f "$LEDGER" ] && cat "$LEDGER" || echo "(no prior SDD progress)"

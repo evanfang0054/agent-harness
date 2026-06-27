@@ -41,5 +41,5 @@ inspo
 triage/
 skills/harness-optimizer/tests
 skills/harness-optimizer/scripts/__pycache__
-.superpowers/session-analysis
+.agent-harness/session-analysis
 !CLAUDE.md

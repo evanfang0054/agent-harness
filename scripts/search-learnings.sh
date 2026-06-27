@@ -24,17 +24,17 @@ set -euo pipefail
 # fall back to git rev-parse for manual runs / CI. Keep read location aligned
 # with log-learning.sh write location.
 LEARNINGS_DIR="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}"
-LEARNINGS_FILE="$LEARNINGS_DIR/.superpowers/learnings.jsonl"
+LEARNINGS_FILE="$LEARNINGS_DIR/.agent-harness/learnings.jsonl"
 
 # Cleanup any temp files we create (esp. for --recent branch which can leak
 # under set -e if format_learnings raises Python exception on bad JSON).
-_SUPERPOWERS_TMP_CLEANUP=""
-_superpowers_cleanup() {
-    if [ -n "$_SUPERPOWERS_TMP_CLEANUP" ] && [ -f "$_SUPERPOWERS_TMP_CLEANUP" ]; then
-        rm -f "$_SUPERPOWERS_TMP_CLEANUP"
+_AGENT_HARNESS_TMP_CLEANUP=""
+_agent_harness_cleanup() {
+    if [ -n "$_AGENT_HARNESS_TMP_CLEANUP" ] && [ -f "$_AGENT_HARNESS_TMP_CLEANUP" ]; then
+        rm -f "$_AGENT_HARNESS_TMP_CLEANUP"
     fi
 }
-trap _superpowers_cleanup EXIT
+trap _agent_harness_cleanup EXIT
 
 # Check if learnings file exists
 if [ ! -f "$LEARNINGS_FILE" ]; then
@@ -73,7 +73,7 @@ import os
 from datetime import datetime, timedelta
 from collections import defaultdict
 
-file_path = sys.argv[1] if len(sys.argv) > 1 else '.superpowers/learnings.jsonl'
+file_path = sys.argv[1] if len(sys.argv) > 1 else '.agent-harness/learnings.jsonl'
 filter_text = os.environ.get('LEARNINGS_FILTER', '').lower()
 type_filter = os.environ.get('LEARNINGS_TYPE_FILTER', '').lower()
 max_entries = int(os.environ.get('LEARNINGS_MAX_ENTRIES', '0') or '0')
@@ -239,14 +239,14 @@ case "$1" in
         n="${2:-10}"
         echo "=== Recent $n Learnings ==="
         # For recent, just show last N lines formatted
-        # NOTE: 之前用 `/tmp/superpowers_recent_$$.jsonl`，set -e 下 format_learnings
+        # NOTE: 之前用 `/tmp/agent_harness_recent_$$.jsonl`，set -e 下 format_learnings
         # 失败（如 JSON 损坏）时 rm 永不执行，临时文件泄漏。改用 mktemp + 全局 EXIT trap。
-        tmp_recent=$(mktemp -t superpowers_recent)
-        _SUPERPOWERS_TMP_CLEANUP="$tmp_recent"
+        tmp_recent=$(mktemp -t agent_harness_recent)
+        _AGENT_HARNESS_TMP_CLEANUP="$tmp_recent"
         tail -"$n" "$LEARNINGS_FILE" > "$tmp_recent"
         LEARNINGS_FILE="$tmp_recent" format_learnings "" "" "$MAX_ENTRIES" "$MIN_CONFIDENCE" "$RECENT_WITHIN_DAYS"
         rm -f "$tmp_recent"
-        _SUPERPOWERS_TMP_CLEANUP=""
+        _AGENT_HARNESS_TMP_CLEANUP=""
         ;;
     --type)
         if [ -z "${2:-}" ]; then

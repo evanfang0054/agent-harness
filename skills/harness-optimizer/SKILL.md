@@ -27,7 +27,7 @@ disable-model-invocation: true
 - 实现 harness 自我闭环
 
 **目标对象判定：**
-- 如果用户明确说“优化这个项目 / 这个仓库 / 这套 superpowers”，优先输出该对象的优化建议并在该对象上落地修改
+- 如果用户明确说“优化这个项目 / 这个仓库 / 这套 agent-harness”，优先输出该对象的优化建议并在该对象上落地修改
 - 如果用户明确说“优化这个 skill”或“优化分析器本身”，才把 `harness-optimizer` 当成主要优化对象
 - 如果 session 命中了别的项目目录，要在分析报告里显式标注跨项目风险，避免把样本项目的问题误写成当前项目的问题
 
@@ -67,7 +67,7 @@ ls -lt ~/.claude/projects/<project-path>/*.jsonl | head -20
 python "${CLAUDE_PLUGIN_ROOT}/skills/harness-optimizer/scripts/extract-session.py" \
   --session-id <session-id> \
   --project-path=<encoded-project-path> \
-  --output .superpowers/session-analysis/<session-id>.json
+  --output .agent-harness/session-analysis/<session-id>.json
 ```
 
 **注意：** 当 `project-path` 本身以 `-` 开头（Claude 编码路径通常如此）时，必须使用 `--project-path=<value>` 这种等号写法，避免被 argparse 误识别为新选项。
@@ -113,7 +113,7 @@ python "${CLAUDE_PLUGIN_ROOT}/skills/harness-optimizer/scripts/extract-session.p
 
 **推荐子 agent 任务描述：**
 ```text
-读取 .superpowers/session-analysis/<session-id>.json，生成 .superpowers/session-analysis/<session-id>-report.md。
+读取 .agent-harness/session-analysis/<session-id>.json，生成 .agent-harness/session-analysis/<session-id>-report.md。
 
 目标：基于该 session 样本总结问题模式、关键证据、风险和优化建议。
 限制：只做分析，不写代码，不修改目标项目。
@@ -180,12 +180,12 @@ python "${CLAUDE_PLUGIN_ROOT}/skills/harness-optimizer/scripts/extract-session.p
 ```bash
 # 使用 skill-creator 的 eval 系统
 # 创建测试用例
-mkdir -p .superpowers/skill-evals/<skill-name>/
+mkdir -p .agent-harness/skill-evals/<skill-name>/
 
 # 运行测试
 python -m skill_creator.scripts.run_eval \
   --skill-path skills/<skill-name> \
-  --eval-set .superpowers/skill-evals/<skill-name>/evals.json
+  --eval-set .agent-harness/skill-evals/<skill-name>/evals.json
 ```
 
 ## 完整闭环流程

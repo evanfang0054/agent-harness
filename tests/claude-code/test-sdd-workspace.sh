@@ -38,20 +38,20 @@ main() {
     local dir
     dir="$(cd "$repo" && "$SDD_SCRIPTS/sdd-workspace")"
 
-    if [[ "$dir" == "$repo/.superpowers/sdd" ]]; then
-        pass "prints <repo-root>/.superpowers/sdd"
+    if [[ "$dir" == "$repo/.agent-harness/sdd" ]]; then
+        pass "prints <repo-root>/.agent-harness/sdd"
     else
-        fail "prints <repo-root>/.superpowers/sdd"
+        fail "prints <repo-root>/.agent-harness/sdd"
         echo "    got: $dir"
     fi
 
-    if [[ -f "$repo/.superpowers/sdd/.gitignore" && "$(cat "$repo/.superpowers/sdd/.gitignore")" == "*" ]]; then
+    if [[ -f "$repo/.agent-harness/sdd/.gitignore" && "$(cat "$repo/.agent-harness/sdd/.gitignore")" == "*" ]]; then
         pass "self-ignoring .gitignore created with '*'"
     else
         fail "self-ignoring .gitignore created with '*'"
     fi
 
-    printf 'x\n' > "$repo/.superpowers/sdd/artifact.md"
+    printf 'x\n' > "$repo/.agent-harness/sdd/artifact.md"
     local status
     status="$(cd "$repo" && git status --porcelain)"
     if [[ -z "$status" ]]; then
@@ -83,7 +83,7 @@ PLAN
     brief_out="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan.md 1)"
     brief_path="$(printf '%s\n' "$brief_out" | sed -n 's/^wrote \(.*\): [0-9][0-9]* lines$/\1/p')"
     case "$brief_path" in
-        "$repo/.superpowers/sdd/"*) pass "task-brief writes its brief under the workspace" ;;
+        "$repo/.agent-harness/sdd/"*) pass "task-brief writes its brief under the workspace" ;;
         *)
             fail "task-brief writes its brief under the workspace"
             echo "    got: $brief_path"
@@ -100,7 +100,7 @@ PLAN
     rp_out="$(cd "$repo" && "$SDD_SCRIPTS/review-package" HEAD~1 HEAD)"
     rp_path="$(printf '%s\n' "$rp_out" | sed -n 's/^wrote \(.*\): [0-9].*$/\1/p')"
     case "$rp_path" in
-        "$repo/.superpowers/sdd/"*) pass "review-package writes its diff under the workspace" ;;
+        "$repo/.agent-harness/sdd/"*) pass "review-package writes its diff under the workspace" ;;
         *)
             fail "review-package writes its diff under the workspace"
             echo "    got: $rp_path"
@@ -113,7 +113,7 @@ PLAN
     local wt_root wt_dir
     wt_root="$(cd "$wt" && git rev-parse --show-toplevel)"
     wt_dir="$(cd "$wt" && "$SDD_SCRIPTS/sdd-workspace")"
-    if [[ "$wt_dir" == "$wt_root/.superpowers/sdd" && "$wt_dir" != "$dir" ]]; then
+    if [[ "$wt_dir" == "$wt_root/.agent-harness/sdd" && "$wt_dir" != "$dir" ]]; then
         pass "linked worktree resolves its own distinct workspace"
     else
         fail "linked worktree resolves its own distinct workspace"
@@ -121,7 +121,7 @@ PLAN
         echo "    wt:   $wt_dir"
     fi
 
-    printf 'y\n' > "$wt/.superpowers/sdd/artifact.md"
+    printf 'y\n' > "$wt/.agent-harness/sdd/artifact.md"
     local wt_status
     wt_status="$(cd "$wt" && git status --porcelain)"
     if [[ -z "$wt_status" ]]; then

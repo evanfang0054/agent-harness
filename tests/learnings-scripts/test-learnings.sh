@@ -13,7 +13,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
-TEST_DIR="/tmp/superpowers-learnings-test-$$"
+TEST_DIR="/tmp/agent-harness-learnings-test-$$"
 
 # Colors
 RED='\033[0;31m'
@@ -45,7 +45,7 @@ setup() {
     mkdir -p "$TEST_DIR"
     cd "$TEST_DIR"
     export CLAUDE_PROJECT_DIR="$TEST_DIR"
-    # Don't create .superpowers yet - let scripts create it as needed
+    # Don't create .agent-harness yet - let scripts create it as needed
 }
 
 echo "=== Learnings Scripts Tests ==="
@@ -61,8 +61,8 @@ setup
 
 "$PLUGIN_DIR/scripts/log-learning.sh" pattern "test_key" "Test insight message" 8 observed
 
-if [ -f .superpowers/learnings.jsonl ]; then
-    if python3 -c "import json; json.loads(open('.superpowers/learnings.jsonl').read())" 2>/dev/null; then
+if [ -f .agent-harness/learnings.jsonl ]; then
+    if python3 -c "import json; json.loads(open('.agent-harness/learnings.jsonl').read())" 2>/dev/null; then
         log_pass "log-learning.sh creates valid JSON"
     else
         log_fail "log-learning.sh creates invalid JSON"
@@ -76,10 +76,10 @@ fi
 # ==========================================
 echo "--- Test 2: JSON fields validation ---"
 
-TYPE=$(python3 -c "import json; print(json.loads(open('.superpowers/learnings.jsonl').read())['type'])")
-KEY=$(python3 -c "import json; print(json.loads(open('.superpowers/learnings.jsonl').read())['key'])")
-INSIGHT=$(python3 -c "import json; print(json.loads(open('.superpowers/learnings.jsonl').read())['insight'])")
-CONFIDENCE=$(python3 -c "import json; print(json.loads(open('.superpowers/learnings.jsonl').read())['confidence'])")
+TYPE=$(python3 -c "import json; print(json.loads(open('.agent-harness/learnings.jsonl').read())['type'])")
+KEY=$(python3 -c "import json; print(json.loads(open('.agent-harness/learnings.jsonl').read())['key'])")
+INSIGHT=$(python3 -c "import json; print(json.loads(open('.agent-harness/learnings.jsonl').read())['insight'])")
+CONFIDENCE=$(python3 -c "import json; print(json.loads(open('.agent-harness/learnings.jsonl').read())['confidence'])")
 
 if [ "$TYPE" = "pattern" ] && [ "$KEY" = "test_key" ] && [ "$INSIGHT" = "Test insight message" ] && [ "$CONFIDENCE" = "8" ]; then
     log_pass "JSON fields are correct"
@@ -191,12 +191,12 @@ fi
 # ==========================================
 echo "--- Test 9: Confidence decay ---"
 setup
-mkdir -p .superpowers
+mkdir -p .agent-harness
 
 # Create an entry with old timestamp (365 days ago = ~12 months = -12 points decay)
 # Use Python for portable date calculation
 OLD_TS=$(python3 -c "from datetime import datetime, timedelta; print((datetime.utcnow() - timedelta(days=365)).strftime('%Y-%m-%dT%H:%M:%SZ'))")
-echo "{\"ts\":\"$OLD_TS\",\"type\":\"pattern\",\"key\":\"old_entry\",\"insight\":\"Old observed pattern\",\"confidence\":10,\"source\":\"observed\",\"files\":[]}" > .superpowers/learnings.jsonl
+echo "{\"ts\":\"$OLD_TS\",\"type\":\"pattern\",\"key\":\"old_entry\",\"insight\":\"Old observed pattern\",\"confidence\":10,\"source\":\"observed\",\"files\":[]}" > .agent-harness/learnings.jsonl
 
 OUTPUT=$("$PLUGIN_DIR/scripts/search-learnings.sh" --summary)
 

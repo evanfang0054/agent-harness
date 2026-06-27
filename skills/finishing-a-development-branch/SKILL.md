@@ -182,7 +182,7 @@ Then: Done
 - **Fix:** Require typed "discard" confirmation
 
 **Forgetting SDD workspace cleanup**
-- **Problem:** `.superpowers/sdd/` accumulates dozens of brief/report/diff files across sessions
+- **Problem:** `.agent-harness/sdd/` accumulates dozens of brief/report/diff files across sessions
 - **Fix:** Always run `cleanup-workspace` after every option, including Keep As-Is
 
 ## Red Flags

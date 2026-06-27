@@ -56,7 +56,7 @@ run_skill() {
 
     local timestamp
     timestamp=$(date +%s)
-    local output_dir="/tmp/superpowers-tests/${timestamp}/skill-behavior/${skill_name}"
+    local output_dir="/tmp/agent-harness-tests/${timestamp}/skill-behavior/${skill_name}"
     mkdir -p "$output_dir"
 
     # 隔离 HOME 避免用户配置污染（参考 explicit-skill-requests/run-test.sh）

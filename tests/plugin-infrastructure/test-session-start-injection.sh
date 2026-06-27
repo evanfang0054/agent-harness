@@ -17,11 +17,11 @@ OUTPUT=$(CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
          CLAUDE_PROJECT_DIR="$REPO_ROOT" \
          echo "$MOCK_INPUT" | bash "$SESSION_START" 2>&1) || true
 
-# 断言输出包含 using-superpowers skill 内容
-if echo "$OUTPUT" | grep -q "using-superpowers"; then
-    pass "output contains using-superpowers reference"
+# 断言输出包含 using-agent-harness skill 内容
+if echo "$OUTPUT" | grep -q "using-agent-harness"; then
+    pass "output contains using-agent-harness reference"
 else
-    fail "output contains using-superpowers reference"
+    fail "output contains using-agent-harness reference"
 fi
 
 # 断言输出包含 hookSpecificOutput 结构（如果有 JSON 输出）

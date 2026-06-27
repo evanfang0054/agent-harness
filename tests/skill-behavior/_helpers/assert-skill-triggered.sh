@@ -31,15 +31,15 @@ assert_skill_triggered() {
         return 1
     fi
 
-    # 必须同时出现 "name":"Skill" 和 "skill":"superpowers:<name>"
+    # 必须同时出现 "name":"Skill" 和 "skill":"agent-harness:<name>"
     if grep -q '"name":"Skill"' "$LOG_FILE" && \
-       grep -q "\"skill\":\"superpowers:${skill}\"" "$LOG_FILE"; then
+       grep -q "\"skill\":\"agent-harness:${skill}\"" "$LOG_FILE"; then
         _skill_pass "Skill '$skill' triggered"
         return 0
     fi
 
     _skill_fail "Skill '$skill' triggered"
-    echo "    Expected: \"name\":\"Skill\" + \"skill\":\"superpowers:${skill}\"" >&2
+    echo "    Expected: \"name\":\"Skill\" + \"skill\":\"agent-harness:${skill}\"" >&2
     echo "    Actual skills in log:" >&2
     grep -o '"skill":"[^"]*"' "$LOG_FILE" 2>/dev/null | sort -u | head -10 >&2
     return 1

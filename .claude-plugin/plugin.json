@@ -1,13 +1,13 @@
 {
-  "name": "superpowers",
+  "name": "agent-harness",
   "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
   "version": "6.2.0",
   "author": {
     "name": "evanfang0054",
     "email": "380616679@qq.com"
   },
-  "homepage": "https://github.com/evanfang0054/superpowers",
-  "repository": "https://github.com/evanfang0054/superpowers",
+  "homepage": "https://github.com/evanfang0054/agent-harness",
+  "repository": "https://github.com/evanfang0054/agent-harness",
   "license": "MIT",
   "keywords": [
     "skills",

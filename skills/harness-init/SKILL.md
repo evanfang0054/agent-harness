@@ -1,6 +1,6 @@
 ---
 name: harness-init
-description: Use when initializing superpowers in a new project or reconfiguring an existing project for a specific tech stack like React, Python, or Go.
+description: Use when initializing agent-harness in a new project or reconfiguring an existing project for a specific tech stack like React, Python, or Go.
 when_to_use: "[feedforward] Triggered at project setup to bootstrap harness configuration from templates."
 user-invocable: true
 disable-model-invocation: true
@@ -10,7 +10,7 @@ disable-model-invocation: true
 
 ## Overview
 
-Bootstraps harness configuration from preset templates. Copies sensor configs and recommended skills list to `.superpowers/`.
+Bootstraps harness configuration from preset templates. Copies sensor configs and recommended skills list to `.agent-harness/`.
 
 ## Available Templates
 
@@ -24,7 +24,7 @@ Bootstraps harness configuration from preset templates. Copies sensor configs an
 
 1. List available templates
 2. Ask user to select one (or detect from project files: `package.json` -> react-typescript, `requirements.txt`/`pyproject.toml` -> python-fastapi, `go.mod` -> go-cli)
-3. Copy `templates/{selected}/sensors.json` -> `.superpowers/sensors.json`
+3. Copy `templates/{selected}/sensors.json` -> `.agent-harness/sensors.json`
 4. Copy `templates/{selected}/hooks-config.json` -> project hooks config (if not already configured)
 5. Show recommended skills from `templates/{selected}/skills-recommended.md`
 6. Prompt user to review and customize

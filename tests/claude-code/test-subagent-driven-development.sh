@@ -188,7 +188,7 @@ trap cleanup_ralph_state RETURN
 TEST_TMP_HOME=$(mktemp -d)
 TEST_OUTPUT_DIR=$(mktemp -d)
 cd "$TEST_OUTPUT_DIR"
-output=$(HOME="$TEST_TMP_HOME" claude -p "Use the superpowers:subagent-driven-development skill for this exact task: smoke test only. Do not implement code or create files; just start the workflow and report that it started." \
+output=$(HOME="$TEST_TMP_HOME" claude -p "Use the agent-harness:subagent-driven-development skill for this exact task: smoke test only. Do not implement code or create files; just start the workflow and report that it started." \
     --plugin-dir "$REPO_ROOT" \
     --permission-mode bypassPermissions \
     --output-format stream-json \
@@ -215,9 +215,9 @@ fi
 
 # Primary signal: parse the stream-json output captured from this run.
 # The output variable already contains everything emitted by `claude -p`.
-if echo "$output" | grep -q '"name":"Skill"' && echo "$output" | grep -q '"skill":"superpowers:subagent-driven-development"'; then
+if echo "$output" | grep -q '"name":"Skill"' && echo "$output" | grep -q '"skill":"agent-harness:subagent-driven-development"'; then
     echo "  [PASS] Skill tool invoked"
-elif grep -q '"name":"Skill".*"skill":"superpowers:subagent-driven-development"' "$LATEST_SESSION_AFTER" 2>/dev/null; then
+elif grep -q '"name":"Skill".*"skill":"agent-harness:subagent-driven-development"' "$LATEST_SESSION_AFTER" 2>/dev/null; then
     echo "  [PASS] Skill tool invoked"
 else
     echo "  [FAIL] Skill tool invoked"
@@ -225,7 +225,7 @@ else
     exit 1
 fi
 
-if echo "$output" | grep -q 'Launching skill: superpowers:subagent-driven-development' || grep -q 'Launching skill: superpowers:subagent-driven-development' "$LATEST_SESSION_AFTER" 2>/dev/null; then
+if echo "$output" | grep -q 'Launching skill: agent-harness:subagent-driven-development' || grep -q 'Launching skill: agent-harness:subagent-driven-development' "$LATEST_SESSION_AFTER" 2>/dev/null; then
     echo "  [PASS] Skill launch succeeded"
 else
     echo "  [FAIL] Skill launch succeeded"

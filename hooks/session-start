@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SessionStart hook for superpowers plugin
+# SessionStart hook for agent-harness plugin
 
 set -euo pipefail
 
@@ -30,7 +30,7 @@ esac
 # --- Subagent detection (issue #67) ---
 # Claude Code dispatches subagents with `isSidechain: true` in the payload,
 # and subagent transcripts live under `*/subagents/agent-*.jsonl`. Either
-# signal is sufficient. We do NOT inject superpowers context into subagents —
+# signal is sufficient. We do NOT inject agent-harness context into subagents —
 # they should focus on their task brief, not the skill registry.
 IS_SUBAGENT="false"
 if [ -n "$STDIN_PAYLOAD" ] && command -v jq >/dev/null 2>&1; then
@@ -60,14 +60,14 @@ fi
 
 # Check if legacy skills directory exists and build warning
 warning_message=""
-legacy_skills_dir="${HOME}/.config/superpowers/skills"
+legacy_skills_dir="${HOME}/.config/agent-harness/skills"
 if [ -d "$legacy_skills_dir" ]; then
-    warning_message="\n\n<important-reminder>IN YOUR FIRST REPLY AFTER SEEING THIS MESSAGE YOU MUST TELL THE USER:⚠️ **WARNING:** Superpowers now uses Claude Code's skills system. Custom skills in ~/.config/superpowers/skills will not be read. Move custom skills to ~/.claude/skills instead. To make this message go away, remove ~/.config/superpowers/skills</important-reminder>"
+    warning_message="\n\n<important-reminder>IN YOUR FIRST REPLY AFTER SEEING THIS MESSAGE YOU MUST TELL THE USER:⚠️ **WARNING:** Agent Harness now uses Claude Code's skills system. Custom skills in ~/.config/agent-harness/skills will not be read. Move custom skills to ~/.claude/skills instead. To make this message go away, remove ~/.config/agent-harness/skills</important-reminder>"
 fi
 
 # --- Source-aware injection (issue #66) ---
 # - startup / clear → full injection (the canonical case)
-# - resume          → only learnings delta; using-superpowers already in context
+# - resume          → only learnings delta; using-agent-harness already in context
 # - precompact      → inject nothing (compact is meant to free space; re-injecting
 #                     the same content defeats the purpose)
 if [ "$SESSION_SOURCE" = "precompact" ]; then
@@ -82,10 +82,10 @@ if [ "$SESSION_SOURCE" = "precompact" ]; then
     exit 0
 fi
 
-# Read using-superpowers content (full on startup/clear, empty on resume)
-using_superpowers_content=""
+# Read using-agent-harness content (full on startup/clear, empty on resume)
+using_agent_harness_content=""
 if [ "$SESSION_SOURCE" = "startup" ] || [ "$SESSION_SOURCE" = "clear" ]; then
-    using_superpowers_content=$(cat "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md" 2>&1 || echo "Error reading using-superpowers skill")
+    using_agent_harness_content=$(cat "${PLUGIN_ROOT}/skills/using-agent-harness/SKILL.md" 2>&1 || echo "Error reading using-agent-harness skill")
 fi
 
 # Read project learnings if they exist (injected on every source except precompact).
@@ -94,8 +94,8 @@ learnings_content=""
 # Resolve project root the same way log/search-learnings.sh do (v2):
 # prefer CLAUDE_PROJECT_DIR, fall back to git rev-parse for manual/CI runs.
 LEARNINGS_DIR="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}"
-if [ -f "$LEARNINGS_DIR/.superpowers/learnings.jsonl" ]; then
-    learnings_count=$(wc -l < "$LEARNINGS_DIR/.superpowers/learnings.jsonl" | tr -d ' ')
+if [ -f "$LEARNINGS_DIR/.agent-harness/learnings.jsonl" ]; then
+    learnings_count=$(wc -l < "$LEARNINGS_DIR/.agent-harness/learnings.jsonl" | tr -d ' ')
     if [ "$learnings_count" -gt 0 ]; then
         # Get formatted summary using search script.
         # Throttle: when learnings exceed 50 entries, only inject top-5 high-confidence
@@ -109,7 +109,7 @@ if [ -f "$LEARNINGS_DIR/.superpowers/learnings.jsonl" ]; then
             fi
         else
             # Fallback to raw JSON
-            formatted_learnings=$(tail -10 "$LEARNINGS_DIR/.superpowers/learnings.jsonl" 2>/dev/null || true)
+            formatted_learnings=$(tail -10 "$LEARNINGS_DIR/.agent-harness/learnings.jsonl" 2>/dev/null || true)
         fi
         if [ -n "$formatted_learnings" ]; then
             learnings_content="\n\n## Project Learnings\n\n${formatted_learnings}\n\nReview these before making changes. Use 'session-learnings' skill to add new learnings."
@@ -134,20 +134,20 @@ escape_for_json() {
     printf '%s' "$s"
 }
 
-using_superpowers_escaped=$(escape_for_json "$using_superpowers_content")
+using_agent_harness_escaped=$(escape_for_json "$using_agent_harness_content")
 warning_escaped=$(escape_for_json "$warning_message")
 learnings_escaped=$(escape_for_json "$learnings_content")
 headless_tip_escaped=$(escape_for_json "$headless_tip")
 
 # Build the session context.
-# - startup / clear: full wrapper with using-superpowers body + learnings + tip
-# - resume: lean payload — using-superpowers is already in the prior context,
+# - startup / clear: full wrapper with using-agent-harness body + learnings + tip
+# - resume: lean payload — using-agent-harness is already in the prior context,
 #   so we inject only the learnings refresh (and warning if present). No empty
 #   "Below is the full content..." heading.
 if [ "$SESSION_SOURCE" = "resume" ]; then
     session_context="${warning_escaped}${learnings_escaped}"
 else
-    session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n\n${warning_escaped}${learnings_escaped}${headless_tip_escaped}\n</EXTREMELY_IMPORTANT>"
+    session_context="<EXTREMELY_IMPORTANT>\nYou have agent-harness.\n\n**Below is the full content of your 'agent-harness:using-agent-harness' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_agent_harness_escaped}\n\n${warning_escaped}${learnings_escaped}${headless_tip_escaped}\n</EXTREMELY_IMPORTANT>"
 fi
 
 # Output context injection as JSON.

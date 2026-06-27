@@ -1,1 +1,1 @@
-Invoke the superpowers:qa-testing skill via the Skill tool (its tool identifier is superpowers:qa-testing). I have a web app running locally and need to QA test it systematically — find bugs, then iteratively fix them in the source code, test and fix what's broken.
+Invoke the agent-harness:qa-testing skill via the Skill tool (its tool identifier is agent-harness:qa-testing). I have a web app running locally and need to QA test it systematically — find bugs, then iteratively fix them in the source code, test and fix what's broken.

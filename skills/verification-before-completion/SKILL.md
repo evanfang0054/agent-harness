@@ -57,9 +57,9 @@ Interpret exit codes:
 
 After loop detection, before semantic review, run deterministic checks:
 
-1. Check for `.superpowers/sensors.json`:
+1. Check for `.agent-harness/sensors.json`:
    - If exists: run each configured sensor
-   - If missing: use `superpowers:computational-sensors` to set up
+   - If missing: use `agent-harness:computational-sensors` to set up
 2. Run sensors in order: lint → typecheck → test → coverage → build
 3. Any sensor failure = verification FAILURE. Do not proceed to semantic review.
 
