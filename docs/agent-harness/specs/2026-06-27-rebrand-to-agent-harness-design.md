@@ -43,11 +43,11 @@
 - **skill 名标识符**：`using-agent-harness` → `using-agent-harness`（YAML frontmatter `name` 字段、目录名、引用）
 - **插件元数据**：
   - `.claude-plugin/plugin.json`：`name: agent-harness` → `name: agent-harness`
-  - `.claude-plugin/marketplace.json`：`agent-harness-dev` → `agent-harness-dev`；其中 `name: agent-harness` → `agent-harness`
+  - `.claude-plugin/marketplace.json`：`agent-harness-dev` → `agent-harness`；其中 `name: agent-harness` → `agent-harness`
   - `package.json`：`name: agent-harness` → `agent-harness`；`description` 中 `Agent Harness` 字样替换
   - `.codex-plugin/plugin.json`、`.pi/extensions/agent-harness.ts` 同步
 - **配置引用**：
-  - `.claude/settings.json` / `settings.local.json.example` 中 `enabledPlugins.agent-harness@agent-harness-dev` → `agent-harness@agent-harness-dev`
+  - `.claude/settings.json` / `settings.local.json.example` 中 `enabledPlugins.agent-harness@agent-harness-dev` → `agent-harness@agent-harness`
 - **hooks 与 scripts**：
   - `hooks/session-start`、`hooks/session-start-codex`、`hooks/stop-hook.sh` 中读取 `using-agent-harness` 的路径同步
   - `scripts/*learnings.sh`、`scripts/auto-loop.sh`、`scripts/guard-staging.sh`、`scripts/loop-detector.sh`、`scripts/trace-analyzer.sh`、`scripts/coverage-metrics.sh`、`scripts/audit-subagent.sh`、`scripts/setup-ralph-loop.sh`、`scripts/log-learning.sh` 中 `.agent-harness/` 路径引用同步
@@ -79,8 +79,8 @@
 | 3 | `using-agent-harness` | `using-agent-harness` | skill 名标识符 |
 | 4 | `.agent-harness/` | `.agent-harness/` | 顶层与 demo 隐藏目录路径 |
 | 5 | `docs/agent-harness/` | `docs/agent-harness/` | 文档目录路径（含 demo） |
-| 6 | `agent-harness-dev` | `agent-harness-dev` | marketplace name |
-| 7 | `agent-harness@agent-harness-dev` | `agent-harness@agent-harness-dev` | settings 插件引用 |
+| 6 | `agent-harness-dev` | `agent-harness` | marketplace name |
+| 7 | `agent-harness@agent-harness-dev` | `agent-harness@agent-harness` | settings 插件引用 |
 | 8 | `Agent Harness` | `Agent Harness` | 大驼峰单词（标题、品牌） |
 | 9 | `agent-harness` | `agent-harness` | 全小写单词（兜底） |
 

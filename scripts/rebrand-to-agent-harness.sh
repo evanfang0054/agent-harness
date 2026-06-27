@@ -110,10 +110,10 @@ apply_sed '\.superpowers/' '.agent-harness/' '规则4: 路径 .superpowers/'
 apply_sed 'docs/superpowers/' 'docs/agent-harness/' '规则5: 路径 docs/superpowers/'
 
 # 规则 6（marketplace name）
-apply_sed 'superpowers-dev' 'agent-harness-dev' '规则6: marketplace name superpowers-dev'
+apply_sed 'superpowers-dev' 'agent-harness' '规则6: marketplace name superpowers-dev'
 
 # 规则 7（settings 插件引用，已被规则 6 覆盖一半，此处显式补全）
-apply_sed 'superpowers@agent-harness-dev' 'agent-harness@agent-harness-dev' '规则7: settings 插件引用'
+apply_sed 'superpowers@agent-harness-dev' 'agent-harness@agent-harness' '规则7: settings 插件引用'
 
 # 规则 8（大驼峰单词，用词边界）
 # 注：macOS BSD sed -E 不识别 \b（GNU 扩展），改用 perl 跨平台一致
@@ -157,8 +157,8 @@ if [[ -f "README.md" ]]; then
     sed "${SED_INPLACE[@]}" -E 's/using-superpowers/using-agent-harness/g' README.md
     sed "${SED_INPLACE[@]}" -E 's|\.superpowers/|.agent-harness/|g' README.md
     sed "${SED_INPLACE[@]}" -E 's|docs/superpowers/|docs/agent-harness/|g' README.md
-    sed "${SED_INPLACE[@]}" -E 's/superpowers-dev/agent-harness-dev/g' README.md
-    sed "${SED_INPLACE[@]}" -E 's/superpowers@agent-harness-dev/agent-harness@agent-harness-dev/g' README.md
+    sed "${SED_INPLACE[@]}" -E 's/superpowers-dev/agent-harness/g' README.md
+    sed "${SED_INPLACE[@]}" -E 's/superpowers@agent-harness-dev/agent-harness@agent-harness/g' README.md
     # 在第一个一级标题后插入致敬段（若尚未存在）
     if ! grep -q '^## 致谢' README.md; then
         # 用 awk 在第一个 ## 标题（目录或 About）前插入
@@ -179,8 +179,8 @@ if [[ -f "README_EN.md" ]]; then
     sed "${SED_INPLACE[@]}" -E 's/using-superpowers/using-agent-harness/g' README_EN.md
     sed "${SED_INPLACE[@]}" -E 's|\.superpowers/|.agent-harness/|g' README_EN.md
     sed "${SED_INPLACE[@]}" -E 's|docs/superpowers/|docs/agent-harness/|g' README_EN.md
-    sed "${SED_INPLACE[@]}" -E 's/superpowers-dev/agent-harness-dev/g' README_EN.md
-    sed "${SED_INPLACE[@]}" -E 's/superpowers@agent-harness-dev/agent-harness@agent-harness-dev/g' README_EN.md
+    sed "${SED_INPLACE[@]}" -E 's/superpowers-dev/agent-harness/g' README_EN.md
+    sed "${SED_INPLACE[@]}" -E 's/superpowers@agent-harness-dev/agent-harness@agent-harness/g' README_EN.md
     if ! grep -q '^## Acknowledgements' README_EN.md; then
         awk -v tribute="$TRIBUTE_EN" '
             NR==1 { print; next }
@@ -203,8 +203,8 @@ if [[ -f "CLAUDE.md" ]]; then
     sed "${SED_INPLACE[@]}" -E 's/using-superpowers/using-agent-harness/g' CLAUDE.md
     sed "${SED_INPLACE[@]}" -E 's|\.superpowers/|.agent-harness/|g' CLAUDE.md
     sed "${SED_INPLACE[@]}" -E 's|docs/superpowers/|docs/agent-harness/|g' CLAUDE.md
-    sed "${SED_INPLACE[@]}" -E 's/superpowers-dev/agent-harness-dev/g' CLAUDE.md
-    sed "${SED_INPLACE[@]}" -E 's/superpowers@agent-harness-dev/agent-harness@agent-harness-dev/g' CLAUDE.md
+    sed "${SED_INPLACE[@]}" -E 's/superpowers-dev/agent-harness/g' CLAUDE.md
+    sed "${SED_INPLACE[@]}" -E 's/superpowers@agent-harness-dev/agent-harness@agent-harness/g' CLAUDE.md
     # 恢复致敬句
     sed "${SED_INPLACE[@]}" -E 's/__TRIBUTE_SENTINEL__/基于 Jesse Vincent 的原版 Superpowers 项目/g' CLAUDE.md
 fi
@@ -220,8 +220,8 @@ for f in "skills/CLAUDE.md" "tests/CLAUDE.md" "tests/claude-code/README.md"; do
     sed "${SED_INPLACE[@]}" -E 's/using-superpowers/using-agent-harness/g' "$f"
     sed "${SED_INPLACE[@]}" -E 's|\.superpowers/|.agent-harness/|g' "$f"
     sed "${SED_INPLACE[@]}" -E 's|docs/superpowers/|docs/agent-harness/|g' "$f"
-    sed "${SED_INPLACE[@]}" -E 's/superpowers-dev/agent-harness-dev/g' "$f"
-    sed "${SED_INPLACE[@]}" -E 's/superpowers@agent-harness-dev/agent-harness@agent-harness-dev/g' "$f"
+    sed "${SED_INPLACE[@]}" -E 's/superpowers-dev/agent-harness/g' "$f"
+    sed "${SED_INPLACE[@]}" -E 's/superpowers@agent-harness-dev/agent-harness@agent-harness/g' "$f"
 done
 
 echo "✓ 阶段 3 完成（README / CLAUDE.md 致敬段处理）"
