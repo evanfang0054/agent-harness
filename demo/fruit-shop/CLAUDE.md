@@ -91,8 +91,8 @@ web 通过 Vite `import.meta.env` 读取，主要在前缀 `/api` 上。
 ## 文档
 
 - `README.md`（中文）—— 完整技术栈、项目结构、API、路由、Schema、认证流程
-- `docs/superpowers/specs/` 与 `docs/superpowers/plans/` —— 历史任务规格与实施计划
-- `.superpowers/learnings.jsonl` —— session-learnings 记录的踩坑/模式
+- `docs/agent-harness/specs/` 与 `docs/agent-harness/plans/` —— 历史任务规格与实施计划
+- `.agent-harness/learnings.jsonl` —— session-learnings 记录的踩坑/模式
 
 ## 引擎要求
 

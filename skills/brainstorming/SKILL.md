@@ -26,7 +26,7 @@ You MUST create a task for each of these items and complete them in order:
 2. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
 3. **Propose 2-3 approaches** — with trade-offs and your recommendation
 4. **Present design** — in sections scaled to their complexity, get user approval after each section
-5. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` (check if target directory is gitignored before committing; if so, inform user and save anyway)
+5. **Write design doc** — save to `docs/agent-harness/specs/YYYY-MM-DD-<topic>-design.md` (check if target directory is gitignored before committing; if so, inform user and save anyway)
 6. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
 7. **User reviews written spec** — ask user to review the spec file before proceeding
 8. **Transition to implementation** — invoke writing-plans skill to create implementation plan
@@ -63,7 +63,7 @@ digraph brainstorming {
 }
 ```
 
-**The terminal state is invoking writing-plans.** Between design approval and writing-plans, you MAY optionally invoke superpowers:gate-driven-test-design when the user asks for test case generation or the feature carries non-trivial behavior/contract/regression risk. The ONLY skills you invoke after brainstorming are gate-driven-test-design (optional) and writing-plans (required). Do NOT invoke frontend-design, mcp-builder, or any other implementation skill.
+**The terminal state is invoking writing-plans.** Between design approval and writing-plans, you MAY optionally invoke agent-harness:gate-driven-test-design when the user asks for test case generation or the feature carries non-trivial behavior/contract/regression risk. The ONLY skills you invoke after brainstorming are gate-driven-test-design (optional) and writing-plans (required). Do NOT invoke frontend-design, mcp-builder, or any other implementation skill.
 
 ## The Process
 
@@ -108,7 +108,7 @@ digraph brainstorming {
 
 **Documentation:**
 
-- Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
+- Write the validated design (spec) to `docs/agent-harness/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
@@ -132,7 +132,7 @@ Wait for the user's response. If they request changes, make them and re-run the 
 
 **Sprint Contract:**
 
-After spec approval, before invoking writing-plans, use `superpowers:sprint-contract` to negotiate explicit Definition of Done. This prevents the common failure mode of "completed but not what was expected."
+After spec approval, before invoking writing-plans, use `agent-harness:sprint-contract` to negotiate explicit Definition of Done. This prevents the common failure mode of "completed but not what was expected."
 
 Skip sprint contract only for changes that meet ALL of these criteria:
 - **Scope**: single file, < 15 lines changed

@@ -36,7 +36,7 @@ The agent plays both roles in sequence. This is not a form to fill out -- it is 
 3. GENERATOR: Revise based on evaluator challenges.
 4. EVALUATOR: Accept or challenge again.
 5. Repeat until evaluator accepts without further challenges.
-6. Save contract to docs/superpowers/contracts/{feature-name}.contract.md
+6. Save contract to docs/agent-harness/contracts/{feature-name}.contract.md
 ```
 
 **Minimum 2 rounds.** If evaluator accepts on round 1, the criteria were too vague.
@@ -75,7 +75,7 @@ The agent plays both roles in sequence. This is not a form to fill out -- it is 
 | 3 | Revise criteria to address challenges | Revised DoD |
 | 4 | Repeat 2-3 until consensus | Final DoD |
 | 5 | Fill boundary conditions and acceptance criteria | Full contract |
-| 6 | Save to `docs/superpowers/contracts/{feature-name}.contract.md` | Committed file |
+| 6 | Save to `docs/agent-harness/contracts/{feature-name}.contract.md` | Committed file |
 
 ## Common Mistakes
 

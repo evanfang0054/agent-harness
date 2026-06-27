@@ -9,7 +9,7 @@
 /harness-init react-typescript
 
 # Or manually
-cp templates/react-typescript/sensors.json .superpowers/sensors.json
+cp templates/react-typescript/sensors.json .agent-harness/sensors.json
 ```
 
 ## What's Included

@@ -23,7 +23,7 @@ if [ "$OUTPUT_LEN" -lt 50 ]; then
 fi
 
 # Check 2: off-topic keyword drift
-# Keywords unrelated to typical superpowers development work
+# Keywords unrelated to typical agent-harness development work
 OFFTOPIC_KEYWORDS="Unity|Unreal Engine|game engine|shader|rendering pipeline|Roblox|Minecraft mod"
 if echo "$OUTPUT" | grep -qiE "$OFFTOPIC_KEYWORDS"; then
     WARNINGS="${WARNINGS}- Subagent output mentions off-topic keywords (game engines / unrelated stacks) — verify task scope was respected.\n"

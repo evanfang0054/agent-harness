@@ -17,7 +17,7 @@ Analyze recent Claude Code sessions, identify problem patterns, and open GitHub 
 - 想批量从历史会话挖掘问题，暂时不想修复
 
 **When NOT to use:**
-- 想修复已有 issue → 用 `superpowers:fix-issues-and-pr`
+- 想修复已有 issue → 用 `agent-harness:fix-issues-and-pr`
 - 想一次完成 分析+修复+PR → 直接调用 `"${CLAUDE_PLUGIN_ROOT}/scripts/auto-loop.sh"`（不带 `--dry-run`）
 
 ## How to Invoke
@@ -39,7 +39,7 @@ Run `"${CLAUDE_PLUGIN_ROOT}/scripts/auto-loop.sh" --dry-run "<natural language r
 "${CLAUDE_PLUGIN_ROOT}/scripts/auto-loop.sh" --dry-run \
     --filter "调用了 brainstorming 相关 skill" \
     --max-issues 5 \
-    "分析本周 superpowers 相关会话"
+    "分析本周 agent-harness 相关会话"
 ```
 
 ```bash
@@ -56,12 +56,12 @@ Run `"${CLAUDE_PLUGIN_ROOT}/scripts/auto-loop.sh" --dry-run "<natural language r
 
 - 会话快照: `.claude/auto-loop/runs/<run_id>/sessions.md`
 - 分析结果: `.claude/auto-loop/runs/<run_id>/analysis.json`
-- 提交的 issues: GitHub `evanfang0054/superpowers`
+- 提交的 issues: GitHub `evanfang0054/agent-harness`
 - dry-run 模式保留 worktree 供检查（脚本侧已处理）
 
 ## Scope Boundary (Do NOT)
 
-- ❌ 不修复 issue → 用 `superpowers:fix-issues-and-pr`
+- ❌ 不修复 issue → 用 `agent-harness:fix-issues-and-pr`
 - ❌ 不提 PR、不写代码、不调用 brainstorming / writing-plans / SDD
 
 完整能力见 `"${CLAUDE_PLUGIN_ROOT}/scripts/auto-loop.sh"` 与 `skills/auto-loop/orchestrator-prompt.md`。

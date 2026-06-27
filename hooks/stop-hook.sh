@@ -58,7 +58,7 @@ if [[ ! "$ITERATION" =~ ^[0-9]+$ ]]; then
   echo "   Problem: 'iteration' field is not a valid number (got: '$ITERATION')" >&2
   echo "" >&2
   echo "   This usually means the state file was manually edited or corrupted." >&2
-  echo "   Ralph loop is stopping. Run /superpowers:ralph-loop again to start fresh." >&2
+  echo "   Ralph loop is stopping. Run /agent-harness:ralph-loop again to start fresh." >&2
   rm "$RALPH_STATE_FILE"
   exit 0
 fi
@@ -69,7 +69,7 @@ if [[ ! "$MAX_ITERATIONS" =~ ^[0-9]+$ ]]; then
   echo "   Problem: 'max_iterations' field is not a valid number (got: '$MAX_ITERATIONS')" >&2
   echo "" >&2
   echo "   This usually means the state file was manually edited or corrupted." >&2
-  echo "   Ralph loop is stopping. Run /superpowers:ralph-loop again to start fresh." >&2
+  echo "   Ralph loop is stopping. Run /agent-harness:ralph-loop again to start fresh." >&2
   rm "$RALPH_STATE_FILE"
   exit 0
 fi
@@ -183,7 +183,7 @@ if [[ -z "$PROMPT_TEXT" ]]; then
   echo "     • State file was manually edited" >&2
   echo "     • File was corrupted during writing" >&2
   echo "" >&2
-  echo "   Ralph loop is stopping. Run /superpowers:ralph-loop again to start fresh." >&2
+  echo "   Ralph loop is stopping. Run /agent-harness:ralph-loop again to start fresh." >&2
   rm "$RALPH_STATE_FILE"
   exit 0
 fi
@@ -193,7 +193,7 @@ fi
 TEMP_FILE="${RALPH_STATE_FILE}.tmp.$$"
 # Ensure temp file is removed if sed fails (set -e exits) or the hook is
 # signaled (SIGHUP/SIGINT/SIGTERM are common for Stop hooks). Mirrors the
-# _SUPERPOWERS_TMP_CLEANUP trap already present in search-learnings.sh (#19).
+# _AGENT_HARNESS_TMP_CLEANUP trap already present in search-learnings.sh (#19).
 trap 'rm -f "$TEMP_FILE"' INT TERM HUP
 sed "s/^iteration: .*/iteration: $NEXT_ITERATION/" "$RALPH_STATE_FILE" > "$TEMP_FILE"
 mv "$TEMP_FILE" "$RALPH_STATE_FILE"

@@ -7,9 +7,9 @@ set -uo pipefail
 
 # Protected runtime paths (relative to repo root)
 PROTECTED_PATHS=(
-    ".superpowers/learnings.jsonl"
-    ".superpowers/sdd/"
-    ".superpowers/loop-tracker.json"
+    ".agent-harness/learnings.jsonl"
+    ".agent-harness/sdd/"
+    ".agent-harness/loop-tracker.json"
 )
 
 # Read event JSON from stdin

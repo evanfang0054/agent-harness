@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 你是谁，在哪
 
-你正在编辑 **Superpowers** 的 `skills/` 目录。这里存放的不是编译型代码，而是 **行为塑造型 skill 文档**（Markdown）—— 每个 skill 是一个目录，核心是 `SKILL.md`（带 YAML frontmatter），可附带子代理提示、参考资料、脚本。
+你正在编辑 **Agent Harness** 的 `skills/` 目录。这里存放的不是编译型代码，而是 **行为塑造型 skill 文档**（Markdown）—— 每个 skill 是一个目录，核心是 `SKILL.md`（带 YAML frontmatter），可附带子代理提示、参考资料、脚本。
 
 顶层 `../CLAUDE.md` 是项目宪法（AI Agent 贡献规则、PR 拒绝红线、跨平台架构）。**本文件只补充 skill 本地开发的具体规则**，与顶层文档冲突时以顶层为准。动手前请先读完顶层 `CLAUDE.md` 的 "如果你是一个 AI Agent" 一节。
 
@@ -95,4 +95,4 @@ cd tests/claude-code && ./run-skill-tests.sh
 - 不要为 "合规" 而重写已调优 skill 文案 —— 除非有评估证据。
 - 不要批量 / 捆绑无关 skill 改动到一个 PR。一个 PR 一个问题。
 - 不要伪造问题描述或虚构功能。
-- 不要手动编辑 `.superpowers/learnings.jsonl`，用 `session-learnings` skill。
+- 不要手动编辑 `.agent-harness/learnings.jsonl`，用 `session-learnings` skill。

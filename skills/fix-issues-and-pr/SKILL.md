@@ -14,10 +14,10 @@ Pull existing GitHub issues, fix each via SDD workflow, and ship all fixes as **
 
 - 用户说："修一下 #12" / "把 open issues 都修了提 PR" / "拉 issue 来修" / "fix issue #15"
 - 用户调用 `/fix-issues-and-pr #12,#15` 或 `/fix-issues-and-pr all`
-- Issues already exist (人工或 `superpowers:generate-issues` 创建的)，现在要批量修复
+- Issues already exist (人工或 `agent-harness:generate-issues` 创建的)，现在要批量修复
 
 **When NOT to use:**
-- 想从会话日志挖掘新问题 → 用 `superpowers:generate-issues`
+- 想从会话日志挖掘新问题 → 用 `agent-harness:generate-issues`
 - 想一次完成 分析+修复+PR → 直接调用 `"${CLAUDE_PLUGIN_ROOT}/scripts/auto-loop.sh"`（不带 `--fix-only`）
 
 ## Key Constraint — One PR for All Issues
@@ -35,7 +35,7 @@ Pull existing GitHub issues, fix each via SDD workflow, and ship all fixes as **
 ## Issue Source — Ask, Don't Guess
 
 - **默认**：用户必须明确给 issue 号。如果用户说"修那个性能 issue"而没给号，**引导用户给号**，不要自己猜。
-- **`all`**：拉取 `evanfang0054/superpowers` 所有 open issues，按更新时间排序，受 `--max-issues` 限制。
+- **`all`**：拉取 `evanfang0054/agent-harness` 所有 open issues，按更新时间排序，受 `--max-issues` 限制。
 
 ## Examples
 
@@ -49,7 +49,7 @@ Pull existing GitHub issues, fix each via SDD workflow, and ship all fixes as **
 
 ## Prerequisites
 
-同 `superpowers:generate-issues`：`claude` / `gh`（已 `gh auth login`） / `jq` / `uv` 可用，工作区干净。
+同 `agent-harness:generate-issues`：`claude` / `gh`（已 `gh auth login`） / `jq` / `uv` 可用，工作区干净。
 
 ## Shell Portability — macOS BSD sed vs GNU sed
 
@@ -72,7 +72,7 @@ Pull existing GitHub issues, fix each via SDD workflow, and ship all fixes as **
 
 ## Scope Boundary (Do NOT)
 
-- ❌ 不重新分析会话 → 用 `superpowers:generate-issues`
+- ❌ 不重新分析会话 → 用 `agent-harness:generate-issues`
 - ❌ 不提新 issue → issue 来源是已存在的
 - ❌ 不拆分多个 PR → 当前实现只支持单 PR
 

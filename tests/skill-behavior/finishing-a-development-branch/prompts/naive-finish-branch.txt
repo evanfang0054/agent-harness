@@ -1,1 +1,1 @@
-Invoke the superpowers:finishing-a-development-branch skill via the Skill tool (its tool identifier is superpowers:finishing-a-development-branch). My implementation is complete and all tests pass. I need to decide how to integrate the work — merge, create PR, or cleanup the branch.
+Invoke the agent-harness:finishing-a-development-branch skill via the Skill tool (its tool identifier is agent-harness:finishing-a-development-branch). My implementation is complete and all tests pass. I need to decide how to integrate the work — merge, create PR, or cleanup the branch.

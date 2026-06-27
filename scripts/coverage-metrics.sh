@@ -16,8 +16,8 @@ set -euo pipefail
 
 PROJECT_ROOT="${1:-.}"
 SKILLS_DIR="${PROJECT_ROOT}/skills"
-SENSORS_FILE="${PROJECT_ROOT}/.superpowers/sensors.json"
-CONTRACTS_DIR="${PROJECT_ROOT}/docs/superpowers/contracts"
+SENSORS_FILE="${PROJECT_ROOT}/.agent-harness/sensors.json"
+CONTRACTS_DIR="${PROJECT_ROOT}/docs/agent-harness/contracts"
 
 echo "=== Harness Coverage Report ==="
 echo "Generated: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -46,7 +46,7 @@ except Exception:
 ' 2>/dev/null || echo "?")
     echo "Computational Sensors:   ${sensor_count} configured"
 else
-    echo "Computational Sensors:   NOT CONFIGURED (.superpowers/sensors.json missing)"
+    echo "Computational Sensors:   NOT CONFIGURED (.agent-harness/sensors.json missing)"
 fi
 
 # Loop detection

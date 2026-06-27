@@ -1,6 +1,6 @@
 ---
 name: trace-analysis
-description: Use during retrospective or when trying to understand recurring failure patterns across sessions, based on historical learnings data in .superpowers/learnings.jsonl.
+description: Use during retrospective or when trying to understand recurring failure patterns across sessions, based on historical learnings data in .agent-harness/learnings.jsonl.
 when_to_use: "[feedback] Triggered during retrospective or when analyzing cross-session failure trends."
 ---
 
@@ -8,14 +8,14 @@ when_to_use: "[feedback] Triggered during retrospective or when analyzing cross-
 
 ## Overview
 
-Trace analysis turns historical learnings into actionable signal for skill improvement. Uses `scripts/trace-analyzer.sh` to classify failure patterns from `.superpowers/learnings.jsonl`.
+Trace analysis turns historical learnings into actionable signal for skill improvement. Uses `scripts/trace-analyzer.sh` to classify failure patterns from `.agent-harness/learnings.jsonl`.
 
 **Core principle:** Data over intuition. Run the analyzer before deciding what to improve.
 
 ## When to Use
 
 - During retrospective (pair with `retrospective` skill)
-- When reviewing `.superpowers/learnings.jsonl` for trends
+- When reviewing `.agent-harness/learnings.jsonl` for trends
 - When noticing recurring failure modes across sessions
 - When planning which skills to improve next
 
@@ -54,11 +54,11 @@ Baseline failures: agent skips trace-analyzer.sh, rationalizes "I know the patte
 
 Match analyzer recommendations to skill invocations:
 
-1. loop-detection → `superpowers:loop-detection` — ensure tracking is active
-2. computational-sensors → `superpowers:computational-sensors` — configure sensors
-3. sprint-contract → `superpowers:sprint-contract` — lock scope before next implementation
-4. verification checklists → `superpowers:verification-before-completion`
-5. writing-plans → `superpowers:writing-plans` — plan before next multi-step task
+1. loop-detection → `agent-harness:loop-detection` — ensure tracking is active
+2. computational-sensors → `agent-harness:computational-sensors` — configure sensors
+3. sprint-contract → `agent-harness:sprint-contract` — lock scope before next implementation
+4. verification checklists → `agent-harness:verification-before-completion`
+5. writing-plans → `agent-harness:writing-plans` — plan before next multi-step task
 
 ## Common Mistakes
 

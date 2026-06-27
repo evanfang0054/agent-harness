@@ -13,7 +13,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # PLUGIN_ROOT: 脚本所在的插件源仓库根 —— 用于定位插件自带文件
 # （orchestrator-prompt.md、--plugin-dir 加载点）。全局安装下指向
-# ~/.claude/plugins/cache/.../superpowers/<ver>/，开发期指向源仓库。
+# ~/.claude/plugins/cache/.../agent-harness/<ver>/，开发期指向源仓库。
 PLUGIN_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # TARGET_REPO: 用户要分析/修复的目标仓库。默认 = 当前工作目录的 git
 # 顶层，可被 --project 覆盖。必须与 PLUGIN_ROOT 区分：全局安装下两者
@@ -134,11 +134,11 @@ check_git_remote() {
         echo "错误: 未配置 git remote origin" >&2
         exit 1
     fi
-    # 验证 origin 指向用户 fork（evanfang0054/superpowers），而非 upstream
+    # 验证 origin 指向用户 fork（evanfang0054/agent-harness），而非 upstream
     local origin_url
     origin_url=$(git -C "$TARGET_REPO" remote get-url origin 2>/dev/null)
-    if ! echo "$origin_url" | grep -q "evanfang0054/superpowers"; then
-        echo "警告: origin ($origin_url) 不是 evanfang0054/superpowers" >&2
+    if ! echo "$origin_url" | grep -q "evanfang0054/agent-harness"; then
+        echo "警告: origin ($origin_url) 不是 evanfang0054/agent-harness" >&2
         echo "PR 将推到此 remote。如需推到 fork，请先配置:" >&2
         echo "  git remote set-url origin <your-fork-url>" >&2
         echo "继续运行? (y/N)" >&2

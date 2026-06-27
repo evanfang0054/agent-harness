@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 你在哪，测什么
 
-这是 **Superpowers** 的 `tests/` 目录 —— 测试目标是**非编译型行为塑造产物**（skills / hooks / 插件 manifest / shell 脚本），不是常规应用代码。顶层 `../CLAUDE.md` 是项目宪法，冲突时以顶层为准。
+这是 **Agent Harness** 的 `tests/` 目录 —— 测试目标是**非编译型行为塑造产物**（skills / hooks / 插件 manifest / shell 脚本），不是常规应用代码。顶层 `../CLAUDE.md` 是项目宪法，冲突时以顶层为准。
 
 测试分两类，**区分清楚至关重要**：
 
@@ -20,7 +20,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `codex-plugin-sync/` | 纯脚本 | `./test-sync-to-codex-plugin.sh` | Codex plugin manifest 与 Claude Code 一致性 |
 | `sdd-scripts/` | 纯脚本 | `./test-cleanup-workspace.sh` | SDD 工作区清理脚本 |
 | `ralph-loop-scripts/` | 纯脚本 | `./test-stop-hook-promise.sh` | stop hook 行为 |
-| `pi/` | 纯脚本 (tsx) | `npx tsx --test tests/pi/test-pi-extension.mjs` | `.pi/extensions/superpowers.ts` 与 `skills/using-superpowers/references/pi-tools.md` 一致性 |
+| `pi/` | 纯脚本 (tsx) | `npx tsx --test tests/pi/test-pi-extension.mjs` | `.pi/extensions/agent-harness.ts` 与 `skills/using-agent-harness/references/pi-tools.md` 一致性 |
 | `claude-code/` | 混合 | `./run-skill-tests.sh [--integration\|--test <f>\|--verbose]` | skill 加载/集成（用 headless `claude -p`） |
 | `skill-behavior/` | headless 行为 | `<skill>/run-test.sh` 或全量 `./run-all-tests.sh` | 每个 skill 的真实行为触发与合规 |
 | `explicit-skill-requests/` | headless 行为 | `./run-all.sh` | 多轮显式 `/skill` 调用 |

@@ -1,1 +1,1 @@
-/superpowers:harness-optimizer 我有一个 Claude Code 会话 ID：abc-123-def。根据这个会话复盘，帮我优化我的项目工作流。
+/agent-harness:harness-optimizer 我有一个 Claude Code 会话 ID：abc-123-def。根据这个会话复盘，帮我优化我的项目工作流。

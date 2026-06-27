@@ -14,9 +14,9 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
+**Save plans to:** `docs/agent-harness/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
-- **Before saving:** Check if the target directory is gitignored (`git check-ignore <dir>`). If so, inform the user and suggest `.superpowers/plans/` as an alternative, but respect the user's choice.
+- **Before saving:** Check if the target directory is gitignored (`git check-ignore <dir>`). If so, inform the user and suggest `.agent-harness/plans/` as an alternative, but respect the user's choice.
 
 ## Scope Check
 
@@ -26,9 +26,9 @@ If the spec covers multiple independent subsystems, it should have been broken i
 
 Before defining tasks, check for sprint contract:
 
-1. Look for `docs/superpowers/contracts/{feature-name}.contract.md`
+1. Look for `docs/agent-harness/contracts/{feature-name}.contract.md`
 2. If exists: read and align plan tasks with Definition of Done
-3. If missing: prompt user to run `superpowers:sprint-contract` first
+3. If missing: prompt user to run `agent-harness:sprint-contract` first
    - User can skip with explicit "skip contract" — proceed without contract
    - Default: assume contract exists from prior brainstorming phase
 
@@ -61,7 +61,7 @@ This structure informs the task decomposition. Each task should produce self-con
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use agent-harness:subagent-driven-development (recommended) or agent-harness:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -170,7 +170,7 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 After saving the plan, offer execution choice:
 
-**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Two execution options:**
+**"Plan complete and saved to `docs/agent-harness/plans/<filename>.md`. Two execution options:**
 
 **1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
 
@@ -179,9 +179,9 @@ After saving the plan, offer execution choice:
 **Which approach?"**
 
 **If Subagent-Driven chosen:**
-- **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
+- **REQUIRED SUB-SKILL:** Use agent-harness:subagent-driven-development
 - Fresh subagent per task + two-stage review
 
 **If Inline Execution chosen:**
-- **REQUIRED SUB-SKILL:** Use superpowers:executing-plans
+- **REQUIRED SUB-SKILL:** Use agent-harness:executing-plans
 - Batch execution with checkpoints for review

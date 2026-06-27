@@ -91,7 +91,7 @@ $changelog
 "
     
     # 读取现有内容并在标题后插入新条目
-    local header="# Superpowers Release Notes"
+    local header="# Agent Harness Release Notes"
     local existing_content
     existing_content=$(tail -n +3 "$RELEASE_NOTES")
     

@@ -5,9 +5,9 @@
 #   trace-analyzer.sh [project_root]
 #
 # Input:
-#   .superpowers/learnings.jsonl
-#   docs/superpowers/specs/ (optional)
-#   /tmp/superpowers-edit-tracker/ (optional)
+#   .agent-harness/learnings.jsonl
+#   docs/agent-harness/specs/ (optional)
+#   /tmp/agent-harness-edit-tracker/ (optional)
 #
 # Output:
 #   Structured text report with failure patterns, trends, recommendations
@@ -15,7 +15,7 @@
 set -euo pipefail
 
 PROJECT_ROOT="${1:-.}"
-LEARNINGS_FILE="${PROJECT_ROOT}/.superpowers/learnings.jsonl"
+LEARNINGS_FILE="${PROJECT_ROOT}/.agent-harness/learnings.jsonl"
 
 if [ ! -f "${LEARNINGS_FILE}" ]; then
     echo "=== Trace Analysis Report ==="
@@ -23,7 +23,7 @@ if [ ! -f "${LEARNINGS_FILE}" ]; then
     echo "No learnings file found at ${LEARNINGS_FILE}"
     echo "Cannot analyze failure patterns without data."
     echo ""
-    echo "Recommendation: Use superpowers:session-learnings to start recording."
+    echo "Recommendation: Use agent-harness:session-learnings to start recording."
     exit 0
 fi
 

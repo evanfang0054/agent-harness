@@ -16,7 +16,7 @@
 set -euo pipefail
 
 root="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}"
-dir="$root/.superpowers/sdd"
+dir="$root/.agent-harness/sdd"
 mkdir -p "$dir"
 printf '*\n' > "$dir/.gitignore"
 cd "$dir" && pwd

@@ -1,8 +1,8 @@
-# Superpowers
+# Agent Harness
 
 [中文文档](README.md)
 
-Superpowers is a complete software development workflow for your coding agents, built on top of a set of composable "skills" and some initial instructions that make sure your agent uses them.
+Agent Harness is a complete software development workflow for your coding agents, built on top of a set of composable "skills" and some initial instructions that make sure your agent uses them.
 
 ## How it works
 
@@ -14,7 +14,7 @@ After you've signed off on the design, your agent puts together an implementatio
 
 Next up, once you say "go", it launches a *subagent-driven-development* process, having agents work through each engineering task, inspecting and reviewing their work, and continuing forward. It's not uncommon for Claude to be able to work autonomously for a couple hours at a time without deviating from the plan you put together.
 
-There's a bunch more to it, but that's the core of the system. And because the skills trigger automatically, you don't need to do anything special. Your coding agent just has Superpowers.
+There's a bunch more to it, but that's the core of the system. And because the skills trigger automatically, you don't need to do anything special. Your coding agent just has Agent Harness.
 
 
 ## Installation
@@ -23,12 +23,12 @@ There's a bunch more to it, but that's the core of the system. And because the s
 
 ### Claude Code Official Marketplace
 
-Superpowers is available via the [official Claude plugin marketplace](https://claude.com/plugins/superpowers)
+Agent Harness is available via the [official Claude plugin marketplace](https://claude.com/plugins/agent-harness)
 
 Install the plugin from Claude marketplace:
 
 ```bash
-/plugin install superpowers@claude-plugins-official
+/plugin install agent-harness@claude-plugins-official
 ```
 
 ### Claude Code (via Plugin Marketplace)
@@ -36,13 +36,13 @@ Install the plugin from Claude marketplace:
 In Claude Code, register the marketplace first:
 
 ```bash
-/plugin marketplace add evanfang0054/superpowers-marketplace
+/plugin marketplace add evanfang0054/agent-harness-marketplace
 ```
 
 Then install the plugin from this marketplace:
 
 ```bash
-/plugin install superpowers@superpowers-marketplace
+/plugin install agent-harness@agent-harness-marketplace
 ```
 
 ### Cursor (via Plugin Marketplace)
@@ -50,17 +50,17 @@ Then install the plugin from this marketplace:
 In Cursor Agent chat, install from marketplace:
 
 ```text
-/add-plugin superpowers
+/add-plugin agent-harness
 ```
 
-or search for "superpowers" in the plugin marketplace.
+or search for "agent-harness" in the plugin marketplace.
 
 ### Codex
 
 Tell Codex:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/evanfang0054/superpowers/refs/heads/main/.codex/INSTALL.md
+Fetch and follow instructions from https://raw.githubusercontent.com/evanfang0054/agent-harness/refs/heads/main/.codex/INSTALL.md
 ```
 
 **Detailed docs:** [docs/README.codex.md](docs/README.codex.md)
@@ -70,7 +70,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/evanfang005
 Tell OpenCode:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/evanfang0054/superpowers/refs/heads/main/.opencode/INSTALL.md
+Fetch and follow instructions from https://raw.githubusercontent.com/evanfang0054/agent-harness/refs/heads/main/.opencode/INSTALL.md
 ```
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
@@ -78,29 +78,29 @@ Fetch and follow instructions from https://raw.githubusercontent.com/evanfang005
 ### GitHub Copilot CLI
 
 ```bash
-copilot plugin marketplace add evanfang0054/superpowers-marketplace
-copilot plugin install superpowers@superpowers-marketplace
+copilot plugin marketplace add evanfang0054/agent-harness-marketplace
+copilot plugin install agent-harness@agent-harness-marketplace
 ```
 
 ### Gemini CLI
 
 ```bash
-gemini extensions install https://github.com/evanfang0054/superpowers
+gemini extensions install https://github.com/evanfang0054/agent-harness
 ```
 
 To update:
 
 ```bash
-gemini extensions update superpowers
+gemini extensions update agent-harness
 ```
 
 ### Verify Installation
 
-Start a new session in your chosen platform and ask for something that should trigger a skill (for example, "help me plan this feature" or "let's debug this issue"). The agent should automatically invoke the relevant superpowers skill.
+Start a new session in your chosen platform and ask for something that should trigger a skill (for example, "help me plan this feature" or "let's debug this issue"). The agent should automatically invoke the relevant agent-harness skill.
 
 ## Workflow Overview
 
-Superpowers uses a layered architecture: **Decision Layer** ensures "doing the right thing", **Execution Layer** ensures "doing things right", **Quality Layer** ensures "doing things well".
+Agent Harness uses a layered architecture: **Decision Layer** ensures "doing the right thing", **Execution Layer** ensures "doing things right", **Quality Layer** ensures "doing things well".
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -229,7 +229,7 @@ You provide a natural language request
     ↓
 [3] Claude analyzes sessions, identifies problem patterns
     ↓
-[4] File issues to evanfang0054/superpowers
+[4] File issues to evanfang0054/agent-harness
     ↓
 [5] Fix each issue via SDD (brainstorming → writing-plans → implement)
     ↓
@@ -251,7 +251,7 @@ Clean up worktree, output PR link, wait for your review
 
 In real-world testing on this project itself, auto-loop has autonomously discovered and fixed 30+ shell script bugs (covering Python source injection, signal-path resource leaks, set -u boundary issues, frontmatter boundary corruption, and more). Each bug was identified by Claude → filed as an issue → fixed via SDD → pushed → wrapped in a PR. Average run takes 15-40 minutes and produces a ready-to-review PR.
 
-See the [design spec](docs/superpowers/specs/2026-06-24-auto-loop-self-improvement-design.md) for details.
+See the [design spec](docs/agent-harness/specs/2026-06-24-auto-loop-self-improvement-design.md) for details.
 
 ## What's Inside
 
@@ -293,7 +293,7 @@ See the [design spec](docs/superpowers/specs/2026-06-24-auto-loop-self-improveme
 
 **Meta**
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
-- **using-superpowers** - Introduction to the skills system
+- **using-agent-harness** - Introduction to the skills system
 
 **Harness Tools**
 - **harness-init** - Bootstrap harness configuration from templates for React, Python, Go, etc.
@@ -325,7 +325,7 @@ See `skills/writing-skills/SKILL.md` for the complete guide.
 Skills update automatically when you update the plugin:
 
 ```bash
-/plugin update superpowers
+/plugin update agent-harness
 ```
 
 ## License
@@ -334,7 +334,7 @@ MIT License - see LICENSE file for details
 
 ## Support
 
-- **Issues**: https://github.com/evanfang0054/superpowers/issues
+- **Issues**: https://github.com/evanfang0054/agent-harness/issues
 
 ## Acknowledgements
 
