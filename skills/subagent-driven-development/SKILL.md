@@ -11,14 +11,27 @@ when_to_use: "[feedforward, feedback] Triggered when dispatching subagents for p
 
 You are the ORCHESTRATOR. Your job is to coordinate subagents, NOT implement code yourself.
 
+IMPORTANT: All script paths in this workflow MUST be anchored to the plugin
+root so they resolve regardless of the current working directory. Define
+once at the top of your shell context:
+  SDD_SKILL_DIR=\"\${CLAUDE_PLUGIN_ROOT}/skills/subagent-driven-development\"
+Then use:
+  \"\$SDD_SKILL_DIR/scripts/task-brief\"      # task brief extractor
+  \"\$SDD_SKILL_DIR/scripts/review-package\"  # diff packager
+  \"\$SDD_SKILL_DIR/implementer-prompt.md\"   # implementer template
+  \"\$SDD_SKILL_DIR/task-reviewer-prompt.md\" # reviewer template
+Never call these with bare relative paths like \`scripts/task-brief\` — if
+the CWD has drifted (e.g. after cd-ing into a subdirectory) relative paths
+resolve to the wrong location and fail.
+
 === ORCHESTRATOR WORKFLOW (per iteration) ===
 1. Read the plan/task, extract pending tasks
 2. For the NEXT pending task:
-   a. Run scripts/task-brief to extract task text to a file
-   b. Dispatch IMPLEMENTER subagent (use ./implementer-prompt.md template, with brief file path)
+   a. Run `\"\$SDD_SKILL_DIR/scripts/task-brief\"` to extract task text to a file
+   b. Dispatch IMPLEMENTER subagent (use `\"\$SDD_SKILL_DIR/implementer-prompt.md\"` template, with brief file path)
    c. If implementer asks questions, answer them and re-dispatch
-   d. When implementer reports DONE, run scripts/review-package BASE HEAD to generate diff file
-   e. Dispatch TASK REVIEWER subagent (./task-reviewer-prompt.md) with brief file + report file + review package
+   d. When implementer reports DONE, run `\"\$SDD_SKILL_DIR/scripts/review-package\" BASE HEAD` to generate diff file
+   e. Dispatch TASK REVIEWER subagent (`\"\$SDD_SKILL_DIR/task-reviewer-prompt.md\"`) with brief file + report file + review package
    f. If review fails, have implementer fix and re-review
    g. When review passes, mark task complete in progress ledger
 3. Move to next task
@@ -171,7 +184,7 @@ that implementer. Single-file mechanical fixes also take the cheapest tier.
 
 Implementer subagents report one of four statuses. Handle each appropriately:
 
-**DONE:** Generate the review package (`scripts/review-package BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then dispatch the task reviewer with the printed path.
+**DONE:** Generate the review package (`"$SDD_SKILL_DIR/scripts/review-package" BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then dispatch the task reviewer with the printed path.
 
 **DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
 
@@ -217,7 +230,7 @@ final whole-branch review. When you fill a reviewer template:
   test hygiene, review method) — the constraints block is for what THIS
   project's spec demands.
 - Hand the reviewer its diff as a file: run this skill's
-  `scripts/review-package BASE HEAD` and pass the reviewer the file path
+  `"$SDD_SKILL_DIR/scripts/review-package" BASE HEAD` and pass the reviewer the file path
   it prints (or, without bash: `git log --oneline`, `git diff --stat`,
   and `git diff -U10` for the range, redirected to one uniquely named
   file). The output never enters your own context, and the reviewer sees
@@ -239,7 +252,7 @@ final whole-branch review. When you fill a reviewer template:
   Do not dismiss the finding because the plan mandates it, and do not
   dispatch a fix that contradicts the plan without asking.
 - The final whole-branch review gets a package too: run
-  `scripts/review-package MERGE_BASE HEAD` (MERGE_BASE = the commit the
+  `"$SDD_SKILL_DIR/scripts/review-package" MERGE_BASE HEAD` (MERGE_BASE = the commit the
   branch started from, e.g. `git merge-base main HEAD`) and include the
   printed path in the final review dispatch, so the final reviewer reads
   one file instead of re-deriving the branch diff with git commands.
@@ -261,7 +274,7 @@ prints back — stays resident in your context for the rest of the session
 and is re-read on every later turn. Hand artifacts over as files:
 
 - **Task brief:** before dispatching an implementer, run this skill's
-  `scripts/task-brief PLAN_FILE N` — it extracts the task's full text to a
+  `"$SDD_SKILL_DIR/scripts/task-brief" PLAN_FILE N` — it extracts the task's full text to a
   uniquely named file and prints the path. Compose the dispatch so the
   brief stays the single source of requirements. Your dispatch should
   contain: (1) one line on where this task fits in the project; (2) the
@@ -288,9 +301,15 @@ controllers that lost their place have re-dispatched entire completed task
 sequences — the single most expensive failure observed. Track progress in
 a ledger file, not only in todos.
 
-- At skill start, check for a ledger:
-  `cat "${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}/.superpowers/sdd/progress.md"`. Tasks listed there
-  as complete are DONE — do not re-dispatch them; resume at the first task
+- At skill start, ensure the SDD ledger directory exists and check for a
+  ledger. Use this exact form (the directory is absent on first run):
+  ```
+  SDD_DIR="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}"/.superpowers/sdd
+  mkdir -p "$SDD_DIR"
+  LEDGER="$SDD_DIR/progress.md"
+  [ -f "$LEDGER" ] && cat "$LEDGER" || echo "(no prior SDD progress)"
+  ```
+  Tasks listed in the ledger as complete are DONE — do not re-dispatch them; resume at the first task
   not marked complete.
 - When a task's review comes back clean, append one line to the ledger in
   the same message as your other bookkeeping:
@@ -408,7 +427,7 @@ Done!
 - Proceed with unfixed issues
 - Dispatch multiple implementation subagents in parallel (conflicts)
 - Make a subagent read the whole plan file (hand it its task brief —
-  `scripts/task-brief` — instead)
+  `"$SDD_SKILL_DIR/scripts/task-brief"` — instead)
 - Skip scene-setting context (subagent needs to understand where task fits)
 - Ignore subagent questions (answer before letting them proceed)
 - Accept "close enough" on spec compliance (reviewer found spec issues = not done)
@@ -418,7 +437,7 @@ Done!
   dispatch prompt ("treat it as Minor at most") — the plan's example code is
   a starting point, not evidence that its weaknesses were chosen
 - Dispatch a task reviewer without a diff file — generate it first
-  (`scripts/review-package BASE HEAD`) and name the printed path in the
+  (`"$SDD_SKILL_DIR/scripts/review-package" BASE HEAD`) and name the printed path in the
   prompt
 - Move to next task while the review has open Critical/Important issues
 - Re-dispatch a task the progress ledger already marks complete — check

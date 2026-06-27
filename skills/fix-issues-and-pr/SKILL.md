@@ -18,7 +18,7 @@ Pull existing GitHub issues, fix each via SDD workflow, and ship all fixes as **
 
 **When NOT to use:**
 - 想从会话日志挖掘新问题 → 用 `superpowers:generate-issues`
-- 想一次完成 分析+修复+PR → 直接调用 `scripts/auto-loop.sh`（不带 `--fix-only`）
+- 想一次完成 分析+修复+PR → 直接调用 `"${CLAUDE_PLUGIN_ROOT}/scripts/auto-loop.sh"`（不带 `--fix-only`）
 
 ## Key Constraint — One PR for All Issues
 
@@ -40,16 +40,30 @@ Pull existing GitHub issues, fix each via SDD workflow, and ship all fixes as **
 ## Examples
 
 ```bash
-./scripts/auto-loop.sh --fix-only "#12,#15"
+"${CLAUDE_PLUGIN_ROOT}/scripts/auto-loop.sh" --fix-only "#12,#15"
 ```
 
 ```bash
-./scripts/auto-loop.sh --fix-only "all" --max-issues 10
+"${CLAUDE_PLUGIN_ROOT}/scripts/auto-loop.sh" --fix-only "all" --max-issues 10
 ```
 
 ## Prerequisites
 
 同 `superpowers:generate-issues`：`claude` / `gh`（已 `gh auth login`） / `jq` / `uv` 可用，工作区干净。
+
+## Shell Portability — macOS BSD sed vs GNU sed
+
+> **重要**：填充 PR 模板 / 改文件时，不要用 GNU sed 的 `c\` / `a\` / `i\` 多行替换语法。macOS 默认是 BSD sed，遇到 `sed -i '' "/pattern/c\ replacement"` 会报：
+> ```
+> sed: 1: "/pattern/c\...": extra characters after \ at the end of c command
+> ```
+>
+> **推荐做法（跨平台）**：
+> - 简单字符串替换：`sed 's/pattern/replacement/g'`（GNU 和 BSD 都支持）
+> - 多行替换 / 模板填充：优先用 **Edit 工具** 或 **Python**（`python3 -c "..."`），不要用 `sed c\`
+> - 写入新文件：直接用 Write 工具
+>
+> 该约束适用于整个 SDD 修复链路 —— orchestrator 派发的 Claude 也要遵守。
 
 ## Outputs
 
@@ -62,4 +76,4 @@ Pull existing GitHub issues, fix each via SDD workflow, and ship all fixes as **
 - ❌ 不提新 issue → issue 来源是已存在的
 - ❌ 不拆分多个 PR → 当前实现只支持单 PR
 
-完整能力见 `scripts/auto-loop.sh` 与 `skills/auto-loop/orchestrator-prompt.md` 的 `fix_only` 模式分支。
+完整能力见 `"${CLAUDE_PLUGIN_ROOT}/scripts/auto-loop.sh"` 与 `skills/auto-loop/orchestrator-prompt.md` 的 `fix_only` 模式分支。

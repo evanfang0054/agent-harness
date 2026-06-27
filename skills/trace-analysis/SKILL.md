@@ -22,7 +22,7 @@ Trace analysis turns historical learnings into actionable signal for skill impro
 ## How to Run
 
 ```bash
-bash scripts/trace-analyzer.sh [project_root]
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/trace-analyzer.sh" [project_root]
 ```
 
 ## Pattern Reference

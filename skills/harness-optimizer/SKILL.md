@@ -62,9 +62,9 @@ ls -lt ~/.claude/projects/<project-path>/*.jsonl | head -20
 
 ## Step 2: 提取会话数据
 
-使用提取脚本：
+使用提取脚本（路径必须锚定到插件根，不要用未定义的 `${SKILL_PATH}`）：
 ```bash
-python ${SKILL_PATH}/scripts/extract-session.py \
+python "${CLAUDE_PLUGIN_ROOT}/skills/harness-optimizer/scripts/extract-session.py" \
   --session-id <session-id> \
   --project-path=<encoded-project-path> \
   --output .superpowers/session-analysis/<session-id>.json
@@ -223,7 +223,7 @@ python -m skill_creator.scripts.run_eval \
 ls -lt ~/.claude/projects/<project-path>/*.jsonl | head -10
 
 # 提取特定会话
-python ${SKILL_PATH}/scripts/extract-session.py --session-id <id>
+python "${CLAUDE_PLUGIN_ROOT}/skills/harness-optimizer/scripts/extract-session.py" --session-id <id>
 ```
 
 ## Integration
