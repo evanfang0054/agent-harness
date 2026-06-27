@@ -137,6 +137,19 @@ jq '.intervention = {"reason": "具体原因", "options": ["选项1"], "current_
 2. 在 analysis.json 里记录 `filtered_sessions`（保留的会话列表）和 `excluded_sessions`（排除的会话列表 + 排除原因）
 3. 只对 `filtered_sessions` 识别问题
 
+**筛选遍历范围（硬约束，违反 = 静默漏掉跨项目会话）：**
+- **会话筛选脚本必须遍历 `{{SCAN_TARGET}}` 下所有项目子目录的 `*.jsonl`**，禁止只扫单个项目目录。
+- 如果 `{{SCAN_TARGET}}` 是 `~/.claude/projects/`（`--all-projects` 模式），必须 `find "{{SCAN_TARGET}}" -name '*.jsonl' -type f` 枚举**所有**项目子目录下的会话文件，而不是 `ls <某个项目目录>/*.jsonl`。
+- **禁止**把 `REPO_ROOT` 反推出来的单一项目目录（如 `~/.claude/projects/-Users-...-superpowers/`）当作全部会话源 —— `REPO_ROOT` 反映的是插件源仓库，跨项目调用 superpowers 的会话会落在**其他**项目目录（如 `-Users-...-dragonpass-*`）。
+- 推荐写法：
+  ```bash
+  # 枚举所有项目下所有 jsonl，再做 filter 判定
+  find "{{SCAN_TARGET}}" -name '*.jsonl' -type f -print0 \
+    | while IFS= read -r -d '' f; do
+        # 对 $f 做 {{FILTER}} 判定
+      done
+  ```
+
 **判定示例（供参考，按自然语言理解执行）：**
 - filter="调用了 superpower 相关 skill" → 会话内出现 Skill 工具调用且 skill 名匹配 superpowers skill 列表（brainstorming / writing-plans / subagent-driven-development / verification-before-completion / finishing-a-development-branch / auto-loop 等）
 - filter="出现 hook 报错" → 会话内有 PreToolUse / SessionStart / Stop hook 的报错文本
