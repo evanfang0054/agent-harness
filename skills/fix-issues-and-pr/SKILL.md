@@ -51,6 +51,20 @@ Pull existing GitHub issues, fix each via SDD workflow, and ship all fixes as **
 
 同 `superpowers:generate-issues`：`claude` / `gh`（已 `gh auth login`） / `jq` / `uv` 可用，工作区干净。
 
+## Shell Portability — macOS BSD sed vs GNU sed
+
+> **重要**：填充 PR 模板 / 改文件时，不要用 GNU sed 的 `c\` / `a\` / `i\` 多行替换语法。macOS 默认是 BSD sed，遇到 `sed -i '' "/pattern/c\ replacement"` 会报：
+> ```
+> sed: 1: "/pattern/c\...": extra characters after \ at the end of c command
+> ```
+>
+> **推荐做法（跨平台）**：
+> - 简单字符串替换：`sed 's/pattern/replacement/g'`（GNU 和 BSD 都支持）
+> - 多行替换 / 模板填充：优先用 **Edit 工具** 或 **Python**（`python3 -c "..."`），不要用 `sed c\`
+> - 写入新文件：直接用 Write 工具
+>
+> 该约束适用于整个 SDD 修复链路 —— orchestrator 派发的 Claude 也要遵守。
+
 ## Outputs
 
 - 分支 `feat/fix-issues-<first_issue>-<date>`，PR body 含 `closes #12\ncloses #15\n...`
