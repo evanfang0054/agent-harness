@@ -139,10 +139,16 @@ warning_escaped=$(escape_for_json "$warning_message")
 learnings_escaped=$(escape_for_json "$learnings_content")
 headless_tip_escaped=$(escape_for_json "$headless_tip")
 
-# Build the session context. On `resume` the using-superpowers body is empty
-# (already present in the prior context), so the wrapper collapses to a small
-# learnings-refresh payload.
-session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n\n${warning_escaped}${learnings_escaped}${headless_tip_escaped}\n</EXTREMELY_IMPORTANT>"
+# Build the session context.
+# - startup / clear: full wrapper with using-superpowers body + learnings + tip
+# - resume: lean payload — using-superpowers is already in the prior context,
+#   so we inject only the learnings refresh (and warning if present). No empty
+#   "Below is the full content..." heading.
+if [ "$SESSION_SOURCE" = "resume" ]; then
+    session_context="${warning_escaped}${learnings_escaped}"
+else
+    session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n\n${warning_escaped}${learnings_escaped}${headless_tip_escaped}\n</EXTREMELY_IMPORTANT>"
+fi
 
 # Output context injection as JSON.
 if [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
