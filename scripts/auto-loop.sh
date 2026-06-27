@@ -57,7 +57,7 @@ usage() {
   auto-loop.sh "分析今天的会话"
   auto-loop.sh --project ~/code/foo "分析本周会话"
   auto-loop.sh --all-projects "找出所有项目的问题"
-  auto-loop.sh --filter "调用了 superpower 相关 skill" "只盘点相关会话"
+  auto-loop.sh --filter "调用了 agent-harness 相关 skill" "只盘点相关会话"
   auto-loop.sh --resume
 EOF
 }
