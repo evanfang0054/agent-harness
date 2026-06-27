@@ -70,9 +70,9 @@ state_clear "$STATE_DIR"
 
 # Case 8: state_init 接受第 6 参数 filter 并持久化
 rm -rf "$STATE_DIR" 2>/dev/null || true
-state_init "test-filter" "feat/f" "需求" "$STATE_DIR" "/scan/path" "调用了 superpower"
+state_init "test-filter" "feat/f" "需求" "$STATE_DIR" "/scan/path" "调用了 agent-harness"
 assert_file_exists "$STATE_DIR/state.json" "state_init with filter creates state.json"
-assert_json_field "$STATE_DIR/state.json" '.filter' '调用了 superpower' "state has filter field"
+assert_json_field "$STATE_DIR/state.json" '.filter' '调用了 agent-harness' "state has filter field"
 
 # Case 9: state_init 不传 filter 时，filter 为空字符串（向后兼容）
 rm -rf "$STATE_DIR" 2>/dev/null || true
