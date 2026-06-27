@@ -2,16 +2,21 @@
 # search-learnings.sh - Search project learnings with confidence decay and dedup
 #
 # Usage:
-#   search-learnings.sh <keyword>           # Search by keyword
-#   search-learnings.sh --type <type>       # Filter by type
-#   search-learnings.sh --recent [N]        # Show recent N entries (default: 10)
-#   search-learnings.sh --all               # Show all entries
-#   search-learnings.sh --summary           # Show formatted summary (for session-start)
+#   search-learnings.sh <keyword>                    # Search by keyword
+#   search-learnings.sh --type <type>                # Filter by type
+#   search-learnings.sh --recent [N]                 # Show recent N entries (default: 10)
+#   search-learnings.sh --all                        # Show all entries
+#   search-learnings.sh --summary                    # Show formatted summary (for session-start)
+#   search-learnings.sh --summary \
+#       --max-entries 5 \
+#       --min-confidence 7 \
+#       --recent-within-days 30                      # Throttled summary (saves tokens)
 #
 # Features:
 #   - Confidence decay: observed/inferred lose 1pt per 30 days
 #   - Deduplication: latest entry wins per key+type
 #   - Formatted output grouped by type
+#   - Throttling: --max-entries / --min-confidence / --recent-within-days
 
 set -euo pipefail
 
@@ -54,16 +59,26 @@ fi
 format_learnings() {
     local filter="${1:-}"
     local type_filter="${2:-}"
-    LEARNINGS_FILTER="$filter" LEARNINGS_TYPE_FILTER="$type_filter" python3 - "$LEARNINGS_FILE" << 'PYTHON'
+    local max_entries="${3:-0}"          # 0 = no limit
+    local min_confidence="${4:-0}"       # 0 = no filter
+    local recent_within_days="${5:-0}"   # 0 = no filter
+    LEARNINGS_FILTER="$filter" LEARNINGS_TYPE_FILTER="$type_filter" \
+        LEARNINGS_MAX_ENTRIES="$max_entries" \
+        LEARNINGS_MIN_CONFIDENCE="$min_confidence" \
+        LEARNINGS_RECENT_WITHIN_DAYS="$recent_within_days" \
+        python3 - "$LEARNINGS_FILE" << 'PYTHON'
 import json
 import sys
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from collections import defaultdict
 
 file_path = sys.argv[1] if len(sys.argv) > 1 else '.superpowers/learnings.jsonl'
 filter_text = os.environ.get('LEARNINGS_FILTER', '').lower()
 type_filter = os.environ.get('LEARNINGS_TYPE_FILTER', '').lower()
+max_entries = int(os.environ.get('LEARNINGS_MAX_ENTRIES', '0') or '0')
+min_confidence = int(os.environ.get('LEARNINGS_MIN_CONFIDENCE', '0') or '0')
+recent_within_days = int(os.environ.get('LEARNINGS_RECENT_WITHIN_DAYS', '0') or '0')
 
 try:
     with open(file_path, 'r') as f:
@@ -134,6 +149,31 @@ for e in entries:
 results = list(seen.values())
 results.sort(key=lambda x: x.get('_effective_confidence', 0), reverse=True)
 
+# Apply throttle filters (--max-entries / --min-confidence / --recent-within-days)
+if min_confidence > 0:
+    results = [e for e in results if e.get('_effective_confidence', 0) >= min_confidence]
+
+if recent_within_days > 0:
+    cutoff = now - timedelta(days=recent_within_days)
+    filtered = []
+    for e in results:
+        ts = e.get('ts', '')
+        if not ts:
+            continue
+        try:
+            ts_clean = ts.replace('Z', '+00:00')
+            if '+' in ts_clean:
+                ts_clean = ts_clean.split('+')[0]
+            entry_date = datetime.fromisoformat(ts_clean)
+            if entry_date >= cutoff:
+                filtered.append(e)
+        except Exception:
+            continue
+    results = filtered
+
+if max_entries > 0 and len(results) > max_entries:
+    results = results[:max_entries]
+
 # Group by type
 by_type = defaultdict(list)
 for e in results:
@@ -156,13 +196,44 @@ for t, arr in sorted(by_type.items()):
 PYTHON
 }
 
+# Throttle defaults (overridable via CLI flags appended after --summary/--all)
+MAX_ENTRIES=0
+MIN_CONFIDENCE=0
+RECENT_WITHIN_DAYS=0
+
+# Pre-scan args to capture throttle flags anywhere in argv
+new_args=()
+for a in "$@"; do
+    case "$a" in
+        --max-entries) shift_next=max_entries ;;
+        --min-confidence) shift_next=min_confidence ;;
+        --recent-within-days) shift_next=recent_within_days ;;
+        --max-entries=*|-*max-entries=*) MAX_ENTRIES="${a#*=}"; shift_next="" ;;
+        --min-confidence=*|-*min-confidence=*) MIN_CONFIDENCE="${a#*=}"; shift_next="" ;;
+        --recent-within-days=*|-*recent-within-days=*) RECENT_WITHIN_DAYS="${a#*=}"; shift_next="" ;;
+        *)
+            if [ -n "${shift_next:-}" ]; then
+                case "$shift_next" in
+                    max_entries) MAX_ENTRIES="$a" ;;
+                    min_confidence) MIN_CONFIDENCE="$a" ;;
+                    recent_within_days) RECENT_WITHIN_DAYS="$a" ;;
+                esac
+                shift_next=""
+            else
+                new_args+=("$a")
+            fi
+            ;;
+    esac
+done
+set -- "${new_args[@]}"
+
 case "$1" in
     --summary)
-        format_learnings ""
+        format_learnings "" "" "$MAX_ENTRIES" "$MIN_CONFIDENCE" "$RECENT_WITHIN_DAYS"
         ;;
     --all)
         echo "=== All Learnings ($total entries) ==="
-        format_learnings ""
+        format_learnings "" "" "$MAX_ENTRIES" "$MIN_CONFIDENCE" "$RECENT_WITHIN_DAYS"
         ;;
     --recent)
         n="${2:-10}"
@@ -173,7 +244,7 @@ case "$1" in
         tmp_recent=$(mktemp -t superpowers_recent)
         _SUPERPOWERS_TMP_CLEANUP="$tmp_recent"
         tail -"$n" "$LEARNINGS_FILE" > "$tmp_recent"
-        LEARNINGS_FILE="$tmp_recent" format_learnings ""
+        LEARNINGS_FILE="$tmp_recent" format_learnings "" "" "$MAX_ENTRIES" "$MIN_CONFIDENCE" "$RECENT_WITHIN_DAYS"
         rm -f "$tmp_recent"
         _SUPERPOWERS_TMP_CLEANUP=""
         ;;
@@ -185,17 +256,21 @@ case "$1" in
         fi
         type="$2"
         echo "=== Learnings of type: $type ==="
-        format_learnings "" "$type"
+        format_learnings "" "$type" "$MAX_ENTRIES" "$MIN_CONFIDENCE" "$RECENT_WITHIN_DAYS"
         ;;
     --help|-h)
         echo "Usage: $0 <keyword> | --type <type> | --recent [N] | --all | --summary"
+        echo "       $0 --summary --max-entries 5 --min-confidence 7 --recent-within-days 30"
         echo ""
         echo "Options:"
-        echo "  <keyword>        Search by keyword (case-insensitive)"
-        echo "  --type <type>    Filter by type"
-        echo "  --recent [N]     Show recent N entries (default: 10)"
-        echo "  --all            Show all entries"
-        echo "  --summary        Formatted summary for session start"
+        echo "  <keyword>                     Search by keyword (case-insensitive)"
+        echo "  --type <type>                 Filter by type"
+        echo "  --recent [N]                  Show recent N entries (default: 10)"
+        echo "  --all                         Show all entries"
+        echo "  --summary                     Formatted summary for session start"
+        echo "  --max-entries N               (throttle) output top-N by confidence"
+        echo "  --min-confidence N            (throttle) drop entries below N"
+        echo "  --recent-within-days N        (throttle) drop entries older than N days"
         echo ""
         echo "Types: pattern, pitfall, preference, architecture, tool, operational"
         echo "Total learnings: $total"
@@ -204,6 +279,6 @@ case "$1" in
         # Keyword search
         keyword="$1"
         echo "=== Learnings matching '$keyword' ==="
-        format_learnings "$keyword"
+        format_learnings "$keyword" "" "$MAX_ENTRIES" "$MIN_CONFIDENCE" "$RECENT_WITHIN_DAYS"
         ;;
 esac

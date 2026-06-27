@@ -7,6 +7,57 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
+# --- Read SessionStart payload (stdin JSON) ---
+# Claude Code 2.1.159+ sends a JSON payload on stdin with a `source` field
+# (startup | resume | precompact | clear). Older versions send nothing.
+# We read it once and keep the parsed fields around (issue #66).
+SESSION_SOURCE="startup"
+SESSION_ID=""
+STDIN_PAYLOAD=""
+if [ ! -t 0 ]; then
+    STDIN_PAYLOAD=$(cat 2>/dev/null || true)
+    if [ -n "$STDIN_PAYLOAD" ] && command -v jq >/dev/null 2>&1; then
+        SESSION_SOURCE=$(printf '%s' "$STDIN_PAYLOAD" | jq -r '.source // "startup"' 2>/dev/null || echo "startup")
+        SESSION_ID=$(printf '%s' "$STDIN_PAYLOAD" | jq -r '.session_id // empty' 2>/dev/null || true)
+    fi
+fi
+# Default empty payload or older harness → treat as startup.
+case "$SESSION_SOURCE" in
+    startup|resume|precompact|clear) ;;  # keep value
+    *) SESSION_SOURCE="startup" ;;
+esac
+
+# --- Subagent detection (issue #67) ---
+# Claude Code dispatches subagents with `isSidechain: true` in the payload,
+# and subagent transcripts live under `*/subagents/agent-*.jsonl`. Either
+# signal is sufficient. We do NOT inject superpowers context into subagents —
+# they should focus on their task brief, not the skill registry.
+IS_SUBAGENT="false"
+if [ -n "$STDIN_PAYLOAD" ] && command -v jq >/dev/null 2>&1; then
+    if [ "$(printf '%s' "$STDIN_PAYLOAD" | jq -r '.isSidechain // false' 2>/dev/null || echo false)" = "true" ]; then
+        IS_SUBAGENT="true"
+    fi
+fi
+# Belt-and-suspenders: env var set by some harness versions.
+if [ "${CLAUDE_SUBAGENT:-0}" = "1" ]; then
+    IS_SUBAGENT="true"
+fi
+
+# Subagent injection: minimal, single-line focus reminder. Done — exit early.
+if [ "$IS_SUBAGENT" = "true" ]; then
+    subagent_context="You are a subagent dispatched for a specific task. Focus on your task brief. Do not invoke other skills unless explicitly required by your task."
+    subagent_escaped="${subagent_context//\\/\\\\}"
+    subagent_escaped="${subagent_escaped//\"/\\\"}"
+    if [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
+        printf '{\n  "additional_context": "%s"\n}\n' "$subagent_escaped" | cat
+    elif [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -z "${COPILOT_CLI:-}" ]; then
+        printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$subagent_escaped" | cat
+    else
+        printf '{\n  "additionalContext": "%s"\n}\n' "$subagent_escaped" | cat
+    fi
+    exit 0
+fi
+
 # Check if legacy skills directory exists and build warning
 warning_message=""
 legacy_skills_dir="${HOME}/.config/superpowers/skills"
@@ -14,10 +65,31 @@ if [ -d "$legacy_skills_dir" ]; then
     warning_message="\n\n<important-reminder>IN YOUR FIRST REPLY AFTER SEEING THIS MESSAGE YOU MUST TELL THE USER:⚠️ **WARNING:** Superpowers now uses Claude Code's skills system. Custom skills in ~/.config/superpowers/skills will not be read. Move custom skills to ~/.claude/skills instead. To make this message go away, remove ~/.config/superpowers/skills</important-reminder>"
 fi
 
-# Read using-superpowers content
-using_superpowers_content=$(cat "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md" 2>&1 || echo "Error reading using-superpowers skill")
+# --- Source-aware injection (issue #66) ---
+# - startup / clear → full injection (the canonical case)
+# - resume          → only learnings delta; using-superpowers already in context
+# - precompact      → inject nothing (compact is meant to free space; re-injecting
+#                     the same content defeats the purpose)
+if [ "$SESSION_SOURCE" = "precompact" ]; then
+    # Emit an empty-but-valid JSON for each platform.
+    if [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
+        printf '{\n  "additional_context": ""\n}\n'
+    elif [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -z "${COPILOT_CLI:-}" ]; then
+        printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": ""\n  }\n}\n'
+    else
+        printf '{\n  "additionalContext": ""\n}\n'
+    fi
+    exit 0
+fi
 
-# Read project learnings if they exist
+# Read using-superpowers content (full on startup/clear, empty on resume)
+using_superpowers_content=""
+if [ "$SESSION_SOURCE" = "startup" ] || [ "$SESSION_SOURCE" = "clear" ]; then
+    using_superpowers_content=$(cat "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md" 2>&1 || echo "Error reading using-superpowers skill")
+fi
+
+# Read project learnings if they exist (injected on every source except precompact).
+# On resume we still inject learnings (they may have grown since the session paused).
 learnings_content=""
 # Resolve project root the same way log/search-learnings.sh do (v2):
 # prefer CLAUDE_PROJECT_DIR, fall back to git rev-parse for manual/CI runs.
@@ -25,9 +97,16 @@ LEARNINGS_DIR="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null
 if [ -f "$LEARNINGS_DIR/.superpowers/learnings.jsonl" ]; then
     learnings_count=$(wc -l < "$LEARNINGS_DIR/.superpowers/learnings.jsonl" | tr -d ' ')
     if [ "$learnings_count" -gt 0 ]; then
-        # Get formatted summary using search script
+        # Get formatted summary using search script.
+        # Throttle: when learnings exceed 50 entries, only inject top-5 high-confidence
+        # entries from the last 30 days. Saves ~10KB per session (see issue #64).
         if [ -x "${PLUGIN_ROOT}/scripts/search-learnings.sh" ]; then
-            formatted_learnings=$("${PLUGIN_ROOT}/scripts/search-learnings.sh" --summary 2>/dev/null || true)
+            if [ "$learnings_count" -ge 50 ]; then
+                formatted_learnings=$("${PLUGIN_ROOT}/scripts/search-learnings.sh" --summary \
+                    --max-entries 5 --min-confidence 7 --recent-within-days 30 2>/dev/null || true)
+            else
+                formatted_learnings=$("${PLUGIN_ROOT}/scripts/search-learnings.sh" --summary 2>/dev/null || true)
+            fi
         else
             # Fallback to raw JSON
             formatted_learnings=$(tail -10 "$LEARNINGS_DIR/.superpowers/learnings.jsonl" 2>/dev/null || true)
@@ -38,13 +117,13 @@ if [ -f "$LEARNINGS_DIR/.superpowers/learnings.jsonl" ]; then
     fi
 fi
 
-# Headless skill invocation tip — unconditional, applies to every session.
-# Critical for test/CI authors; low-noise for interactive users (session-start is already verbose).
-headless_tip="\n\n## Skill Invocation Best Practice\nWhen programmatically invoking skills (tests, CI, -p mode), use imperative form:\n  ✅ 'Invoke the Skill tool with brainstorming'\n  ❌ '/brainstorming'\n"
+# Headless skill invocation tip — only on startup/clear, not resume.
+headless_tip=""
+if [ "$SESSION_SOURCE" = "startup" ] || [ "$SESSION_SOURCE" = "clear" ]; then
+    headless_tip="\n\n## Skill Invocation Best Practice\nWhen programmatically invoking skills (tests, CI, -p mode), use imperative form:\n  ✅ 'Invoke the Skill tool with brainstorming'\n  ❌ '/brainstorming'\n"
+fi
 
 # Escape string for JSON embedding using bash parameter substitution.
-# Each ${s//old/new} is a single C-level pass - orders of magnitude
-# faster than the character-by-character loop this replaces.
 escape_for_json() {
     local s="$1"
     s="${s//\\/\\\\}"
@@ -59,25 +138,24 @@ using_superpowers_escaped=$(escape_for_json "$using_superpowers_content")
 warning_escaped=$(escape_for_json "$warning_message")
 learnings_escaped=$(escape_for_json "$learnings_content")
 headless_tip_escaped=$(escape_for_json "$headless_tip")
-session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n\n${warning_escaped}${learnings_escaped}${headless_tip_escaped}\n</EXTREMELY_IMPORTANT>"
+
+# Build the session context.
+# - startup / clear: full wrapper with using-superpowers body + learnings + tip
+# - resume: lean payload — using-superpowers is already in the prior context,
+#   so we inject only the learnings refresh (and warning if present). No empty
+#   "Below is the full content..." heading.
+if [ "$SESSION_SOURCE" = "resume" ]; then
+    session_context="${warning_escaped}${learnings_escaped}"
+else
+    session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n\n${warning_escaped}${learnings_escaped}${headless_tip_escaped}\n</EXTREMELY_IMPORTANT>"
+fi
 
 # Output context injection as JSON.
-# Cursor hooks expect additional_context (snake_case).
-# Claude Code hooks expect hookSpecificOutput.additionalContext (nested).
-# Copilot CLI (v1.0.11+) and others expect additionalContext (top-level, SDK standard).
-# Claude Code reads BOTH additional_context and hookSpecificOutput without
-# deduplication, so we must emit only the field the current platform consumes.
-#
-# Uses printf instead of heredoc to work around bash 5.3+ heredoc hang.
-# See: https://github.com/evanfang0054/superpowers/issues/571
 if [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
-  # Cursor sets CURSOR_PLUGIN_ROOT (may also set CLAUDE_PLUGIN_ROOT)
   printf '{\n  "additional_context": "%s"\n}\n' "$session_context" | cat
 elif [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -z "${COPILOT_CLI:-}" ]; then
-  # Claude Code sets CLAUDE_PLUGIN_ROOT without COPILOT_CLI
   printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$session_context" | cat
 else
-  # Copilot CLI (sets COPILOT_CLI=1) or unknown platform — SDK standard format
   printf '{\n  "additionalContext": "%s"\n}\n' "$session_context" | cat
 fi
 
