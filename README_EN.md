@@ -338,4 +338,4 @@ MIT License - see LICENSE file for details
 
 ## Acknowledgements
 
-This project is based on [Agent Harness](https://github.com/obra/agent-harness) by [Jesse Vincent](https://github.com/obra). Thanks to the original author for creating such an excellent project.
+This project is based on [Superpowers](https://github.com/obra/superpowers) by [Jesse Vincent](https://github.com/obra). Thanks to the original author for creating such an excellent project.

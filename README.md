@@ -359,4 +359,4 @@ MIT 许可证 - 详见 LICENSE 文件
 
 ## 致谢
 
-本项目基于 [Jesse Vincent](https://github.com/obra) 的 [Agent Harness](https://github.com/obra/agent-harness) 项目开发。感谢原作者创建了如此优秀的项目。
+本项目基于 [Jesse Vincent](https://github.com/obra) 的 [Superpowers](https://github.com/obra/superpowers) 项目开发。感谢原作者创建了如此优秀的项目。
