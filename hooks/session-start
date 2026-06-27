@@ -25,9 +25,16 @@ LEARNINGS_DIR="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null
 if [ -f "$LEARNINGS_DIR/.superpowers/learnings.jsonl" ]; then
     learnings_count=$(wc -l < "$LEARNINGS_DIR/.superpowers/learnings.jsonl" | tr -d ' ')
     if [ "$learnings_count" -gt 0 ]; then
-        # Get formatted summary using search script
+        # Get formatted summary using search script.
+        # Throttle: when learnings exceed 50 entries, only inject top-5 high-confidence
+        # entries from the last 30 days. Saves ~10KB per session (see issue #64).
         if [ -x "${PLUGIN_ROOT}/scripts/search-learnings.sh" ]; then
-            formatted_learnings=$("${PLUGIN_ROOT}/scripts/search-learnings.sh" --summary 2>/dev/null || true)
+            if [ "$learnings_count" -ge 50 ]; then
+                formatted_learnings=$("${PLUGIN_ROOT}/scripts/search-learnings.sh" --summary \
+                    --max-entries 5 --min-confidence 7 --recent-within-days 30 2>/dev/null || true)
+            else
+                formatted_learnings=$("${PLUGIN_ROOT}/scripts/search-learnings.sh" --summary 2>/dev/null || true)
+            fi
         else
             # Fallback to raw JSON
             formatted_learnings=$(tail -10 "$LEARNINGS_DIR/.superpowers/learnings.jsonl" 2>/dev/null || true)
