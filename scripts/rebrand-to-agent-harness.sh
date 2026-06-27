@@ -116,11 +116,12 @@ apply_sed 'superpowers-dev' 'agent-harness-dev' '规则6: marketplace name super
 apply_sed 'superpowers@agent-harness-dev' 'agent-harness@agent-harness-dev' '规则7: settings 插件引用'
 
 # 规则 8（大驼峰单词，用词边界）
+# 注：macOS BSD sed -E 不识别 \b（GNU 扩展），改用 perl 跨平台一致
 xargs < "$TMP_FILELIST" grep -liE '\bSuperpowers\b' 2>/dev/null | while read -r f; do
     case "$f" in
         ./README.md|./README_EN.md|./CLAUDE.md) continue ;;
     esac
-    sed "${SED_INPLACE[@]}" -E 's/\bSuperpowers\b/Agent Harness/g' "$f"
+    perl -C -pi -e 's/\bSuperpowers\b/Agent Harness/g' "$f"
 done
 
 # 规则 9（全小写兜底，用词边界）
@@ -128,7 +129,7 @@ xargs < "$TMP_FILELIST" grep -liE '\bsuperpowers\b' 2>/dev/null | while read -r 
     case "$f" in
         ./README.md|./README_EN.md|./CLAUDE.md) continue ;;
     esac
-    sed "${SED_INPLACE[@]}" -E 's/\bsuperpowers\b/agent-harness/g' "$f"
+    perl -C -pi -e 's/\bsuperpowers\b/agent-harness/g' "$f"
 done
 
 rm -f "$TMP_FILELIST"
@@ -148,8 +149,9 @@ This project is forked from Jesse Vincent ([@obra](https://github.com/obra))'s [
 # README.md：先应用规则 8/9 的替换，再注入致敬段
 if [[ -f "README.md" ]]; then
     # 替换大驼峰与小写（致敬词会在最后注入，无需保留）
-    sed "${SED_INPLACE[@]}" -E 's/\bSuperpowers\b/Agent Harness/g' README.md
-    sed "${SED_INPLACE[@]}" -E 's/\bsuperpowers\b/agent-harness/g' README.md
+    # 注：macOS BSD sed -E 不识别 \b，改用 perl
+    perl -C -pi -e 's/\bSuperpowers\b/Agent Harness/g' README.md
+    perl -C -pi -e 's/\bsuperpowers\b/agent-harness/g' README.md
     sed "${SED_INPLACE[@]}" -E 's/superpowers:using-superpowers/agent-harness:using-agent-harness/g' README.md
     sed "${SED_INPLACE[@]}" -E 's/superpowers:/agent-harness:/g' README.md
     sed "${SED_INPLACE[@]}" -E 's/using-superpowers/using-agent-harness/g' README.md
@@ -170,8 +172,8 @@ fi
 
 # README_EN.md：同步处理
 if [[ -f "README_EN.md" ]]; then
-    sed "${SED_INPLACE[@]}" -E 's/\bSuperpowers\b/Agent Harness/g' README_EN.md
-    sed "${SED_INPLACE[@]}" -E 's/\bsuperpowers\b/agent-harness/g' README_EN.md
+    perl -C -pi -e 's/\bSuperpowers\b/Agent Harness/g' README_EN.md
+    perl -C -pi -e 's/\bsuperpowers\b/agent-harness/g' README_EN.md
     sed "${SED_INPLACE[@]}" -E 's/superpowers:using-superpowers/agent-harness:using-agent-harness/g' README_EN.md
     sed "${SED_INPLACE[@]}" -E 's/superpowers:/agent-harness:/g' README_EN.md
     sed "${SED_INPLACE[@]}" -E 's/using-superpowers/using-agent-harness/g' README_EN.md
@@ -193,8 +195,9 @@ fi
 if [[ -f "CLAUDE.md" ]]; then
     # 用占位符保护致敬句
     sed "${SED_INPLACE[@]}" -E 's/基于 Jesse Vincent 的原版 Superpowers 项目/__TRIBUTE_SENTINEL__/g' CLAUDE.md
-    sed "${SED_INPLACE[@]}" -E 's/\bSuperpowers\b/Agent Harness/g' CLAUDE.md
-    sed "${SED_INPLACE[@]}" -E 's/\bsuperpowers\b/agent-harness/g' CLAUDE.md
+    # 注：macOS BSD sed -E 不识别 \b，改用 perl
+    perl -C -pi -e 's/\bSuperpowers\b/Agent Harness/g' CLAUDE.md
+    perl -C -pi -e 's/\bsuperpowers\b/agent-harness/g' CLAUDE.md
     sed "${SED_INPLACE[@]}" -E 's/superpowers:using-superpowers/agent-harness:using-agent-harness/g' CLAUDE.md
     sed "${SED_INPLACE[@]}" -E 's/superpowers:/agent-harness:/g' CLAUDE.md
     sed "${SED_INPLACE[@]}" -E 's/using-superpowers/using-agent-harness/g' CLAUDE.md
@@ -209,8 +212,9 @@ fi
 # skills/CLAUDE.md / tests/CLAUDE.md / tests/claude-code/README.md：标准 sed（无致敬保留）
 for f in "skills/CLAUDE.md" "tests/CLAUDE.md" "tests/claude-code/README.md"; do
     [[ -f "$f" ]] || continue
-    sed "${SED_INPLACE[@]}" -E 's/\bSuperpowers\b/Agent Harness/g' "$f"
-    sed "${SED_INPLACE[@]}" -E 's/\bsuperpowers\b/agent-harness/g' "$f"
+    # 注：macOS BSD sed -E 不识别 \b，改用 perl
+    perl -C -pi -e 's/\bSuperpowers\b/Agent Harness/g' "$f"
+    perl -C -pi -e 's/\bsuperpowers\b/agent-harness/g' "$f"
     sed "${SED_INPLACE[@]}" -E 's/superpowers:using-superpowers/agent-harness:using-agent-harness/g' "$f"
     sed "${SED_INPLACE[@]}" -E 's/superpowers:/agent-harness:/g' "$f"
     sed "${SED_INPLACE[@]}" -E 's/using-superpowers/using-agent-harness/g' "$f"
