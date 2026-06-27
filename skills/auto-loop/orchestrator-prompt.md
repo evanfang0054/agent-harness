@@ -10,6 +10,21 @@
 - ❌ **绝对禁止** 执行 `rm -rf .claude/auto-loop`、`rm -rf .claude/worktrees`、`rm -rf .superpowers/sdd` 等任何删除 `.claude/auto-loop/` 或 `.claude/worktrees/` 的命令
 - ❌ **绝对禁止** 执行 `git worktree remove` 或 `git worktree prune`
 - ❌ **绝对禁止** 手动 `git stash`、`git checkout` 切换到其他分支（你必须在当前 worktree 分支工作）
+- ❌ **绝对禁止** 让 CWD 漂移后用相对路径执行 git/文件操作（见下方「路径纪律」）
+
+**路径纪律（CWD 漂移会让所有相对路径失败）：**
+
+你的 CWD 可能在任务执行中被切到子目录（如 `tests/`、`skills/<name>/`）。为避免 `fatal: pathspec ... did not match any files` 和 `Path does not exist ... current working directory is ...`：
+
+1. **所有 git 操作必须用绝对路径或 `-C` 指定仓库根**：
+   ```bash
+   git -C "{{REPO_ROOT}}" add scripts/auto-loop.sh
+   git -C "{{REPO_ROOT}}" commit -m "..."
+   ```
+   禁止 `cd <subdir>` 后用 `git add scripts/...`。
+2. **所有文件读写优先用绝对路径**。Edit/Read 工具本身就要求绝对路径 —— 永远传绝对路径，不要拼相对路径。
+3. **执行 shell 命令前自检**：如果命令里出现相对路径（`scripts/...` / `skills/...` / `tests/...`），先 `pwd` 确认 CWD，再决定是否补 `{{REPO_ROOT}}/` 前缀。
+4. **`cd` 是临时的**：shell 状态不跨 Bash 工具调用持久化，但单条命令内的 `cd X && do Y` 会让 Y 在 X 内执行 —— 谨慎使用，确保后续命令不依赖原 CWD。
 
 **允许的操作：**
 - ✅ 读写 `{{STATE_FILE}}`（用 jq，见下方协议）
