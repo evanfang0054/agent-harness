@@ -11,8 +11,15 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-STATE_DIR="$REPO_ROOT/.claude/auto-loop"
+# PLUGIN_ROOT: 脚本所在的插件源仓库根 —— 用于定位插件自带文件
+# （orchestrator-prompt.md、--plugin-dir 加载点）。全局安装下指向
+# ~/.claude/plugins/cache/.../superpowers/<ver>/，开发期指向源仓库。
+PLUGIN_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# TARGET_REPO: 用户要分析/修复的目标仓库。默认 = 当前工作目录的 git
+# 顶层，可被 --project 覆盖。必须与 PLUGIN_ROOT 区分：全局安装下两者
+# 不同，TARGET_REPO 是用户项目，PLUGIN_ROOT 是插件目录。
+TARGET_REPO="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+STATE_DIR="$TARGET_REPO/.claude/auto-loop"
 STATE_FILE="$STATE_DIR/state.json"
 
 source "$SCRIPT_DIR/lib/state.sh"
@@ -92,7 +99,7 @@ done
 
 # ---------- 清理模式 ----------
 if $CLEANUP; then
-    worktree_cleanup_all "$REPO_ROOT" 2>/dev/null || true
+    worktree_cleanup_all "$TARGET_REPO" 2>/dev/null || true
     rm -rf "$STATE_DIR"
     echo "已清理 $STATE_DIR 和所有 worktree"
     exit 0
@@ -115,21 +122,21 @@ check_prerequisites() {
 }
 
 check_clean_workspace() {
-    if [ -n "$(git -C "$REPO_ROOT" status --porcelain 2>/dev/null)" ]; then
+    if [ -n "$(git -C "$TARGET_REPO" status --porcelain 2>/dev/null)" ]; then
         echo "错误: 工作区不干净，请 commit 或 stash 后重试" >&2
-        git -C "$REPO_ROOT" status --short >&2
+        git -C "$TARGET_REPO" status --short >&2
         exit 1
     fi
 }
 
 check_git_remote() {
-    if ! git -C "$REPO_ROOT" remote get-url origin >/dev/null 2>&1; then
+    if ! git -C "$TARGET_REPO" remote get-url origin >/dev/null 2>&1; then
         echo "错误: 未配置 git remote origin" >&2
         exit 1
     fi
     # 验证 origin 指向用户 fork（evanfang0054/superpowers），而非 upstream
     local origin_url
-    origin_url=$(git -C "$REPO_ROOT" remote get-url origin 2>/dev/null)
+    origin_url=$(git -C "$TARGET_REPO" remote get-url origin 2>/dev/null)
     if ! echo "$origin_url" | grep -q "evanfang0054/superpowers"; then
         echo "警告: origin ($origin_url) 不是 evanfang0054/superpowers" >&2
         echo "PR 将推到此 remote。如需推到 fork，请先配置:" >&2
@@ -195,9 +202,13 @@ else
     elif [ -n "$PROJECT" ]; then
         SCOPE_DESC="扫描指定项目: $PROJECT"
         SCAN_TARGET="$PROJECT"
+        # --project 同时改变 target repo（用户指定要操作的项目仓库）
+        TARGET_REPO="$(cd "$PROJECT" && git rev-parse --show-toplevel 2>/dev/null || echo "$PROJECT")"
+        STATE_DIR="$TARGET_REPO/.claude/auto-loop"
+        STATE_FILE="$STATE_DIR/state.json"
     else
-        SCOPE_DESC="扫描当前项目: $REPO_ROOT"
-        SCAN_TARGET="$REPO_ROOT"
+        SCOPE_DESC="扫描当前项目: $TARGET_REPO"
+        SCAN_TARGET="$TARGET_REPO"
     fi
 
     RUN_ID="run-$(date +%Y-%m-%d-%H%M%S)"
@@ -224,7 +235,7 @@ else
     # 否则会混进 PR diff。详见 orchestrator-prompt.md 的 State.json 操作协议。
 
     # ---------- 创建 worktree 隔离工作区 ----------
-    WORKTREE_PATH=$(worktree_create "$REPO_ROOT" "$RUN_ID" "$BRANCH")
+    WORKTREE_PATH=$(worktree_create "$TARGET_REPO" "$RUN_ID" "$BRANCH")
     # 用 state_set_str（jq --arg 安全转义）而不是手拼 JSON 字符串字面量。
     # 若 WORKTREE_PATH/ORIGINAL_PWD 含双引号或反斜杠，手拼的 "\"$VAR\"" 会让
     # state.sh 的 `jq "$path = $value"` 解析失败，set -e 直接退出。详见 #30。
@@ -250,7 +261,7 @@ if $RESUME; then
     else
         echo "警告: worktree 不存在 ($WORKTREE_PATH)，重新创建"
         BRANCH=$(state_get "$STATE_DIR" '.branch')
-        WORKTREE_PATH=$(worktree_create "$REPO_ROOT" "$(state_get "$STATE_DIR" '.run_id')" "$BRANCH")
+        WORKTREE_PATH=$(worktree_create "$TARGET_REPO" "$(state_get "$STATE_DIR" '.run_id')" "$BRANCH")
         state_set_str "$STATE_DIR" '.worktree_path' "$WORKTREE_PATH"
         cd "$WORKTREE_PATH"
     fi
@@ -284,8 +295,8 @@ REQUEST_VAL=$(state_get "$STATE_DIR" '.request')
 SCOPE_VAL="$SCOPE_DESC"
 # scan_target 优先用本次 CLI 传入的，resume 时从 state.json 读
 SCAN_TARGET_VAL="${SCAN_TARGET:-$(state_get "$STATE_DIR" '.scan_target // ""' 2>/dev/null || echo "")}"
-# 空时回退到 REPO_ROOT（向后兼容旧 state.json）
-[ -z "$SCAN_TARGET_VAL" ] && SCAN_TARGET_VAL="$REPO_ROOT"
+# 空时回退到 TARGET_REPO（向后兼容旧 state.json）
+[ -z "$SCAN_TARGET_VAL" ] && SCAN_TARGET_VAL="$TARGET_REPO"
 # filter 优先用本次 CLI 传入的，resume 时从 state.json 读
 FILTER_VAL="${FILTER:-$(state_get "$STATE_DIR" '.filter // ""' 2>/dev/null || echo "")}"
 
@@ -296,7 +307,7 @@ PROMPT=$(jq --raw-input --slurp \
     --arg scope "$SCOPE_VAL" \
     --arg branch "$BRANCH" \
     --arg state "$STATE_FILE" \
-    --arg repo "$REPO_ROOT" \
+    --arg repo "$PLUGIN_ROOT" \
     --arg scan_target "$SCAN_TARGET_VAL" \
     --arg filter "$FILTER_VAL" \
     --arg mode "$MODE_VAL" \
@@ -312,7 +323,7 @@ PROMPT=$(jq --raw-input --slurp \
      | gsub("{{MODE}}"; $mode)
      | gsub("{{TARGET_ISSUES}}"; $target_issues)
      | gsub("{{MAX_ISSUES}}"; $max_issues)' \
-    < "$REPO_ROOT/skills/auto-loop/orchestrator-prompt.md")
+    < "$PLUGIN_ROOT/skills/auto-loop/orchestrator-prompt.md")
 
 PROMPT="${PROMPT}${PROMPT_DRY_RUN_NOTE:-}${PROMPT_FIX_ONLY_NOTE:-}"
 
@@ -374,7 +385,7 @@ done < <(
     # 导出 AUTO_LOOP_ACTIVE=1 让 guard-auto-loop.sh PreToolUse hook 拦截
     # Claude 删除 .claude/auto-loop/ 或调用 auto-loop.sh 本身的尝试
     AUTO_LOOP_ACTIVE=1 claude -p "$PROMPT" \
-        --plugin-dir "$REPO_ROOT" \
+        --plugin-dir "$PLUGIN_ROOT" \
         --permission-mode bypassPermissions \
         --output-format stream-json \
         --verbose \
@@ -399,7 +410,7 @@ if [ "$LAST_SIGNAL" = "COMPLETE" ]; then
     else
         # 正常完成 → 清理 worktree
         emit_event "🧹" "" "清理 worktree..."
-        worktree_remove "$REPO_ROOT" "$WORKTREE_PATH"
+        worktree_remove "$TARGET_REPO" "$WORKTREE_PATH"
         emit_event "✨" "" "worktree 已清理，当前工作区已恢复"
     fi
     cd "$ORIGINAL_PWD"
