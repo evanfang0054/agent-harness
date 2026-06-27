@@ -18,11 +18,11 @@ Analyze recent Claude Code sessions, identify problem patterns, and open GitHub 
 
 **When NOT to use:**
 - 想修复已有 issue → 用 `superpowers:fix-issues-and-pr`
-- 想一次完成 分析+修复+PR → 直接调用 `scripts/auto-loop.sh`（不带 `--dry-run`）
+- 想一次完成 分析+修复+PR → 直接调用 `"${CLAUDE_PLUGIN_ROOT}/scripts/auto-loop.sh"`（不带 `--dry-run`）
 
 ## How to Invoke
 
-Run `./scripts/auto-loop.sh --dry-run "<natural language request>"`. Common flags:
+Run `"${CLAUDE_PLUGIN_ROOT}/scripts/auto-loop.sh" --dry-run "<natural language request>"`. Common flags:
 
 | 用户表达 | CLI 参数 |
 |---------|---------|
@@ -31,19 +31,19 @@ Run `./scripts/auto-loop.sh --dry-run "<natural language request>"`. Common flag
 | 所有项目 | `--all-projects` |
 | "最多提 N 个" | `--max-issues N` |
 
-完整参数列表运行 `./scripts/auto-loop.sh --help`。
+完整参数列表运行 `"${CLAUDE_PLUGIN_ROOT}/scripts/auto-loop.sh" --help`。
 
 ## Examples
 
 ```bash
-./scripts/auto-loop.sh --dry-run \
+"${CLAUDE_PLUGIN_ROOT}/scripts/auto-loop.sh" --dry-run \
     --filter "调用了 brainstorming 相关 skill" \
     --max-issues 5 \
     "分析本周 superpowers 相关会话"
 ```
 
 ```bash
-./scripts/auto-loop.sh --dry-run --all-projects "盘点所有项目最近的问题"
+"${CLAUDE_PLUGIN_ROOT}/scripts/auto-loop.sh" --dry-run --all-projects "盘点所有项目最近的问题"
 ```
 
 ## Prerequisites
@@ -64,4 +64,4 @@ Run `./scripts/auto-loop.sh --dry-run "<natural language request>"`. Common flag
 - ❌ 不修复 issue → 用 `superpowers:fix-issues-and-pr`
 - ❌ 不提 PR、不写代码、不调用 brainstorming / writing-plans / SDD
 
-完整能力见 `scripts/auto-loop.sh` 与 `skills/auto-loop/orchestrator-prompt.md`。
+完整能力见 `"${CLAUDE_PLUGIN_ROOT}/scripts/auto-loop.sh"` 与 `skills/auto-loop/orchestrator-prompt.md`。

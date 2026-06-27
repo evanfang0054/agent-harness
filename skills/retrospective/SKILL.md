@@ -63,7 +63,7 @@ git diff --stat HEAD~50 --name-only | sort | uniq -c | sort -rn | head -20
 As part of data collection, run trace analyzer:
 
 ```bash
-bash scripts/trace-analyzer.sh
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/trace-analyzer.sh"
 ```
 
 Use the output to identify:
@@ -78,7 +78,7 @@ Reference: `superpowers:trace-analysis` for interpretation guidance.
 Run coverage metrics alongside trace analysis:
 
 ```bash
-bash scripts/coverage-metrics.sh
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/coverage-metrics.sh"
 ```
 
 Use coverage gaps to identify which harness dimensions need improvement in the next sprint.

@@ -18,7 +18,7 @@ Pull existing GitHub issues, fix each via SDD workflow, and ship all fixes as **
 
 **When NOT to use:**
 - 想从会话日志挖掘新问题 → 用 `superpowers:generate-issues`
-- 想一次完成 分析+修复+PR → 直接调用 `scripts/auto-loop.sh`（不带 `--fix-only`）
+- 想一次完成 分析+修复+PR → 直接调用 `"${CLAUDE_PLUGIN_ROOT}/scripts/auto-loop.sh"`（不带 `--fix-only`）
 
 ## Key Constraint — One PR for All Issues
 
@@ -40,11 +40,11 @@ Pull existing GitHub issues, fix each via SDD workflow, and ship all fixes as **
 ## Examples
 
 ```bash
-./scripts/auto-loop.sh --fix-only "#12,#15"
+"${CLAUDE_PLUGIN_ROOT}/scripts/auto-loop.sh" --fix-only "#12,#15"
 ```
 
 ```bash
-./scripts/auto-loop.sh --fix-only "all" --max-issues 10
+"${CLAUDE_PLUGIN_ROOT}/scripts/auto-loop.sh" --fix-only "all" --max-issues 10
 ```
 
 ## Prerequisites
@@ -76,4 +76,4 @@ Pull existing GitHub issues, fix each via SDD workflow, and ship all fixes as **
 - ❌ 不提新 issue → issue 来源是已存在的
 - ❌ 不拆分多个 PR → 当前实现只支持单 PR
 
-完整能力见 `scripts/auto-loop.sh` 与 `skills/auto-loop/orchestrator-prompt.md` 的 `fix_only` 模式分支。
+完整能力见 `"${CLAUDE_PLUGIN_ROOT}/scripts/auto-loop.sh"` 与 `skills/auto-loop/orchestrator-prompt.md` 的 `fix_only` 模式分支。
