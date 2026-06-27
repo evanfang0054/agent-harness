@@ -27,11 +27,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PROJECT_DIR}/scripts/guard-staging.sh\""
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/guard-staging.sh\""
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PROJECT_DIR}/scripts/guard-auto-loop.sh\""
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/guard-auto-loop.sh\""
           }
         ]
       }
@@ -42,7 +42,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PROJECT_DIR}/scripts/audit-subagent.sh\""
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/audit-subagent.sh\""
           }
         ]
       }
