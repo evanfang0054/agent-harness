@@ -52,8 +52,8 @@
 | 3 | `using-agent-harness` | `using-agent-harness` | skill 名标识符 |
 | 4 | `.agent-harness/` | `.agent-harness/` | 顶层与 demo 隐藏目录路径 |
 | 5 | `docs/agent-harness/` | `docs/agent-harness/` | 文档目录路径（含 demo） |
-| 6 | `agent-harness-dev` | `agent-harness-dev` | marketplace name |
-| 7 | `agent-harness@agent-harness-dev` | `agent-harness@agent-harness-dev` | settings 插件引用 |
+| 6 | `agent-harness-dev` | `agent-harness` | marketplace name |
+| 7 | `agent-harness@agent-harness-dev` | `agent-harness@agent-harness` | settings 插件引用 |
 | 8 | `Agent Harness` | `Agent Harness` | 大驼峰单词 |
 | 9 | `agent-harness` | `agent-harness` | 全小写兜底 |
 
@@ -254,10 +254,10 @@ apply_sed '\.agent-harness/' '.agent-harness/' '规则4: 路径 .agent-harness/'
 apply_sed 'docs/agent-harness/' 'docs/agent-harness/' '规则5: 路径 docs/agent-harness/'
 
 # 规则 6（marketplace name）
-apply_sed 'agent-harness-dev' 'agent-harness-dev' '规则6: marketplace name agent-harness-dev'
+apply_sed 'agent-harness-dev' 'agent-harness' '规则6: marketplace name agent-harness-dev'
 
 # 规则 7（settings 插件引用，已被规则 6 覆盖一半，此处显式补全）
-apply_sed 'agent-harness@agent-harness-dev' 'agent-harness@agent-harness-dev' '规则7: settings 插件引用'
+apply_sed 'agent-harness@agent-harness-dev' 'agent-harness@agent-harness' '规则7: settings 插件引用'
 
 # 规则 8（大驼峰单词，用词边界）
 xargs -a "$TMP_FILELIST" grep -liE '\bSuperpowers\b' 2>/dev/null | while read -r f; do
@@ -321,7 +321,7 @@ if [[ -f "README.md" ]]; then
     sed "${SED_INPLACE[@]}" -E 's/using-agent-harness/using-agent-harness/g' README.md
     sed "${SED_INPLACE[@]}" -E 's|\.agent-harness/|.agent-harness/|g' README.md
     sed "${SED_INPLACE[@]}" -E 's|docs/agent-harness/|docs/agent-harness/|g' README.md
-    sed "${SED_INPLACE[@]}" -E 's/agent-harness-dev/agent-harness-dev/g' README.md
+    sed "${SED_INPLACE[@]}" -E 's/agent-harness-dev/agent-harness/g' README.md
     # 在第一个一级标题后插入致敬段（若尚未存在）
     if ! grep -q '^## 致谢' README.md; then
         # 用 awk 在第一个 ## 标题（目录或 About）前插入
@@ -341,7 +341,7 @@ if [[ -f "README_EN.md" ]]; then
     sed "${SED_INPLACE[@]}" -E 's/using-agent-harness/using-agent-harness/g' README_EN.md
     sed "${SED_INPLACE[@]}" -E 's|\.agent-harness/|.agent-harness/|g' README_EN.md
     sed "${SED_INPLACE[@]}" -E 's|docs/agent-harness/|docs/agent-harness/|g' README_EN.md
-    sed "${SED_INPLACE[@]}" -E 's/agent-harness-dev/agent-harness-dev/g' README_EN.md
+    sed "${SED_INPLACE[@]}" -E 's/agent-harness-dev/agent-harness/g' README_EN.md
     if ! grep -q '^## Acknowledgements' README_EN.md; then
         awk -v tribute="$TRIBUTE_EN" '
             NR==1 { print; next }
@@ -362,7 +362,7 @@ if [[ -f "CLAUDE.md" ]]; then
     sed "${SED_INPLACE[@]}" -E 's/using-agent-harness/using-agent-harness/g' CLAUDE.md
     sed "${SED_INPLACE[@]}" -E 's|\.agent-harness/|.agent-harness/|g' CLAUDE.md
     sed "${SED_INPLACE[@]}" -E 's|docs/agent-harness/|docs/agent-harness/|g' CLAUDE.md
-    sed "${SED_INPLACE[@]}" -E 's/agent-harness-dev/agent-harness-dev/g' CLAUDE.md
+    sed "${SED_INPLACE[@]}" -E 's/agent-harness-dev/agent-harness/g' CLAUDE.md
     # 恢复致敬句
     sed "${SED_INPLACE[@]}" -E 's/__TRIBUTE_SENTINEL__/基于 Jesse Vincent 的原版 Agent Harness 项目/g' CLAUDE.md
 fi
@@ -376,7 +376,7 @@ for f in "skills/CLAUDE.md" "tests/CLAUDE.md" "tests/claude-code/README.md"; do
     sed "${SED_INPLACE[@]}" -E 's/using-agent-harness/using-agent-harness/g' "$f"
     sed "${SED_INPLACE[@]}" -E 's|\.agent-harness/|.agent-harness/|g' "$f"
     sed "${SED_INPLACE[@]}" -E 's|docs/agent-harness/|docs/agent-harness/|g' "$f"
-    sed "${SED_INPLACE[@]}" -E 's/agent-harness-dev/agent-harness-dev/g' "$f"
+    sed "${SED_INPLACE[@]}" -E 's/agent-harness-dev/agent-harness/g' "$f"
 done
 
 echo "✓ 阶段 3 完成（README / CLAUDE.md 致敬段处理）"
@@ -538,7 +538,7 @@ echo "规则3 skill名:     $(grep -rl 'using-agent-harness' --exclude-dir=.git 
 echo "规则4 .agent-harness/: $(grep -rl '\.agent-harness/' --exclude-dir=.git . | wc -l | tr -d ' ')"
 echo "规则5 docs/agent-harness/: $(grep -rl 'docs/agent-harness/' --exclude-dir=.git . | wc -l | tr -d ' ')"
 echo "规则6 marketplace:  $(grep -rl 'agent-harness-dev' --exclude-dir=.git . | wc -l | tr -d ' ')"
-echo "规则7 settings引用: $(grep -rl 'agent-harness@agent-harness-dev' --exclude-dir=.git . | wc -l | tr -d ' ')"
+echo "规则7 settings引用: $(grep -rl 'agent-harness@agent-harness' --exclude-dir=.git . | wc -l | tr -d ' ')"
 echo "规则8 大驼峰:       $(grep -rlE '\bSuperpowers\b' --exclude-dir=.git . | wc -l | tr -d ' ')"
 echo "规则9 小写兜底:     $(grep -rlE '\bsuperpowers\b' --exclude-dir=.git . | wc -l | tr -d ' ')"
 ```
@@ -605,9 +605,9 @@ head -8 .pi/extensions/agent-harness.ts
 ```
 Expected:
 - `plugin.json` name = `"agent-harness"`
-- `marketplace.json` name = `"agent-harness-dev"`, plugins[0].name = `"agent-harness"`
+- `marketplace.json` name = `"agent-harness"`, plugins[0].name = `"agent-harness"`
 - `package.json` name = `"agent-harness"`, pi.extensions 含 `"./.pi/extensions/agent-harness.ts"`
-- `settings.json` 含 `"agent-harness@agent-harness-dev": true`
+- `settings.json` 含 `"agent-harness@agent-harness": true`
 - `skills/using-agent-harness/SKILL.md` 第2行 `name: using-agent-harness`
 - `.pi/extensions/agent-harness.ts` 含 `BOOTSTRAP_MARKER` 改为 `"agent-harness:using-agent-harness bootstrap for pi"`
 
@@ -833,7 +833,7 @@ Expected: PR 创建成功，返回 PR URL。
 - [ ] CLAUDE.md 含「基于 Jesse Vincent 的原版 Agent Harness 项目」一句
 - [ ] `skills/using-agent-harness/SKILL.md` 的 `name: using-agent-harness`
 - [ ] `.claude-plugin/plugin.json` 的 `name: agent-harness`
-- [ ] `.claude/settings.json` 含 `agent-harness@agent-harness-dev`
+- [ ] `.claude/settings.json` 含 `agent-harness@agent-harness`
 - [ ] git commit 已创建（message 含 `refactor: rebrand`）
 - [ ] 远程仓库已重命名（若用户批准 Task 13）
 

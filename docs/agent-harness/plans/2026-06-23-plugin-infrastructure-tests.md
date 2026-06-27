@@ -183,7 +183,7 @@ git commit -m "test(infra): 添加 plugin.json manifest 结构测试"
 - Create: `tests/plugin-infrastructure/test-marketplace-manifest.sh`
 
 **参考输入**（已确认）：
-- `.claude-plugin/marketplace.json` 字段：`name=agent-harness-dev`、`plugins[0].version=5.0.21-beta.5`、`plugins[0].source=./`
+- `.claude-plugin/marketplace.json` 字段：`name=agent-harness`、`plugins[0].version=5.0.21-beta.5`、`plugins[0].source=./`
 
 - [ ] **Step 1: 写测试脚本**
 
