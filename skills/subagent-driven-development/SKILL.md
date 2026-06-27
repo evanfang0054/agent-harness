@@ -288,9 +288,15 @@ controllers that lost their place have re-dispatched entire completed task
 sequences — the single most expensive failure observed. Track progress in
 a ledger file, not only in todos.
 
-- At skill start, check for a ledger:
-  `cat "${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}/.superpowers/sdd/progress.md"`. Tasks listed there
-  as complete are DONE — do not re-dispatch them; resume at the first task
+- At skill start, ensure the SDD ledger directory exists and check for a
+  ledger. Use this exact form (the directory is absent on first run):
+  ```
+  SDD_DIR="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}"/.superpowers/sdd
+  mkdir -p "$SDD_DIR"
+  LEDGER="$SDD_DIR/progress.md"
+  [ -f "$LEDGER" ] && cat "$LEDGER" || echo "(no prior SDD progress)"
+  ```
+  Tasks listed in the ledger as complete are DONE — do not re-dispatch them; resume at the first task
   not marked complete.
 - When a task's review comes back clean, append one line to the ledger in
   the same message as your other bookkeeping:
