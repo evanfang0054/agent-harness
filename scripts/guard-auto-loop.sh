@@ -41,26 +41,58 @@ fi
 # Patterns that would destroy the running auto-loop state.
 # We deliberately keep this list narrow: only commands that operate on
 # .claude/auto-loop/ or .claude/worktrees/ or call auto-loop.sh itself.
+# Patterns are anchored to command-start (^) to avoid matching the path string
+# inside comments, echo, heredoc, grep arguments, or variable assignments.
+# Leading whitespace/env-var prefixes are tolerated by stripping them below.
+#
+# Pre-processing: strip leading comments so a `# rm -rf ...` comment is never
+# mistaken for a real command. We do NOT strip echo/heredoc content because
+# doing so is unsafe (echo can still cause harm if redirected), but the
+# command-start anchoring already excludes those cases where the dangerous
+# token is merely a quoted argument.
+COMMAND_FOR_MATCH="$COMMAND"
+# Strip a leading comment line: if the command starts with optional
+# whitespace then '#', treat it as a non-command and skip matching.
+case "$COMMAND_FOR_MATCH" in
+    *[[:space:]]#*|\#*) COMMENT_LEADING=1 ;;
+    *) COMMENT_LEADING=0 ;;
+esac
+
+# Only enforce the destructive patterns on real command invocations.
+# We detect "real invocation" by anchoring each pattern to ^, optionally
+# preceded by env-var assignments (FOO=bar baz) which bash allows.
+ALLOW_PREFIX='^([A-Z_][A-Z0-9_]*=[^[:space:]]*[[:space:]]*)*'
+
 BLOCK_PATTERNS=(
-    # Direct deletion of the state directory or its parents
-    'rm[[:space:]]+-rf?[[:space:]].*\.claude/auto-loop'
-    'rm[[:space:]]+-rf?[[:space:]].*\.claude/worktrees'
-    'rm[[:space:]]+-rf?[[:space:]].*\.claude[[:space:]]*/?$'
-    'rm[[:space:]]+-rf?[[:space:]].*\.claude[[:space:]]*"\s*$'
-    # rmdir / find -delete on the same
-    'rmdir[[:space:]].*\.claude/auto-loop'
-    'rmdir[[:space:]].*\.claude/worktrees'
-    'find[[:space:]].*\.claude/auto-loop.*-delete'
-    'find[[:space:]].*\.claude/worktrees.*-delete'
-    # Invoking auto-loop.sh from within itself
-    'scripts/auto-loop\.sh'
-    './scripts/auto-loop\.sh'
-    'auto-loop\.sh[[:space:]]+--cleanup'
-    'auto-loop\.sh[[:space:]]+--resume'
+    # Direct deletion of the state directory or its parents (command-start)
+    "${ALLOW_PREFIX}rm[[:space:]]+-rf?[[:space:]].*\.claude/auto-loop"
+    "${ALLOW_PREFIX}rm[[:space:]]+-rf?[[:space:]].*\.claude/worktrees"
+    "${ALLOW_PREFIX}rm[[:space:]]+-rf?[[:space:]].*\.claude[[:space:]]*([\"']/?)?$"
+    "${ALLOW_PREFIX}rm[[:space:]]+-rf?[[:space:]]+(['\"]?)\.claude\1[[:space:]]*$"
+    # rmdir / find -delete on the same (command-start only)
+    "${ALLOW_PREFIX}rmdir[[:space:]].*\.claude/auto-loop"
+    "${ALLOW_PREFIX}rmdir[[:space:]].*\.claude/worktrees"
+    "${ALLOW_PREFIX}find[[:space:]].*\.claude/auto-loop.*-delete"
+    "${ALLOW_PREFIX}find[[:space:]].*\.claude/worktrees.*-delete"
+    # Invoking auto-loop.sh as an actual command (command-start only).
+    # Matches: scripts/auto-loop.sh ... , ./scripts/auto-loop.sh ... ,
+    # bare `auto-loop.sh --cleanup/--resume` (other args are safe calls
+    # the orchestrator is allowed to make from within its own loop, but we
+    # still block any direct invocation to avoid recursion).
+    "${ALLOW_PREFIX}(\./)?scripts/auto-loop\.sh([[:space:]]|$)"
+    "${ALLOW_PREFIX}(\./)?scripts/auto-loop\.sh[[:space:]]+--cleanup"
+    "${ALLOW_PREFIX}(\./)?scripts/auto-loop\.sh[[:space:]]+--resume"
+    "${ALLOW_PREFIX}auto-loop\.sh([[:space:]]+--(cleanup|resume))?([[:space:]]|$)"
     # worktree removal (the running orchestrator's worktree)
-    'git[[:space:]]+worktree[[:space:]]+remove'
-    'git[[:space:]]+worktree[[:space:]]+prune'
+    "${ALLOW_PREFIX}git[[:space:]]+worktree[[:space:]]+remove"
+    "${ALLOW_PREFIX}git[[:space:]]+worktree[[:space:]]+prune"
 )
+
+# Skip matching entirely for leading-comment lines (a `# rm -rf ...` is not
+# a command bash will execute as rm).
+if [ "$COMMENT_LEADING" = "1" ]; then
+    exit 0
+fi
 
 for pattern in "${BLOCK_PATTERNS[@]}"; do
     if echo "$COMMAND" | grep -qE "$pattern"; then
