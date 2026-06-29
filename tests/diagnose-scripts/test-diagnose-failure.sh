@@ -4,8 +4,8 @@ PLUGIN_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 TEST_DIR="/tmp/agent-harness-diag-test-$$"
 RED='\033[0;31m'; GREEN='\033[0;32m'; NC='\033[0m'
 PASS=0; FAIL=0
-log_pass() { echo -e "${GREEN}✅ PASS${NC}: $1"; ((PASS++)); }
-log_fail() { echo -e "${RED}❌ FAIL${NC}: $1"; ((FAIL++)); }
+log_pass() { echo -e "${GREEN}✅ PASS${NC}: $1"; PASS=$((PASS+1)); }
+log_fail() { echo -e "${RED}❌ FAIL${NC}: $1"; FAIL=$((FAIL+1)); }
 cleanup() { rm -rf "$TEST_DIR"; }
 trap cleanup EXIT
 
