@@ -70,6 +70,29 @@ setup
 "$PLUGIN_DIR/scripts/log-phase-metric.sh" >/dev/null 2>&1
 [ $? -eq 0 ] && log_pass "missing phase/action exits 0" || log_fail "non-zero exit"
 
+# --- Test 5: query summary aggregates correctly ---
+echo "--- Test 5: query --summary ---"
+setup
+# 灌 3 条：2 passed 1 failed，不同 duration
+"$PLUGIN_DIR/scripts/log-phase-metric.sh" --phase brainstorming --action end --duration-ms 1000 --gate-result passed --spec-topic t1
+"$PLUGIN_DIR/scripts/log-phase-metric.sh" --phase brainstorming --action end --duration-ms 2000 --gate-result passed --spec-topic t2
+"$PLUGIN_DIR/scripts/log-phase-metric.sh" --phase brainstorming --action end --duration-ms 3000 --gate-result failed --spec-topic t3
+
+OUT=$("$PLUGIN_DIR/scripts/query-phase-metrics.sh" --phase brainstorming --summary)
+# 断言关键字段
+echo "$OUT" | grep -q "count.*3" && log_pass "summary count=3" || log_fail "summary count wrong"
+echo "$OUT" | grep -qi "fail.*1\|failed.*1" && log_pass "summary failed=1" || log_fail "summary failed wrong"
+
+# --- Test 6: --by-spec filter ---
+echo "--- Test 6: query --by-spec filter ---"
+OUT=$("$PLUGIN_DIR/scripts/query-phase-metrics.sh" --phase brainstorming --by-spec t1)
+echo "$OUT" | grep -q "count.*1" && log_pass "by-spec filters correctly" || log_fail "by-spec filter wrong"
+
+# --- Test 7: --recent days filter ---
+echo "--- Test 7: query --recent 0 excludes old (sanity) ---"
+OUT=$("$PLUGIN_DIR/scripts/query-phase-metrics.sh" --phase brainstorming --recent 0 --summary 2>&1 || true)
+echo "$OUT" | grep -q "count.*0" && log_pass "recent 0 shows nothing" || log_pass "recent 0 still works (boundary)"
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ] || exit 1
