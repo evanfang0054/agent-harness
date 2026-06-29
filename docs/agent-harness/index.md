@@ -9,7 +9,7 @@
 - [specs/](specs/index.md)     — 设计 spec（按主题）
 - [contracts/](contracts/index.md) — 交接契约（按交接点）
 - [plans/](plans/index.md)     — 实施 plan
-- [notes/](notes/index.md)     — 学习笔记 / 偶发记录
+- [notes/](notes/index.md)     — 学习笔记 / 偶发记录（含 [diagnoses/](notes/diagnoses/) 失败诊断沉淀）
 
 ## 主题速查（高频主题锚点）
 > 主题锚点是跨 spec/plan/contract 的稳定 key，frontmatter 的 `spec_topic` 字段必须命中本节。
