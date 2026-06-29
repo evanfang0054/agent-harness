@@ -160,6 +160,12 @@ This prevents plan execution interruptions from type errors discovered during im
 
 After writing the complete plan, look at the spec with fresh eyes and check the plan against it. This is a checklist you run yourself — not a subagent dispatch.
 
+**结构前置校验（硬门禁）**：plan 落盘后、进入 self-review 之前，必须跑：
+```bash
+scripts/validate-handoff.sh --stage plan --file <plan-path>
+```
+失败则回到 plan 写作步骤补全 frontmatter / 字段。通过后再交 self-review 做语义审稿。
+
 **1. Spec coverage:** Skim each section/requirement in the spec. Can you point to a task that implements it? List any gaps.
 
 **2. Placeholder scan:** Search your plan for red flags — any of the patterns from the "No Placeholders" section above. Fix them.

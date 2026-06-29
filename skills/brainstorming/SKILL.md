@@ -114,6 +114,12 @@ digraph brainstorming {
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
 
+**结构前置校验（硬门禁）**：spec 文档提交后、进入 self-review 之前，必须跑：
+```bash
+scripts/validate-handoff.sh --stage spec --file <spec-path>
+```
+退出码非 0 时，回到「Documentation」步骤补全 frontmatter / 字段，**不得**进入 Spec self-review。
+
 **Spec Self-Review:**
 After writing the spec document, look at it with fresh eyes:
 
