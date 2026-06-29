@@ -66,6 +66,6 @@
 ## 2026-06-27-rebrand-to-agent-harness-design
 - [2026-06-27-rebrand-to-agent-harness-design](2026-06-27-rebrand-to-agent-harness-design.md)
 
-## 2026-06-29-harness-engineering-improvements-design
+## harness-engineering-improvements
 - [2026-06-29-harness-engineering-improvements-design](2026-06-29-harness-engineering-improvements-design.md)
 

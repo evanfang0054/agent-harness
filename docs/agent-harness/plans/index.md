@@ -78,15 +78,15 @@
 ## 2026-06-27-rebrand-to-agent-harness
 - [2026-06-27-rebrand-to-agent-harness](2026-06-27-rebrand-to-agent-harness.md)
 
-## 2026-06-29-failure-diagnosis
+## failure-diagnosis
 - [2026-06-29-failure-diagnosis](2026-06-29-failure-diagnosis.md)
 
-## 2026-06-29-handoff-contracts
+## handoff-contracts
 - [2026-06-29-handoff-contracts](2026-06-29-handoff-contracts.md)
 
-## 2026-06-29-knowledge-base
+## knowledge-base
 - [2026-06-29-knowledge-base](2026-06-29-knowledge-base.md)
 
-## 2026-06-29-phase-metrics
+## phase-metrics
 - [2026-06-29-phase-metrics](2026-06-29-phase-metrics.md)
 

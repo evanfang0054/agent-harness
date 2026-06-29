@@ -1,3 +1,11 @@
+---
+spec_ref: ../specs/2026-06-29-harness-engineering-improvements-design.md
+spec_topic: handoff-contracts
+task_count: 7
+estimated_phases: [impl, test, docs]
+dod: success-criteria-in-spec
+---
+
 # Spec #2 协议层契约 Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use agent-harness:subagent-driven-development (recommended) or agent-harness:executing-plans to implement this plan task-by-task.

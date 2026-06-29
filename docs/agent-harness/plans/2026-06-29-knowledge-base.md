@@ -1,3 +1,11 @@
+---
+spec_ref: ../specs/2026-06-29-harness-engineering-improvements-design.md
+spec_topic: knowledge-base
+task_count: 7
+estimated_phases: [impl, test, docs]
+dod: success-criteria-in-spec
+---
+
 # Spec #3 知识库 / 上下文 Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use agent-harness:subagent-driven-development (recommended) or agent-harness:executing-plans to implement this plan task-by-task.

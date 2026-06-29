@@ -1,3 +1,11 @@
+---
+spec_topic: harness-engineering-improvements
+decision_summary: "把参考文章方法论翻译成 agent-harness 文件式架构；4 个 spec 覆盖可监测性/协议层/知识库/失败自愈，零新依赖。"
+design_approved: true
+user_approved_at: 2026-06-29T00:00:00Z
+gates: [user-review-passed]
+---
+
 # Harness Engineering 改进设计
 
 - **Date**: 2026-06-29
