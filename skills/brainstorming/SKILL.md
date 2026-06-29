@@ -130,9 +130,13 @@ After writing the spec document, look at it with fresh eyes:
 
 Fix any issues inline. No need to re-review — just fix and move on.
 
-- Spec self-review 通过后，emit 阶段指标（不阻断）：
+- Spec self-review 通过后，跑结构校验并按结果 emit 阶段指标（不阻断）：
   ```bash
-  scripts/log-phase-metric.sh --phase brainstorming --action end --spec-topic "$SPEC_TOPIC"
+  if scripts/validate-handoff.sh --stage spec --file "$SPEC"; then
+    scripts/log-phase-metric.sh --phase brainstorming --action gate --gate-result passed --spec-topic "$SPEC_TOPIC"
+  else
+    scripts/log-phase-metric.sh --phase brainstorming --action gate --gate-result failed --spec-topic "$SPEC_TOPIC"
+  fi
   ```
 
 **User Review Gate:**

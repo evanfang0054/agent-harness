@@ -174,9 +174,13 @@ scripts/validate-handoff.sh --stage plan --file <plan-path>
 
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 
-- Plan 落盘并通过 self-review 后，emit 阶段 gate（不阻断）：
+- Plan 落盘并通过 self-review 后，跑结构校验并按结果 emit 阶段 gate（不阻断）：
   ```bash
-  scripts/log-phase-metric.sh --phase writing-plans --action gate --gate-result passed --spec-topic "$SPEC_TOPIC"
+  if scripts/validate-handoff.sh --stage plan --file "$PLAN"; then
+    scripts/log-phase-metric.sh --phase writing-plans --action gate --gate-result passed --spec-topic "$SPEC_TOPIC"
+  else
+    scripts/log-phase-metric.sh --phase writing-plans --action gate --gate-result failed --spec-topic "$SPEC_TOPIC"
+  fi
   ```
 
 ## Execution Handoff
