@@ -127,7 +127,7 @@ fi
 # Just point at the KB index, never inject the body. Two-level lookup, no **/*.md glob.
 kb_hint=""
 if [ "$SESSION_SOURCE" = "startup" ] || [ "$SESSION_SOURCE" = "clear" ]; then
-    kb_hint="\n\n## Knowledge Base\n📚 知识库入口: docs/agent-harness/index.md（两级查找，禁止 **/*.md 通配）\n"
+    kb_hint="\n\n## Knowledge Base\n知识库入口: docs/agent-harness/index.md（两级查找，禁止 **/*.md 通配）\n"
 fi
 
 # Escape string for JSON embedding using bash parameter substitution.

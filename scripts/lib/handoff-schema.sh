@@ -12,7 +12,7 @@ HANDOFF_PLAN_FIELDS="spec_ref spec_topic task_count estimated_phases dod"
 HANDOFF_TASK_FIELDS="plan_ref implemented_tasks tests_passed evidence_paths"
 
 # handoff_check_required <stage> <file>
-# 用已加载的 YAML_FM（YAML_FM_FILE）校验
+# 用已加载的 YAML_FM（YAML_FM_CACHE）校验
 handoff_check_required() {
   local stage="$1" file="$2"
   local fields=""
@@ -36,7 +36,7 @@ handoff_check_required() {
       local ref; ref=$(yaml_parse_get "spec_ref")
       if [ -n "$ref" ]; then
         local dir; dir="$(dirname "$file")"
-        # 相对 docs/agent-harness/plans/ 解析到 specs/
+        # $dir/$ref 解析（plan 在 plans/，spec_ref 形如 ../specs/x.md）
         local target="$dir/$ref"
         [ -f "$target" ] || { echo "validate-handoff: spec_ref '$ref' not found ($target)" >&2; rc=1; }
       fi
