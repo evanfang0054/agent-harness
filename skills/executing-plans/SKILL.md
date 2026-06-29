@@ -63,6 +63,10 @@ After all tasks complete and verified:
 - Announce: "I'm using the finishing-a-development-branch skill to complete this work."
 - **REQUIRED SUB-SKILL:** Use agent-harness:finishing-a-development-branch
 - Follow that skill to verify tests, present options, execute choice
+- All tasks 完成并 verified 后，emit 阶段指标（不阻断）：
+  ```bash
+  scripts/log-phase-metric.sh --phase executing-plans --action end --spec-topic "$SPEC_TOPIC"
+  ```
 
 ## When to Stop and Ask for Help
 

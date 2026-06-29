@@ -123,6 +123,11 @@ After writing the spec document, look at it with fresh eyes:
 
 Fix any issues inline. No need to re-review — just fix and move on.
 
+- Spec self-review 通过后，emit 阶段指标（不阻断）：
+  ```bash
+  scripts/log-phase-metric.sh --phase brainstorming --action end --spec-topic "$SPEC_TOPIC"
+  ```
+
 **User Review Gate:**
 After the spec review loop passes, ask the user to review the written spec before proceeding:
 
