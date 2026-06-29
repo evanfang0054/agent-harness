@@ -36,6 +36,8 @@ Before defining tasks, check for sprint contract:
 
 ## File Structure
 
+**知识库检索约定**：开始前先读 `docs/agent-harness/index.md`，再按主题跳到子目录 index.md，禁止 `**/*.md` 全局通配。
+
 Before defining tasks, map out which files will be created or modified and what each one is responsible for. This is where decomposition decisions get locked in.
 
 - Design units with clear boundaries and well-defined interfaces. Each file should have one clear responsibility.
